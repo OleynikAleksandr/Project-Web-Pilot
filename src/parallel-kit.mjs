@@ -8,6 +8,13 @@ import { readReview } from '@webpilot/workflow-kit/lib/plan-review';
 import { reviewBlocksExecution } from './auto-plan-state.mjs';
 
 const execute=promisify(execFile),planFile='.harness/plans/todo-plan.md';
+export function projectVerifiedPlan(plan,resolved) {
+  const projected=structuredClone(plan);
+  for(const task of projected.tasks)if(task.commit_status==='DONE'&&!resolved?.[task.id]?.sha) {
+    task.commit_status='PENDING';task.implementation_status='IN_PROGRESS';
+  }
+  return projected;
+}
 const exists=async file=>{try{await fs.access(file);return true;}catch(e){if(e.code==='ENOENT')return false;throw e;}};
 const commandActivity=async workspace=>(await fs.readdir(path.join(workspace,'.harness/runtime/command-activity'))
   .catch(e=>{if(e.code==='ENOENT')return [];throw e;})).length>0;
@@ -21,6 +28,7 @@ export class ParallelKit {
   }
   async read(workspace) {
     const text=await fs.readFile(path.join(workspace,planFile),'utf8'),plan=parsePlan(text);
+    if(plan.execution_strategy!=='parallel')return {workspace,plan,assignments:[],integration:{status:'IDLE'}};
     const gitDir=await this.git(workspace,['rev-parse','--absolute-git-dir']);
     const integration=await this.plans.call(workspace,'integration:status');
     const proof=await this.plans.call(workspace,'validate');
@@ -50,7 +58,7 @@ export class ParallelKit {
     const head=await this.git(workspace,['rev-parse','HEAD']);
     const integrated=proof.resolved?.[integration.task_id];
     integration.committed=!!integrated?.integration_commit&&integrated.sha===head&&integrated.source_commit===integration.source_commit;
-    return {workspace,plan,head,assignments,integration,
+    return {workspace,plan:projectVerifiedPlan(plan,proof.resolved),head,assignments,integration,
       mainClean:!await this.git(workspace,['status','--porcelain']),
       commandActive:await commandActivity(workspace)||await exists(path.join(gitDir,'workflow-kit','operation.lock')),
       confirmed:unchanged&&!pending&&committed===text.trim()&&!reviewBlocksExecution(readReview(workspace),plan.scope_id)};

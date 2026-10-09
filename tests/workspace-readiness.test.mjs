@@ -9,6 +9,25 @@ import { WorkspaceSetup } from '../src/workspace-setup.mjs';
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const state = (key = 'a') => ({ key, transaction: false });
 
+test('background context readiness retains every addressed workspace while navigation still supersedes its pending choice',async()=>{
+  const gate=deferred(),inspected=[];
+  const cache=new WorkspaceReadiness({fingerprint:async w=>state(w),inspect:async w=>{
+    inspected.push(w);if(w==='/main')await gate.promise;return {ready:true,inputKey:w};
+  }});
+  const main=cache.check('/main'),a=cache.check('/worker-a',{retain:true}),b=cache.check('/worker-b',{retain:true});
+  const old=cache.check('/old-choice'),rejected=assert.rejects(old,{code:'READINESS_SUPERSEDED'}),latest=cache.check('/latest');
+  const same=cache.check('/worker-a',{retain:true});await rejected;gate.resolve();
+  await Promise.all([main,a,b,same,latest]);assert.deepEqual(inspected,['/main','/latest','/worker-a','/worker-b']);
+  assert.equal(cache.retained.length,0);
+});
+
+test('concurrent Git change during inspection gets one bounded retry, without a polling fallback',async()=>{
+  let calls=0;const cache=new WorkspaceReadiness({fingerprint:async()=>state(),inspect:async()=>{
+    if(++calls===1)throw Object.assign(Error('changed'),{code:'CONCURRENT_CHANGE'});return {ready:true,inputKey:'a'};
+  }});
+  assert.equal((await cache.check('/worker',{retain:true})).ready,true);assert.equal(calls,2);
+});
+
 test('readiness coalesces work, checks a fresh key on reuse, isolates returned values and bounds memory', async () => {
   let key = 'a', inspections = 0, fingerprints = 0;
   const gate = deferred();

@@ -55,6 +55,14 @@ test('manual group is bounded, duplicate events/clicks do not clone worktrees or
   assert.equal(f.calls.created.at(-1).base,'base-merge');
 });
 
+test('manual launch waits for main preparation without losing the request while AutoPlan is OFF',async t=>{
+  const f=fixture(t);f.runtime.mainState=()=>({stopped:false});
+  await f.runtime.launch('/main');assert.equal(f.calls.created.length,0);
+  f.runtime.mainState=()=>({stopped:true});await f.runtime.signal('/main');
+  assert.deepEqual(f.calls.created.map(x=>x.task),['A','B']);
+  f.finish('A');await f.runtime.signal('/main');assert.equal(f.calls.created.length,2,'one manual group only');
+});
+
 test('ON starts subsequent ready tasks only from the integrated base; a busy or active-command source never merges',async t=>{
   const f=fixture(t);f.runtime.setEnabled(true);await f.runtime.launch('/main');
   const a=f.finish('A');f.pages.set(a.id,{stopped:false});await f.runtime.signal('/main');assert.equal(f.calls.merged.length,0);
@@ -110,6 +118,28 @@ test('conflict keeps main exclusive and explicit correction is delivered once; U
   f.state.integration.operation_id='integration-wp-2';f.runtime.sendCorrection=async()=>({state:'unknown'});
   await f.runtime.correct('/main');assert.equal((await f.runtime.correct('/main')).reason,'CORRECTION_ALREADY_REQUESTED');
   assert.equal(f.calls.created.length,2);
+});
+
+test('admitted correction permits its own composer operation while a new busy page still cancels it',async t=>{
+  const f=fixture(t);let sending=false,busy=false;
+  f.state.integration={status:'CONFLICT',operation_id:'integration-one'};
+  f.runtime.mainState=()=>({stopped:!sending&&!busy,canSend:!sending&&!busy,canContinueSend:!busy});
+  f.runtime.sendCorrection=async(_origin,_text,ready,before)=>{
+    sending=true;assert.equal(ready(),true);assert.equal(await before(),true);
+    busy=true;assert.equal(ready(),false);return {state:'cancelled'};
+  };
+  assert.equal((await f.runtime.correct('/main')).state,'cancelled');
+  assert.equal(f.runtime.view('/main').correctionStatus,null);
+});
+
+test('explicit correction waits for the running reconciliation instead of racing its published conflict',async t=>{
+  const f=fixture(t);f.state.integration={status:'CONFLICT',operation_id:'integration-wait'};
+  const read=f.kit.read;let release;
+  f.kit.read=async()=>{await new Promise(resolve=>{release=resolve;});f.kit.read=read;return read();};
+  const reconciliation=f.runtime.signal('/main');await new Promise(resolve=>setImmediate(resolve));
+  const correction=f.runtime.correct('/main');await f.runtime.signal('/main');
+  assert.equal(f.calls.corrections.length,0);release();await reconciliation;
+  assert.equal((await correction).state,'sent');assert.equal(f.calls.corrections.length,1);
 });
 
 test('assigned startup starts exactly its task, names worktree/main and does not ask for a second user instruction',()=>{

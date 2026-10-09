@@ -1,5 +1,6 @@
 import { PAGE_STATE_CHANNEL } from './page-state.mjs';
 const chatOrigin = value => { try { return new URL(value).origin === 'https://chatgpt.com'; } catch { return false; } };
+const bridges=new WeakMap();
 
 // One document identity check in the isolated preload world, never a DOM polling loop.
 export function connectPageState(contents, ipc, source, { onFailure = () => {} } = {}) {
@@ -22,7 +23,13 @@ export function connectPageState(contents, ipc, source, { onFailure = () => {} }
       if (result.accepted) clearHealth();
     } catch { if (!closed && ownGeneration === generation) onFailure('PAGE_OBSERVER_INVALID'); }
   };
-  ipc.on(PAGE_STATE_CHANNEL, receive);
+  let bridge=bridges.get(ipc);
+  if(!bridge) {
+    bridge={receivers:new Map()};
+    bridge.receive=(event,raw)=>bridge.receivers.get(event.sender)?.(event,raw);
+    bridges.set(ipc,bridge);ipc.on(PAGE_STATE_CHANNEL,bridge.receive);
+  }
+  bridge.receivers.set(contents,receive);
   on('did-start-navigation', (event, _url, isInPlace, isMainFrame) => { if ((event.isMainFrame ?? isMainFrame) && !(event.isSameDocument ?? isInPlace)) reset(); });
   on('render-process-gone', reset);
   on('preload-error', (_event, preloadPath) => {
@@ -37,7 +44,8 @@ export function connectPageState(contents, ipc, source, { onFailure = () => {} }
     healthTimer.unref?.();
   });
   return () => {
-    closed = true; reset(); ipc.removeListener(PAGE_STATE_CHANNEL, receive);
+    closed = true; reset(); bridge.receivers.delete(contents);
+    if(!bridge.receivers.size){ipc.removeListener(PAGE_STATE_CHANNEL,bridge.receive);bridges.delete(ipc);}
     for (const [event, handler] of handlers) contents.removeListener(event, handler);
   };
 }

@@ -43,6 +43,7 @@ export class SessionRuntimes {
     record.composer=this.createComposer(contents,{pageState:record.pageState});
     record.controller=new ContextSession({store:scopedStore,runtime:this.runtime(),contextCache:this.contextCache,
       composer:record.composer,onChange:()=>this.onChange(record),onChatBound:()=>this.onChatBound(record)});
+    record.controller.onIdle=()=>this.onChange(record);
     record.timer=new AgentTimer({onFinish:(target,durationMs)=>{
       void this.store.recordAgentTime(target.workspace,target.sessionId,durationMs).then(()=>this.onChange(record),error=>this.onError(record,error));
     }});

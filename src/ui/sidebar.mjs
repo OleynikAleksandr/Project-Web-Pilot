@@ -368,7 +368,7 @@ function render(state) {
   $('execution-actions').hidden=!parallel;
   const correcting=['CONFLICT','CHECKS_FAILED','RESOLVING'].includes(execution.integration?.status);
   $('correct-integration').hidden=!correcting;
-  $('correct-integration').disabled=actionPending||execution.phase==='merging'||!!execution.correctionStatus;
+  $('correct-integration').disabled=actionPending||execution.phase==='merging'||!!execution.correctionStatus||execution.canCorrect===false;
   $('execute-tasks').disabled=actionPending||['preparing','merging','integration','complete'].includes(execution.phase)||correcting;
   $('reconcile-execution').disabled=actionPending||['preparing','merging'].includes(execution.phase);
   $('execution-message').textContent=execution.error?.message??({sending:'Поручение исправления отправляется…',sent:'Поручение исправления отправлено. Ждём основной чат.',unknown:'Исход отправки исправления неизвестен. Повтор не отправляется.'}[execution.correctionStatus])??({preparing:'Подготавливаем исполнителей…',merging:'Проверяем слияние в main…',

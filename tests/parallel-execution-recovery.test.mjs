@@ -1,6 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ParallelExecution } from '../src/parallel-execution.mjs';
+import { ParallelKit,projectVerifiedPlan } from '../src/parallel-kit.mjs';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {emptyPlan,renderPlan} from '@webpilot/workflow-kit/lib/plan';
+
+test('a staged integration candidate never projects DONE before its Git commit is proven',()=>{
+  const plan={tasks:[{id:'A',commit_status:'DONE',implementation_status:'DONE'},{id:'B',commit_status:'DONE',implementation_status:'DONE'}]};
+  const view=projectVerifiedPlan(plan,{A:{sha:'actual-merge'},B:{pending:true}});
+  assert.equal(view.tasks[0].commit_status,'DONE');assert.equal(view.tasks[1].commit_status,'PENDING');
+  assert.equal(plan.tasks[1].commit_status,'DONE','the raw candidate remains available to Kit');
+});
+
+test('sequential legacy checkout does not require new assignment commands from its installed Kit',async t=>{
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'parallel-legacy-read-'));
+  t.after(()=>fs.rm(root,{recursive:true,force:true}));await fs.mkdir(path.join(root,'.harness/plans'),{recursive:true});
+  await fs.writeFile(path.join(root,'.harness/plans/todo-plan.md'),renderPlan(emptyPlan('Legacy')));
+  const kit=new ParallelKit({plans:{call:async()=>{throw Error('Legacy Kit cannot run this command');}},setup:{}});
+  const result=await kit.read(root);assert.equal(result.integration.status,'IDLE');assert.deepEqual(result.assignments,[]);
+});
 
 function fixture(t) {
   const origin={workspace:'/main',sessionId:'origin',executionSnapshot:{parallel_allowed:true,max_workers:2}};

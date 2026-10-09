@@ -64,6 +64,7 @@ export class ParallelExecution {
   recheck(workspace) {this.observe(workspace);return this.enqueue(workspace,false,true);}
   enqueue(workspace,manual,recovery=false) {
     if(this.closed)return Promise.resolve();
+    if(this.correcting.has(workspace))return Promise.resolve(this.view(workspace));
     let queue=this.queues.get(workspace);
     if(queue){queue.again=true;queue.manual||=manual;queue.recovery||=recovery;return queue.promise;}
     queue={again:true,manual,recovery};this.queues.set(workspace,queue);
@@ -86,7 +87,7 @@ export class ParallelExecution {
       assignments.push({id:entry.id,parent_task_id:entry.taskId,worktree:entry.worktree,status:'UNKNOWN',
         error:entry.error??issue(fail('ASSIGNMENT_UNKNOWN','Назначение не подтверждено Kit. Повторите сверку; повторного создания нет.'))});
     let recoveryError=null;
-    if(ledger.started) {
+    if(ledger.started||manual) {
       try {await this.restoreOrigin(origin);}catch(error){recoveryError=issue(error);}
       for(const a of assignments) {
         if(a.status==='INTEGRATED') {
@@ -96,7 +97,7 @@ export class ParallelExecution {
         }
         if(a.status==='UNKNOWN'){recoveryError??=a.error;continue;}
         try {
-          const restored=await this.restoreWorker(a,origin,ledger.assignments[a.id]);
+          const restored=await this.restoreWorker(a,origin,ledger.assignments[a.id],recovery);
           if(restored) {
             const entry=ledger.assignments[a.id]??={id:a.id,taskId:a.parent_task_id,worktree:a.worktree};
             if(entry.sessionId!==restored.sessionId){entry.sessionId=restored.sessionId;entry.phase='running';await this.persist();}
@@ -109,6 +110,7 @@ export class ParallelExecution {
         completed:plan.tasks.filter(t=>t.commit_status==='DONE').length,total:plan.tasks.length,
         tasks:plan.tasks.map(t=>({id:t.id,title:t.title,status:t.commit_status==='DONE'?'done':assignments.some(a=>a.parent_task_id===t.id)?'current':'pending'}))},
       assignments,integration:state.integration,correctionStatus:ledger.corrections[state.integration.operation_id]??null,
+      canCorrect:!state.commandActive&&this.mainState(origin).stopped&&this.mainState(origin).canSend,
       error:recoveryError,maxWorkers:plan.max_workers});
     // A pending integration owns main. Only its explicit correction action may send to the main agent.
     if(state.integration.status!=='IDLE') {
@@ -131,7 +133,7 @@ export class ParallelExecution {
     if(!state.confirmed||plan.execution_scope_status!=='ACTIVE'||state.commandActive)
       throw fail('PLAN_NOT_READY','Ждём опубликованный план и завершение текущей команды Kit.');
     if(plan.tasks.length&&plan.tasks.every(t=>t.commit_status==='DONE')) {this.publish(workspace,{phase:'complete'});return;}
-    if(manual){ledger.started=true;await this.persist();}
+    if(manual){ledger.started=true;ledger.manualRequested=true;await this.persist();}
     if(!ledger.started)return;
     const stopped=a=>{const page=this.workerState(a,ledger.assignments[a.id]);return {...page,stopped:page.stopped&&!a.error&&!a.commandActive&&!a.transaction_pending&&!a.dirty};};
     for(const a of assignments) {
@@ -150,8 +152,10 @@ export class ParallelExecution {
       catch(error){entry.integration='unknown';await this.persist();throw error;}
       this.queues.get(workspace).again=true;return;
     }
-    if(!manual&&!this.enabled)return;
+    const requested=manual||ledger.manualRequested===true;
+    if(!requested&&!this.enabled)return;
     if(!state.mainClean||!this.mainState(origin).stopped)return;
+    if(ledger.manualRequested){ledger.manualRequested=false;await this.persist();}
     // A known, never-opened assignment may finish setup under the same identity.
     for(const a of assignments) {
       const entry=ledger.assignments[a.id];
@@ -167,7 +171,7 @@ export class ParallelExecution {
       }catch(error){entry.error=issue(error);await this.persist();recoveryError??=entry.error;}
     }
     for(const task of availableTasks(plan,assignments,stopped)) {
-      if(this.closed||!manual&&!this.enabled)break;
+      if(this.closed||!requested&&!this.enabled)break;
       // Persist identity before creating a worktree. An ambiguous result never gets a new ID.
       let entry=Object.values(ledger.assignments).find(a=>a.taskId===task.id);
       if(entry)continue;
@@ -179,7 +183,7 @@ export class ParallelExecution {
         if(assignment.status==='NEEDS_SETUP')assignment=await this.kit.setupAssignment(workspace,id);
         entry.phase=assignment.status;await this.persist();
         if(assignment.status!=='READY')throw fail('NEEDS_SETUP','Окружение задания не готово. Повторите подготовку задания.');
-        if(this.closed||!manual&&!this.enabled){entry.phase='ready';await this.persist();break;}
+        if(this.closed||!requested&&!this.enabled){entry.phase='ready';await this.persist();break;}
         entry.phase='opening';await this.persist();
         const session=await this.openWorker({...assignment,id,parent_root:workspace,parent_scope_id:plan.scope_id,
           parent_task_id:task.id,title:task.title},origin);
@@ -192,16 +196,21 @@ export class ParallelExecution {
       .concat(assignments.filter(a=>a.status==='UNKNOWN'&&!latest.assignments.some(b=>b.id===a.id))),error:recoveryError});
   }
   async correct(workspace) {
-    if(this.queues.has(workspace)||this.correcting.has(workspace))throw fail('PARALLEL_BUSY','Дождитесь текущей операции.');
+    if(this.correcting.has(workspace))throw fail('PARALLEL_BUSY','Дождитесь текущей операции.');
     this.correcting.add(workspace);
     try {
+    await this.queues.get(workspace)?.promise;
     const state=await this.kit.read(workspace),operation=state.integration;
     if(!['CONFLICT','CHECKS_FAILED','RESOLVING'].includes(operation.status))throw fail('INTEGRATION_NOT_CORRECTABLE','Нет интеграции, ожидающей исправления.');
     const origin=executionOrigin(state.plan,id=>this.origin(workspace,id)),ledger=this.ledger(workspace,state.plan.scope_id);
     if(state.commandActive)throw fail('MAIN_NOT_READY','В main ещё выполняется команда или её завершение не подтверждено.');
     if(ledger.corrections[operation.operation_id])return {state:'unknown',reason:'CORRECTION_ALREADY_REQUESTED'};
-    const ready=()=>!this.closed&&this.mainState(origin).stopped&&this.mainState(origin).canSend;
-    if(!ready())throw fail('MAIN_NOT_READY','Откройте основной чат и дождитесь готовности без черновика.');
+    const initial=this.mainState(origin);
+    if(this.closed||!initial.stopped||!initial.canSend)throw fail('MAIN_NOT_READY','Откройте основной чат и дождитесь готовности без черновика.');
+    const ready=()=>{
+      const page=this.mainState(origin);
+      return !this.closed&&(page.canContinueSend??(page.stopped&&page.canSend));
+    };
     ledger.corrections[operation.operation_id]='sending';await this.persist();
     this.publish(workspace,{correctionStatus:'sending'});
     const text=['Исправь незавершённую интеграцию Workflow Kit.',
@@ -219,7 +228,7 @@ export class ParallelExecution {
       else if(result.state!=='unknown')delete ledger.corrections[operation.operation_id];
       await this.persist();this.publish(workspace,{correctionStatus:ledger.corrections[operation.operation_id]??null});return result;
     }catch(error){ledger.corrections[operation.operation_id]='unknown';await this.persist();throw error;}
-    }finally{this.correcting.delete(workspace);}
+    }finally{this.correcting.delete(workspace);void this.signal(workspace);}
   }
   dispose(){this.closed=true;for(const stop of this.unwatch.values())stop();this.unwatch.clear();}
 }

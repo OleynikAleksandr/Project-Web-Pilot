@@ -8,6 +8,17 @@ import { PageStateSource, PAGE_STATE_CHANNEL, normalizePageObservation } from '.
 import { connectPageState } from '../src/page-state-bridge.mjs';
 
 const turn = () => new Promise(resolve => setImmediate(resolve));
+
+test('many live pages share one IPC listener and release it after the last page',()=>{
+  const ipc=new EventEmitter(),stops=[];
+  for(let i=0;i<20;i++) {
+    const contents=new EventEmitter();contents.isDestroyed=()=>false;
+    stops.push(connectPageState(contents,ipc,new PageStateSource()));
+  }
+  assert.equal(ipc.listenerCount(PAGE_STATE_CHANNEL),1);
+  for(const stop of stops.slice(0,-1))stop();assert.equal(ipc.listenerCount(PAGE_STATE_CHANNEL),1);
+  stops.at(-1)();assert.equal(ipc.listenerCount(PAGE_STATE_CHANNEL),0);
+});
 const observation = (seq = 1, documentId = 'document-1111', patch = {}) => ({ version: 1, seq, documentId,
   state: { url: 'https://chatgpt.com/', experience: 'chat', login: 'unknown', visibility: 'visible',
     editorAvailable: true, editorRevision: 1, writable: true, busy: false, sendEnabled: true,

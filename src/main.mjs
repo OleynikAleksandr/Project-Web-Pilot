@@ -212,13 +212,20 @@ const liveSessions = new SessionRuntimes({store,runtime:()=>runtime,contextCache
   createView:()=>new WebContentsView({webPreferences:{...remotePreferences(),backgroundThrottling:false,
     preload:app.isPackaged?path.join(process.resourcesPath,'resources/chatgpt-page-observer-preload.cjs')
       :path.join(sourceDir,'../resources/chatgpt-page-observer-preload.cjs')}}),
-  onChange:record=>{if(record===liveSessions.visible)pageLoading=record.loading;record.executor?.changed();publish();},
+  onChange:record=>{
+    if(record===liveSessions.visible)pageLoading=record.loading;record.executor?.changed();
+    if(record.identity&&!record.identity.assignmentId&&execution.unwatch.has(record.identity.workspace)) {
+      const stopped=executorPageState(record).stopped;
+      if(record.executionStopped!==stopped){record.executionStopped=stopped;void execution.signal(record.identity.workspace);}
+    }
+    publish();
+  },
   onChatBound:record=>{if(record===liveSessions.visible)void syncSelectedSessionTitle({force:true,reason:'chat-bound'});},
   onPage:(record,event)=>applyObservedPage(event,record),onError:sessionRuntimeError,decorate:decorateSessionRuntime});
 const executionKit=new ParallelKit({plans:sessionPlans,setup:workspaceSetup});
 const liveRecord=project=>project&&liveSessions.records.get(sessionRuntimeKey(project));
 async function restoreExecutionPage(project,assignment=null) {
-  if(liveRecord(project)?.ready)return project;
+  if(liveRecord(project)?.ready&&(!assignment||liveRecord(project).executor))return project;
   if(!project?.chatUrl||(!project.manualStart&&!project.attempt?.sendStartedAtMs&&!['sent','acknowledged'].includes(project.attempt?.state)))
     throw Object.assign(new Error('Сохранённый адрес и отправка не подтверждены. Откройте соответствующий чат и проверьте его; автоматического Send нет.'),{code:'EXECUTOR_CHAT_UNKNOWN'});
   const record=liveSessions.ensure(project);
@@ -244,7 +251,7 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
   mainState:origin=>executorPageState(liveRecord(origin)),
   workerState:(assignment,entry)=>executorPageState(liveRecord(store.project(assignment.worktree,entry?.sessionId))),
   restoreOrigin:origin=>restoreExecutionPage(origin),
-  restoreWorker:async(assignment,origin,entry)=>{
+  restoreWorker:async(assignment,origin,entry,recovery)=>{
     if(!assignment.worktree)return null;
     const project=store.project(assignment.worktree,entry?.sessionId);
     if(!project) {
@@ -255,7 +262,9 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
     if(project.assignmentId!==assignment.id||project.taskId!==assignment.parent_task_id||project.parentScopeId!==assignment.parent_scope_id
       ||project.executionOriginSessionId!==origin.sessionId||project.parentWorkspace!==origin.workspace||project.archivedAt||project.sessionArchivedAt)
       throw Object.assign(new Error('Сессия не соответствует назначению Kit. Откройте её для проверки.'),{code:'EXECUTOR_SESSION_MISMATCH'});
-    return restoreExecutionPage(project,assignment);
+    const restored=await restoreExecutionPage(project,assignment);
+    if(recovery)await liveRecord(restored)?.controller.resumePreparation();
+    return restored;
   },
   openWorker:async(assignment,origin)=>{
     const project=await store.ensureExecutor(assignment,origin),record=liveSessions.ensure(project);

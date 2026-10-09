@@ -12,6 +12,17 @@ const project={workspace:'/Projects/Мой проект',projectId:'id-1',name:'
 const facts={project_id:project.projectId,project_name:project.name,plan_revision:7,scope_id:'scope-1',
   execution_scope_status:'ACTIVE',delivery_status:'IN_PROGRESS',task_id:'T001',task_title:'Read'};
 const now=2000000;
+
+test('explicit preparation retry retains drafts and cannot replay a sent or unknown request',async()=>{
+  const f=controllerFixture();f.controller.state={phase:'error',error:{code:'CONTEXT_INPUTS_UNAVAILABLE'}};
+  f.inspection.draftLength=20;
+  assert.equal(await f.controller.resumePreparation(),true);assert.equal(f.sends(),0);assert.equal(f.controller.state.phase,'waiting-draft');
+  for(const state of ['sending','unknown','sent','acknowledged']) {
+    await f.store.updateSession(project.workspace,project.sessionId,{attempt:{state}});
+    f.controller.state={phase:'error',error:{code:'CONTEXT_INPUTS_UNAVAILABLE'}};
+    assert.equal(await f.controller.resumePreparation(),false);assert.equal(f.sends(),0);
+  }
+});
 function packet(){
   const context='ПОЛНЫЙ КОНТЕКСТ\nОписание проекта\nПлан\n\nНезавершённые изменения\nКОНЕЦ';
   return {delivery_protocol:'inline-context-v1',ack_required:false,status:'ready',completeness:'COMPLETE',workspace:project.workspace,session_id:project.sessionId,plan_id:project.scopeId,

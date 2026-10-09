@@ -5,6 +5,7 @@ export function executorStatus(assignment,record,integration) {
       ?{phase:'attention',label:integration.status==='UNKNOWN'?'Исход слияния неизвестен':'Нужно исправление в main'}
       :{phase:'merging',label:'Интегрируется'};
   if(record?.error)return {phase:'attention',label:record.error.message};
+  if(record?.controller?.state?.error)return {phase:'attention',label:record.controller.state.error.message+' Повторите сверку или откройте чат.'};
   if(assignment?.error)return {phase:'attention',label:assignment.error.message};
   if(assignment?.status==='NEEDS_SETUP')return {phase:'setup',label:'Нужна подготовка worktree'};
   if(assignment?.status==='UNKNOWN')return {phase:'unknown',label:'Состояние требует сверки'};

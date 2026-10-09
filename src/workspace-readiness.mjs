@@ -1,22 +1,26 @@
 import { fail } from './common.mjs';
 const copy = value => structuredClone(value);
 
-// One active worker operation and one latest queued workspace. Readiness is
-// separate from addressed recovery; cache entries never authorize context Send.
+// One active inspection. Visible navigation keeps only its latest queued choice;
+// addressed background deliveries retain their own queued inspections.
 export class WorkspaceReadiness {
   constructor({ fingerprint, inspect, maxEntries = 4 }) {
     Object.assign(this, { fingerprint, inspect, maxEntries });
-    this.cache = new Map(); this.active = null; this.pending = null;
+    this.cache = new Map(); this.active = null; this.pending = null; this.retained=[];
   }
-  check(workspace) {
-    for (const job of [this.active, this.pending]) {
-      if (job?.workspace === workspace && !job.invalidated) return job.promise.then(copy);
+  check(workspace,{retain=false}={}) {
+    for (const job of [this.active, this.pending,...this.retained]) {
+      if (job?.workspace === workspace && !job.invalidated) {job.retain ||= retain;return job.promise.then(copy);}
     }
-    const job = { workspace, invalidated: false };
+    const job = { workspace, invalidated: false,retain };
     job.promise = new Promise((resolve, reject) => Object.assign(job, { resolve, reject }));
     if (this.active) {
-      this.pending?.reject(fail('READINESS_SUPERSEDED', 'Выбран другой проект.'));
-      this.pending = job;
+      if(retain)this.retained.push(job);
+      else {
+        if(this.pending?.retain)this.retained.push(this.pending);
+        else this.pending?.reject(fail('READINESS_SUPERSEDED', 'Выбран другой проект.'));
+        this.pending = job;
+      }
     } else { this.active = job; void this.run(job); }
     return job.promise.then(copy);
   }
@@ -27,6 +31,10 @@ export class WorkspaceReadiness {
       this.pending.reject(fail('READINESS_CHANGED', 'Проверка проекта отменена.'));
       this.pending = null;
     }
+    this.retained=this.retained.filter(job=>{
+      if(workspace&&job.workspace!==workspace)return true;
+      job.reject(fail('READINESS_CHANGED','Проверка проекта отменена.'));return false;
+    });
   }
   assertCurrent(job) {
     if (job.invalidated) throw fail('READINESS_CHANGED', 'Состояние проекта изменилось. Повторите проверку.');
@@ -45,7 +53,9 @@ export class WorkspaceReadiness {
           job.resolve(cached.result); return;
         }
         this.cache.delete(workspace);
-        const result = await this.inspect(workspace);
+        let result;
+        try {result=await this.inspect(workspace);}
+        catch(error){if(error.code==='CONCURRENT_CHANGE'&&attempt===0)continue;throw error;}
         const after = await this.fingerprint(workspace);
         this.assertCurrent(job);
         if (before.key !== after.key || after.transaction || (result.inputKey && result.inputKey !== after.key)) continue;
@@ -58,7 +68,7 @@ export class WorkspaceReadiness {
       throw fail('READINESS_CHANGED', 'Проект меняется во время проверки. Повторите проверку.');
     } catch (error) { this.cache.delete(workspace); job.reject(error); }
     finally {
-      this.active = this.pending; this.pending = null;
+      this.active = this.pending??this.retained.shift()??null; this.pending = null;
       if (this.active) void this.run(this.active);
     }
   }

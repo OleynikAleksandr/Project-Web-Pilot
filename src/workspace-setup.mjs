@@ -134,9 +134,9 @@ export class WorkspaceSetup {
     return result;
   }
   clear() { this.tickets.clear(); }
-  async ready(workspace) {
+  async ready(workspace,options) {
     if (typeof workspace !== 'string' || !path.isAbsolute(workspace)) throw fail('PROJECT_PATH', 'Выберите папку проекта.');
-    return this.readiness.check(await fs.realpath(workspace));
+    return this.readiness.check(await fs.realpath(workspace),options);
   }
   invalidateReadiness(workspace = null) { this.readiness.clear(workspace); }
 }

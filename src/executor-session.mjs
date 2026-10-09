@@ -6,10 +6,13 @@ import { ExecutorTimer } from './agent-timer.mjs';
 
 export function executorPageState(record) {
   const project=record?.project(),page=record?.pageState.current?.state;
-  const stopped=!!project?.chatUrl&&!record.disposed&&!record.loading&&record.ready
+  const observed=!!project?.chatUrl&&!project.archivedAt&&!project.sessionArchivedAt&&!record.disposed&&!record.loading&&record.ready
     &&page?.url===project.chatUrl&&!page.busy&&!page.connectionError&&page.lastMessageRole==='assistant'
-    &&!record.controller.pending&&!record.composer.inFlight;
-  return {stopped,canSend:stopped&&page.editorAvailable&&page.writable&&!page.draftPresent};
+    &&page.login!=='signed-out';
+  const stopped=observed&&!record.controller.pending&&!record.composer.inFlight;
+  return {stopped,canSend:stopped&&page.editorAvailable&&page.writable&&!page.draftPresent,
+    // Composer owns its inFlight flag and inserted draft during an admitted send.
+    canContinueSend:observed&&page.editorAvailable&&page.writable};
 }
 
 // Each assigned task keeps its own continuation ledger and plan watcher. Neither
