@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1670,
+  "plan_revision": 1672,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Полное удаление состояния проекта, безопасный повтор папки и выпуск 0.6.109",
   "acceptance_criteria": [
     "Полное удаление состояния проекта, безопасный повтор папки и выпуск 0.6.109"
@@ -424,8 +424,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-state-deletion-20261009",
         "task_id": "T006",
@@ -450,7 +450,8 @@
       "acceptance_criteria": [
         "main, tag и шесть assets сверены после окончательного push; живая приёмка остаётся открытой"
       ],
-      "expected_commit_message": "feat: Опубликовать выпуск 0.6.109 и репозиторий"
+      "expected_commit_message": "feat: Опубликовать выпуск 0.6.109 и репозиторий",
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -468,10 +469,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1670
+Revision: 1672
 
 ## Цель
 
@@ -515,8 +516,8 @@ Revision: 1670
   - Git Commit: [DONE] feat: Установить и проверить выпуск 0.6.109
   - Reference: project-state-deletion-20261009 / T005 / implementation
   - Файлы: docs/planning/project-state-deletion.md, docs/modules/release.md
-- [TODO] T006: Опубликовать выпуск 0.6.109 и репозиторий — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать выпуск 0.6.109 и репозиторий
+- [DONE] T006: Опубликовать выпуск 0.6.109 и репозиторий — Завершено
+  - Git Commit: [DONE] feat: Опубликовать выпуск 0.6.109 и репозиторий
   - Reference: project-state-deletion-20261009 / T006 / implementation
   - Файлы: docs/planning/project-state-deletion.md, docs/modules/release.md
 
