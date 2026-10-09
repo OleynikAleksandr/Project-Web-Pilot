@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1636,
+  "plan_revision": 1637,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -153,7 +153,7 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": "T034",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -2123,13 +2123,17 @@
         "Версия и evidence согласованы; исходники проверены до сборки"
       ],
       "expected_commit_message": "feat: Подготовить выпуск 0.6.108",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T034",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "package.json"
+      ]
     },
     {
       "id": "DOCS-5",
@@ -2273,8 +2277,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: T034
-Revision: 1636
+Current Task: нет
+Revision: 1637
 
 ## Цель
 
@@ -2438,8 +2442,8 @@ Revision: 1636
   - Git Commit: [DONE] feat: Исправить окружение интеграции и отображение назначений
   - Reference: parallel-chat-execution-20261009 / T033 / implementation
   - Файлы: src/workspace-setup.mjs, src/main.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/execution-projection.mjs, src/parallel-execution.mjs, src/session-plans.mjs, tests/workspace-setup.test.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, src/preload.cjs, src/ui/progress.mjs, docs/modules/auto-plan.md, docs/architecture/OVERVIEW.md, docs/modules/session-runtime.md
-- [IN_PROGRESS] T034: Подготовить выпуск 0.6.108 — В работе
-  - Git Commit: [PENDING] feat: Подготовить выпуск 0.6.108
+- [DONE] T034: Подготовить выпуск 0.6.108 — Завершено
+  - Git Commit: [DONE] feat: Подготовить выпуск 0.6.108
   - Reference: parallel-chat-execution-20261009 / T034 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/auto-plan.md
 - [TODO] DOCS-5: Актуализация всех документов проекта — Ожидает
