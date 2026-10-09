@@ -18,7 +18,7 @@ show/hide не уничтожают сессию. Отдельный release б�
 
 ## AutoPlan проекта
 
-Каждый основной runtime имеет собственные AutoPlan, AutomationSendState и PlanMonitor через project-session-auto-plan. Отправка привязана к record.project(), Composer и Session ID этой страницы, включая скрытую. ProjectAutoPlan хранит разрешение по workspace/scope и журналы по Session ID; один основной чат продолжает последовательный план, назначения наследуют разрешение родителя. Выбор другого проекта и окна не переносит отправку. Новый scope и подтверждённое завершение выключают режим. Контракт — [AutoPlan](auto-plan.md).
+Каждый основной runtime имеет собственные AutoPlan, AutomationSendState и PlanMonitor через project-session-auto-plan. Отправка привязана к record.project(), Composer и Session ID этой страницы, включая скрытую. ProjectAutoPlan хранит разрешение по workspace/scope и журналы по Session ID; один основной чат продолжает последовательный план, назначения наследуют разрешение родителя. Выбор другого проекта и окна не переносит отправку. Новый scope и подтверждённое завершение выключают режим. Явное ON до первого плана сохраняет ожидание только в этом проекте и привязывается к его первому scope. Контракт — [AutoPlan](auto-plan.md).
 
 ## Восстановление разговора
 

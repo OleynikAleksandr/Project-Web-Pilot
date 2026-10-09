@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1621,
+  "plan_revision": 1623,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1909,8 +1909,8 @@
     {
       "id": "DOCS-4",
       "title": "Актуализация всех документов проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "DOCS-4",
@@ -1937,7 +1937,14 @@
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/plan-review.md",
+        "docs/modules/release.md",
+        "docs/modules/session-runtime.md"
+      ]
     },
     {
       "id": "T030",
@@ -2053,7 +2060,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1621
+Revision: 1623
 
 ## Цель
 
@@ -2197,8 +2204,8 @@ Revision: 1621
   - Git Commit: [DONE] feat: Подготовить исправленный выпуск 0.6.107
   - Reference: parallel-chat-execution-20261009 / T029 / implementation
   - Файлы: package.json, package-lock.json, docs/modules/auto-plan.md
-- [TODO] DOCS-4: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS-4: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS-4 / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/release.md, docs/modules/auto-plan-send.md, README.md, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/plan-review.md
 - [TODO] T030: Собрать парный выпуск 0.6.107 для macOS и Windows — Ожидает
