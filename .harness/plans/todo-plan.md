@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1630,
+  "plan_revision": 1631,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Реализовать опциональное параллельное выполнение плана через чат-сессии Web Pilot и отдельные worktree с проверенной последовательной интеграцией в main.",
   "acceptance_criteria": [
     "Снимок разрешения и лимита фиксируется при новой основной сессии; существующее выполнение не меняется от Settings.",
@@ -98,7 +98,8 @@
       "tests/project-auto-plan.test.mjs",
       "packages/workflow-kit/src/lib/task-files.mjs",
       "src/project-session-auto-plan.mjs",
-      "tests/auto-plan-restart-fixture.cjs"
+      "tests/auto-plan-restart-fixture.cjs",
+      "tests/workspace-setup.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/parallel-execution-spec.md",
@@ -2035,6 +2036,193 @@
         "role": "implementation"
       },
       "actual_files": []
+    },
+    {
+      "id": "T033",
+      "title": "Исправить окружение интеграции и отображение назначений",
+      "why": "Исправить окружение интеграции и отображение назначений",
+      "dependencies": [],
+      "functional_paths": [
+        "src/workspace-setup.mjs",
+        "src/main.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/index.html",
+        "src/execution-projection.mjs",
+        "src/parallel-execution.mjs",
+        "src/session-plans.mjs",
+        "tests/workspace-setup.test.mjs",
+        "tests/parallel-execution-ui.test.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/electron-smoke.mjs",
+        "tests/parallel-execution.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Kit и вложенные проверки запускают выбранный Node при минимальном PATH приложения; реальная интеграция node --test проходит без передачи ошибки агенту",
+        "Общий план основного чата показывает назначенные задачи в работе и готовность к интеграции; DONE только по проверенной интеграции",
+        "У исполнителя нет общего плана и кнопок его управления; видны только назначение и состояние; при возврате в основной чат общий прогресс актуален",
+        "Настоящий конфликт или падение теста сохраняют защиту main; ошибки запуска проверок различимы и не трактуются как конфликт кода; данные пользовательского теста не меняются"
+      ],
+      "expected_commit_message": "feat: Исправить окружение интеграции и отображение назначений",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T033",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T034",
+      "title": "Подготовить выпуск 0.6.108",
+      "why": "Подготовить выпуск 0.6.108",
+      "dependencies": [
+        "T033"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md"
+      ],
+      "verification_ids": [
+        "codex-tools-live"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Версия и evidence согласованы; исходники проверены до сборки"
+      ],
+      "expected_commit_message": "feat: Подготовить выпуск 0.6.108",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T034",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "DOCS-5",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "DOCS-5",
+        "role": "implementation",
+        "iteration": 5
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T033",
+        "T034"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта"
+    },
+    {
+      "id": "T035",
+      "title": "Собрать парный выпуск 0.6.108 для macOS и Windows",
+      "why": "Собрать парный выпуск 0.6.108 для macOS и Windows",
+      "dependencies": [
+        "T034",
+        "DOCS-5"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "После DOCS одна сборка готовит обе платформы и шесть assets; identity корневого app сохранена"
+      ],
+      "expected_commit_message": "feat: Собрать парный выпуск 0.6.108 для macOS и Windows",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T035",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T036",
+      "title": "Установить выпуск 0.6.108",
+      "why": "Установить выпуск 0.6.108",
+      "dependencies": [
+        "T035",
+        "DOCS-5"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Готовый staging установлен без пересборки; подпись identity runtime проверены"
+      ],
+      "expected_commit_message": "feat: Установить выпуск 0.6.108",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T036",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T037",
+      "title": "Опубликовать выпуск 0.6.108 на GitHub",
+      "why": "Опубликовать выпуск 0.6.108 на GitHub",
+      "dependencies": [
+        "T036",
+        "DOCS-5"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "main тег и шесть assets сверены после окончательного push; живая приёмка остаётся открытой"
+      ],
+      "expected_commit_message": "feat: Опубликовать выпуск 0.6.108 на GitHub",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T037",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -2060,10 +2248,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1630
+Revision: 1631
 
 ## Цель
 
@@ -2222,6 +2410,30 @@ Revision: 1630
 - [DONE] T032: Опубликовать выпуск 0.6.107 и синхронизировать GitHub — Завершено
   - Git Commit: [DONE] feat: Опубликовать выпуск 0.6.107 и синхронизировать GitHub
   - Reference: parallel-chat-execution-20261009 / T032 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T033: Исправить окружение интеграции и отображение назначений — Ожидает
+  - Git Commit: [PENDING] feat: Исправить окружение интеграции и отображение назначений
+  - Reference: parallel-chat-execution-20261009 / T033 / implementation
+  - Файлы: src/workspace-setup.mjs, src/main.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/execution-projection.mjs, src/parallel-execution.mjs, src/session-plans.mjs, tests/workspace-setup.test.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, docs/modules/auto-plan.md
+- [TODO] T034: Подготовить выпуск 0.6.108 — Ожидает
+  - Git Commit: [PENDING] feat: Подготовить выпуск 0.6.108
+  - Reference: parallel-chat-execution-20261009 / T034 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/auto-plan.md
+- [TODO] DOCS-5: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: parallel-chat-execution-20261009 / DOCS-5 / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T035: Собрать парный выпуск 0.6.108 для macOS и Windows — Ожидает
+  - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.108 для macOS и Windows
+  - Reference: parallel-chat-execution-20261009 / T035 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T036: Установить выпуск 0.6.108 — Ожидает
+  - Git Commit: [PENDING] feat: Установить выпуск 0.6.108
+  - Reference: parallel-chat-execution-20261009 / T036 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T037: Опубликовать выпуск 0.6.108 на GitHub — Ожидает
+  - Git Commit: [PENDING] feat: Опубликовать выпуск 0.6.108 на GitHub
+  - Reference: parallel-chat-execution-20261009 / T037 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 
 ## Context Pack For This Cycle
