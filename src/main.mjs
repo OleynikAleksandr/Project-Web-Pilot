@@ -364,7 +364,7 @@ function snapshot() {
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace && info.inspectedSessionId === saved.sessionId ? info : {}),
-    planReadError: planMonitor.error ?? planMonitor.watchError, agentRun: agentTimer.view(saved) };
+    planReadError: planMonitor.error ?? planMonitor.watchError, agentRun: agentTimer?.view(saved) ?? null };
   return { projects: projects.filter(p => !p.archivedAt&&(!p.parentWorkspace||!projects.some(parent=>parent.workspace===p.parentWorkspace&&!parent.archivedAt)))
     .map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
@@ -373,7 +373,7 @@ function snapshot() {
   })),
     archives: projectedArchives(), settings: settingsState, doctor: doctorState, parallelExecution: { ...parallelExecution },
     execution: execution.view(saved?.parentWorkspace??saved?.workspace),
-    conversationRecovery: conversationRecovery.view(),
+    conversationRecovery: conversationRecovery?.view() ?? { phase: 'idle', message: '', canRetry: false },
     autoPlan: liveSessions.visible?.executor?.flow.view()??autoPlan.view(),
     planReview: {...planReview.view(),...(reviewContinuation.persistenceError?{message:reviewContinuation.flow.state.message,indicator:'attention'}: {})},
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
@@ -1397,7 +1397,6 @@ async function createWindow() {
   // Observe the first request, including failure before a document ever loads.
   if (smoke) {
     await fsp.mkdir(dataDir + '-projects', { recursive: true });
-    fixture = await import('../tests/electron-smoke.mjs');
     runtime = await fixture.createRuntime({ browser: browser.webContents, session: session.fromPartition(partition), dataDir });
   } else {
     runtime = ensureRuntimeSwitcher().createRuntime(chatgptChannel, activateRuntime);
@@ -1443,6 +1442,10 @@ else {
   app.on('second-instance', () => { if (window?.isMinimized()) window.restore(); window?.focus(); });
   app.on('window-all-closed', () => app.quit());
   app.whenReady().then(async () => {
+    if (smoke) {
+      fixture = await import('../tests/electron-smoke.mjs');
+      await fixture.prepareStartup({ dataDir });
+    }
     try {
       const settings = JSON.parse(await fsp.readFile(settingsFile, 'utf8'));
       // Settings of earlier versions name the folder of the retired runtime; it is only cleaned up now.

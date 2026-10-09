@@ -95,6 +95,12 @@ document.querySelector('form').addEventListener('submit',event=>{
 });
 </script></body></html>`;
 
+// Seed only the fresh smoke profile, before main restores settings or creates a page.
+export async function prepareStartup({ dataDir }) {
+  assert.ok(path.basename(dataDir).startsWith('web-pilot-electron-smoke-'));
+  await fs.writeFile(path.join(dataDir, 'settings.json'), JSON.stringify({ autoPlanEnabled: true }), { flag: 'wx' });
+}
+
 export async function createRuntime({ browser, session }) {
   // Explicit isolated test mode only. No request is sent to a real service.
   await session.protocol.handle('https', async request => {
@@ -223,6 +229,17 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   assert.equal(permissionAllowed('media', 'https://example.com', { mediaTypes: ['audio'] }), false);
   const workspace = path.join(await fs.realpath(dataDir + '-projects'), 'Тестовый проект с пробелами');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);
+  assert.equal(autoPlan.view().enabled, true, 'saved AutoPlan ON survives the complete main startup');
+  assert.equal(snapshot().autoPlan.enabled, true);
+  assert.deepEqual(snapshot().conversationRecovery, { phase: 'idle', message: '', canRetry: false });
+  assert.equal(await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').getAttribute('aria-pressed')"), 'true');
+  assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).autoPlanEnabled, true);
+  // Continue the existing suite from its original OFF baseline through the real IPC.
+  const off = await sidebar.executeJavaScript('window.webPilot.setAutoPlan(false)');
+  assert.equal(off.ok, true);
+  assert.equal(snapshot().autoPlan.enabled, false);
+  console.log(JSON.stringify({ mainStartup: true, savedAutoPlan: 'on', sidebarReady: true, isolated: true }));
+
 
   await chromiumDiagnostics.flush();
   let firstLoadEvents = (await fs.readFile(chromiumDiagnosticsFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line));

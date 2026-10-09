@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1580,
+  "plan_revision": 1582,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -141,14 +141,9 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": "T016",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
-      {
-        "path": "docs/planning/parallel-execution-plan-draft.md",
-        "required": true,
-        "revision": "dcdb9132bec59b2e1e26e4cc17e332dbc7412f19"
-      },
       {
         "path": "docs/architecture/OVERVIEW.md",
         "required": true,
@@ -1262,13 +1257,19 @@
         "Следующая свободная версия 0.6.105 согласована в package.json/lock и evidence конфигурации; до DOCS сборка не запускается."
       ],
       "expected_commit_message": "fix: исправить запуск с сохранённым AutoPlan ON",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T016",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/main.mjs",
+        "tests/electron-smoke.mjs",
+        "package.json",
+        "package-lock.json"
+      ]
     },
     {
       "id": "DOCS-2",
@@ -1412,8 +1413,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: T016
-Revision: 1580
+Current Task: нет
+Revision: 1582
 
 ## Цель
 
@@ -1493,8 +1494,8 @@ Revision: 1580
   - Git Commit: [DONE] release: опубликовать выпуск на GitHub
   - Reference: parallel-chat-execution-20261009 / T015 / implementation
   - Файлы: docs/planning/parallel-execution-spec.md, docs/modules/release.md
-- [IN_PROGRESS] T016: Исправить запуск с сохранённым AutoPlan ON и подготовить версию 0.6.105 — В работе
-  - Git Commit: [PENDING] fix: исправить запуск с сохранённым AutoPlan ON
+- [DONE] T016: Исправить запуск с сохранённым AutoPlan ON и подготовить версию 0.6.105 — Завершено
+  - Git Commit: [DONE] fix: исправить запуск с сохранённым AutoPlan ON
   - Reference: parallel-chat-execution-20261009 / T016 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, .harness/workflow.json, docs/modules/auto-plan.md, docs/modules/session-runtime.md, docs/architecture/OVERVIEW.md, README.md, docs/modules/release.md
 - [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
@@ -1516,7 +1517,6 @@ Revision: 1580
 
 ## Context Pack For This Cycle
 
-- docs/planning/parallel-execution-plan-draft.md
 - docs/architecture/OVERVIEW.md
 - docs/planning/parallel-execution-spec.md
 - docs/modules/session-runtime.md
