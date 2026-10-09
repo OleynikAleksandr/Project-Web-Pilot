@@ -122,6 +122,19 @@ export function validatePlan(p) {
     check(typeof p.baseline_commit === 'string' && /^[0-9a-f]{40,64}$/.test(p.baseline_commit), 'PLAN_SCHEMA', 'Активному scope нужен реальный baseline.');
   }
   unique(p.tasks.map(t => t.id), 'task IDs');
+  if(p.assignment) {
+    const a=p.assignment;
+    check(typeof a.id==='string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(a.id)
+      && p.scope_id==='assignment-'+a.id && p.tasks.length===1 && a.parent_task_id===p.tasks[0].id
+      && typeof a.parent_scope_id==='string' && a.parent_scope_id.length>0
+      && typeof a.base_commit==='string' && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(a.base_commit)
+      && a.base_commit===p.baseline_commit && typeof a.branch==='string' && a.branch==='workflow/'+a.id
+      && typeof a.worktree==='string' && path.isAbsolute(a.worktree)
+      && typeof a.parent_root==='string' && path.isAbsolute(a.parent_root)
+      && p.execution_strategy==='sequential' && p.parallel_allowed===false && p.max_workers===1
+      && Array.isArray(a.external_dependencies) && a.external_dependencies.every(d=>typeof d.task_id==='string' && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(d.commit))
+      && p.tasks[0].dependencies.length===0,'PLAN_ASSIGNMENT','Некорректное локальное назначение.');
+  }
   const byId = new Map(p.tasks.map(t => [t.id, t]));
   for (const t of p.tasks) {
     check(t.verification_kind === undefined || ['code','package','installed'].includes(t.verification_kind), 'PLAN_SCHEMA', 'verification_kind задачи: code, package или installed.', {task_id:t.id,field:'verification_kind',received:t.verification_kind});
@@ -172,7 +185,7 @@ export function validatePlan(p) {
       && finalTask.dependencies.every(id => beforeDocs.some(t => t.id === id)),
       'DOCUMENTATION_FINAL_TASK', 'DOCS зависит от работы своего раунда и не ссылается вперёд.');
   }
-  for (const [index, task] of p.tasks.entries()) if (isDeliveryTask(task)) {
+  for (const [index, task] of p.tasks.entries()) if (isDeliveryTask(task) && !p.assignment) {
     const docs = p.tasks.slice(0,index).findLast(isDocumentationFinalizationTask);
     check(docs && task.dependencies.includes(docs.id), 'DOCUMENTATION_FINAL_TASK',
       'Каждая delivery-задача должна зависеть от DOCS своего раунда.', {task_id:task.id});

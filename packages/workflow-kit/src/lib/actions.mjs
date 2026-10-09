@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { assertAssignment, assertAssignmentCommand } from './task-assignment.mjs';
 import { assertReviewPublication, finishReviewPublication, cleanupReview } from './plan-review.mjs';
 import {beginTaskFiles,handoffTaskFiles} from './task-files.mjs';
 import path from 'node:path';
@@ -111,6 +112,7 @@ export function startTask(root, taskId, expectedRevision) {
   const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); assertSingleWriter(root, PLAN); const { plan, config } = validate(root); revision(plan, expectedRevision);
+    assertAssignment(root, plan, {ready:true});
     check(plan.execution_scope_status === 'ACTIVE', 'SCOPE_NOT_ACTIVE', 'Реализация разрешена только в ACTIVE scope.');
     const task = plan.tasks.find(t => t.id === taskId);
     check(task, 'UNKNOWN_TASK', 'Задача не найдена: ' + taskId);
@@ -129,6 +131,7 @@ export function startTask(root, taskId, expectedRevision) {
   });
 }
 export function applyPlan(root, input, expectedRevision) {
+  assertAssignmentCommand(root, 'plan:apply');
   const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); assertSingleWriter(root, PLAN); const { plan: original } = validate(root);
@@ -176,6 +179,7 @@ export function applyPlan(root, input, expectedRevision) {
   });
 }
 export function applyConfig(root, input) {
+  assertAssignmentCommand(root, 'config:apply');
   const PLAN = planPath(root);
   return locked(root, () => {
     noTransaction(root); const candidateConfig = validateConfig(input); const { plan } = validate(root, candidateConfig);

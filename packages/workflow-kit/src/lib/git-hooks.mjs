@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { assertAssignment, readAssignment } from './task-assignment.mjs';
 import path from 'node:path';
 import { check, hash, PLAN, withPlanFile, json, atomic, safePath } from './common.mjs';
 import { listPlans } from './session-plans.mjs';
@@ -19,6 +20,7 @@ export function validateStaged(root) {
   check(git(root, ['write-tree']).stdout.trim() === t.candidate_tree, 'CANDIDATE_CHANGED', 'Index изменён после подготовки кандидата.');
   validateDocumentSizes(root, selected, t);
   const plan = parsePlan(planText);
+  assertAssignment(root,plan,{role:t.role,files:selected,ready:t.role==='implementation'});
   if (t.role === 'implementation') {
     check(t.task?.id === t.task_id && plan.tasks.find(task => task.id === t.task_id)?.commit_status === 'DONE', 'CANDIDATE_TASK', 'Кандидат не завершает нужную задачу.');
     const config = readConfig(root);
@@ -68,6 +70,7 @@ export function postCommit(root) {
   return { ok: true, sha };
 }
 export function prePush(root) {
+  check(!readAssignment(root),'ASSIGNMENT_READ_ONLY','Ветка исполнителя передаётся основной сессии для интеграции; push запрещён.');
   check(!journal(root), 'TRANSACTION_PENDING', 'Перед push завершите commit/repair.');
   for (const { file, plan } of listPlans(root)) {
     withPlanFile(root, file, {}, () => resolveReferences(root, plan));

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1545,
+  "plan_revision": 1548,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -277,8 +277,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T003",
@@ -298,7 +298,9 @@
         "packages/workflow-kit/src/lib/task-assignment.mjs",
         "packages/workflow-kit/src/lib/command-help.mjs",
         "packages/workflow-kit/scripts/check-task-assignment-fixture.mjs",
-        "packages/workflow-kit/package.json"
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/schemas/plan.schema.json"
       ],
       "documentation_paths": [
         "docs/planning/parallel-execution-spec.md"
@@ -330,7 +332,23 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "docs/planning/parallel-execution-spec.md",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-task-assignment-fixture.mjs",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/git-hooks.mjs",
+        "packages/workflow-kit/src/lib/git.mjs",
+        "packages/workflow-kit/src/lib/plan.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/task-assignment.mjs",
+        "packages/workflow-kit/src/lib/transaction.mjs",
+        "packages/workflow-kit/src/lib/validate.mjs",
+        "packages/workflow-kit/src/schemas/plan.schema.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -976,7 +994,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1545
+Revision: 1548
 
 ## Цель
 
@@ -1000,10 +1018,10 @@ Revision: 1545
   - Git Commit: [DONE] feat: Settings и неизменяемый снимок сессии
   - Reference: parallel-chat-execution-20261009 / T002 / implementation
   - Файлы: src/ui/settings-panel.mjs, src/ui/index.html, src/main.mjs, src/preload.cjs, src/workspace-session.mjs, src/context-session.mjs, tests/workspace-session.test.mjs, tests/settings-parallel-execution.test.mjs, src/parallel-settings.mjs, tests/electron-smoke.mjs, docs/planning/parallel-execution-spec.md, docs/planning/parallel-execution-plan-draft.md
-- [TODO] T003: Worktree и локальное назначение Kit — Ожидает
-  - Git Commit: [PENDING] feat: Worktree и локальное назначение Kit
+- [DONE] T003: Worktree и локальное назначение Kit — Завершено
+  - Git Commit: [DONE] feat: Worktree и локальное назначение Kit
   - Reference: parallel-chat-execution-20261009 / T003 / implementation
-  - Файлы: packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-task-assignment-fixture.mjs, packages/workflow-kit/package.json, docs/planning/parallel-execution-spec.md
+  - Файлы: packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/plan.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/validate.mjs, packages/workflow-kit/src/lib/git-hooks.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-task-assignment-fixture.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/schemas/plan.schema.json, docs/planning/parallel-execution-spec.md
 - [TODO] T004: Управляемое слияние и доказательства интеграции — Ожидает
   - Git Commit: [PENDING] feat: Управляемое слияние и доказательства интеграции
   - Reference: parallel-chat-execution-20261009 / T004 / implementation

@@ -239,6 +239,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     if (transaction) continuation = 'Есть незавершённый журнал commit. Сначала status и повтор commit/repair; новую задачу не начинать.';
     else if (plan.execution_scope_status==='NONE') continuation = PROJECT_CONTINUATION_OBJECTIVE;
     else if (plan.execution_scope_status==='BLOCKED') continuation = 'Разрешены обсуждение и диагностика. Причина: '+plan.blocked_reason;
+    else if (plan.assignment && plan.delivery_status==='READY_FOR_ACCEPTANCE') continuation = 'Назначение готово к интеграции. Родительская задача не завершена. Сохраните ветку и worktree; новые задачи и вложенные исполнители запрещены.';
     else if (plan.delivery_status==='READY_FOR_ACCEPTANCE') continuation = 'Все задачи выполнены, план остаётся видимым. Новое поручение добавляется через plan:extend; закрытие требует отдельной прямой команды пользователя.';
     else continuation = (plan.current_task_id?'Продолжить ':'Начать через task:start ')+(task?.id??'задачу после уточнения зависимостей')+'.';
     const units = [];
@@ -260,6 +261,7 @@ export function recoverState(root, reason = 'manual', options = {}) {
     add('objective','ЦЕЛЬ\n'+(plan.objective||PROJECT_CONTINUATION_OBJECTIVE)+'\nКритерии:\n'+plan.acceptance_criteria.map(item=>'- '+item).join('\n'));
     if(hasExecutionPolicy(plan))add('execution-policy','ВЫПОЛНЕНИЕ\n'+JSON.stringify(Object.fromEntries(['parallel_allowed','max_workers','execution_strategy','execution_reason'].map(key=>[key,plan[key]])))+'\nРодительское DONE требует проверенной интеграции; коммит исполнителя не закрывает общий план.');
     add('user-decisions','РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ\n'+plan.user_decisions.map(item=>'- '+item.text).join('\n'));
+    if(plan.assignment)add('assignment','ЛОКАЛЬНОЕ НАЗНАЧЕНИЕ\n'+json(plan.assignment)+'Исполнитель не расширяет план и не создаёт вложенных назначений. Локальное DONE означает готовность к интеграции.');
     for(const item of plan.tasks) add('task:'+item.id,taskProjection(item,resolved));
     const deliveryIndex = plan.tasks.findLastIndex(item=>isDeliveryTask(item)&&item.commit_status==='DONE');
     if(deliveryIndex>=0&&plan.tasks.length>deliveryIndex+1) {

@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { assertAssignment } from './task-assignment.mjs';
 import path from 'node:path';
 import { check, CONFIG, PLAN, planPath, readJSON, textFile, hash, contextPath, relativePath } from './common.mjs';
 import { readPlan, parsePlan, renderPlan } from './plan.mjs';
@@ -174,6 +175,7 @@ export function validatePlanConfiguration(root, plan, config) {
 }
 export function validate(root, candidateConfig) {
   const plan = readPlan(root); const config = candidateConfig ?? readConfig(root); const pendingJournal = journal(root);
+  assertAssignment(root, plan);
   const pending = pendingJournal && (pendingJournal.plan_path ?? '.harness/plans/todo-plan.md') === planPath(root) ? pendingJournal : null;
   const resolved = resolveReferences(root, plan, pending);
   for (const task of plan.tasks) {

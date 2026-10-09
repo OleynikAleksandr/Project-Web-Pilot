@@ -22,7 +22,9 @@ export function repoRoot(cwd) {
   return fs.realpathSync(r.stdout.trim());
 }
 export function gitPath(root, name) { return output(root, ['rev-parse', '--path-format=absolute', '--git-path', name]); }
-export const localPath = (root, name) => gitPath(root, 'workflow-kit/' + name);
+// Custom --git-path names may resolve to the common directory in a linked tree.
+// Locks, journals and evidence belong to the individual Git administrative dir.
+export const localPath = (root, name) => path.join(output(root, ['rev-parse', '--absolute-git-dir']), 'workflow-kit', name);
 export function head(root) {
   const r = git(root, ['rev-parse', '--verify', 'HEAD'], { allowFailure: true });
   return r.status === 0 ? r.stdout.trim() : null;

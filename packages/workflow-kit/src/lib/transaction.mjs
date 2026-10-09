@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { assertAssignment } from './task-assignment.mjs';
 import {selectTaskFiles} from './task-files.mjs';
 import path from 'node:path';
 import { PLAN, planPath, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
@@ -11,6 +12,7 @@ export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id 
 export const locked = (root, fn) => withLock(localPath(root, 'operation.lock'), fn);
 export function checkServicePaths(role, files, PLAN = ' .harness/plans/todo-plan.md'.trim()) {
   const patterns = {
+    'assignment-plan': p => p === PLAN,
     'scope-plan': p => p === PLAN || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     'plan-adjustment': p => p === PLAN || p === '.harness/workflow.json' || p.startsWith('docs/') && /\.(md|markdown)$/.test(p),
     repair: p => p === PLAN, planPath,
@@ -54,6 +56,7 @@ export function finishTransaction(root, t, sha) {
     ...((t.excluded_changes?.length ?? 0) ? {next_action: 'Перечисленные изменения остались вне коммита: они существовали до task:start или не вошли в явный выбор --files. Сверьте их с задачей перед финальной DOCS. Не присваивайте чужие изменения; собственные оставшиеся правки включите в следующую задачу явно через commit --files.'} : {}) };
 }
 export function commitCandidate(root, { plan, role, task = null, selected, message, beforeHead, checks = [] }) {
+  assertAssignment(root, plan, {role,files:selected,ready:role==='implementation'});
   const PLAN = planPath(root);
   ensureIdleGit(root); check(identityReady(root), 'GIT_IDENTITY', 'Git не знает автора. Настройте user.name и user.email; файлы сохранены.');
   let t = journal(root);
