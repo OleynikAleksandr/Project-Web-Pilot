@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1582,
+  "plan_revision": 1584,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1274,8 +1274,8 @@
     {
       "id": "DOCS-2",
       "title": "Актуализация всех документов проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "DOCS-2",
@@ -1298,7 +1298,14 @@
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md",
+        "docs/modules/session-runtime.md"
+      ]
     },
     {
       "id": "T017",
@@ -1414,7 +1421,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1582
+Revision: 1584
 
 ## Цель
 
@@ -1498,8 +1505,8 @@ Revision: 1582
   - Git Commit: [DONE] fix: исправить запуск с сохранённым AutoPlan ON
   - Reference: parallel-chat-execution-20261009 / T016 / implementation
   - Файлы: src/main.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, .harness/workflow.json, docs/modules/auto-plan.md, docs/modules/session-runtime.md, docs/architecture/OVERVIEW.md, README.md, docs/modules/release.md
-- [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS-2: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS-2 / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/session-runtime.md, README.md, docs/modules/release.md
 - [TODO] T017: Собрать исправленный парный выпуск 0.6.105 — Ожидает

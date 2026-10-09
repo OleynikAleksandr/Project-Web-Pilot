@@ -2,6 +2,8 @@
 
 `SessionRuntimes` в `src/session-runtime.mjs` на уровне приложения хранит отдельные WebContentsView, PageState, Composer, ContextSession, AgentTimer и ConversationRecovery. Ключ — workspace/sessionId/assignmentId/taskId. Страницы используют общий профиль входа ChatGPT, фоновые страницы работают с backgroundThrottling=false.
 
+До создания первой страницы snapshot панели не требует runtime: conversationRecovery = {phase: 'idle', message: '', canRetry: false}, agentRun = null. Это позволяет восстановить сохранённый AutoPlan ON и опубликовать состояние до создания окна. После выбора страницы проекция использует её recovery и timer.
+
 ## Представление и адресация
 
 Окно показывает выбранную страницу через show/hide; скрытие снимает view с contentView, сохраняя её работу и обработчики. Возврат к уже открытому URL не вызывает loadURL и не повторяет recovery. Навигация, epoch, отмена доставки и readiness принадлежат своей записи; запоздалый результат не меняет соседнюю сессию. Тема и скрытие вызовов применяются к живым страницам.
@@ -31,5 +33,7 @@ Checkpoint `conversationRecovery {key,used,cooldownUntil,stoppedAt}` сохра�
 Явная повторная сверка может возобновить ContextSession после CONTEXT_INPUTS_UNAVAILABLE/CONTEXT_CHANGED/PROJECT_READ_FAILED только до начатого Send, без pending-операции и manualStart. Сохранённая попытка не сбрасывается. Отправленные, sending и UNKNOWN не переигрываются. Полный контракт — [доставка контекста](context-delivery.md).
 
 ## Проверки и пределы
+
+Electron smoke начинает настоящий main с сохранённым AutoPlan ON в свежем временном профиле, до создания окна и страницы; проверяет открывшуюся панель и сохранённый режим. Пользовательские данные не используются.
 
 Unit-тесты покрывают адресацию, независимость страниц, переключение/перенос представления без пересоздания, отказ release при работе, позднюю навигацию, сохранение recovery и фоновой очереди. Electron TEST FIXTURE проверяет разные настоящие WebContents и события скрытой страницы. Живые Chat/Work и native Windows остаются пользовательской приёмкой.

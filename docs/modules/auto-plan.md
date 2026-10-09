@@ -27,6 +27,7 @@
 - OFF→ON во время ответа: ничего не слать, ждать паузу. OFF→ON на уже существующей паузе: сразу одно «Продолжай». ON→OFF: будущих отправок нет; уже выполненный Send не повторяется и не отменяется (`sent` записывается и после OFF). Повторное ON на использованной паузе второго Send не даёт.
 - Постоянный выбор (решение пользователя): переживает reload, смену разговора, выход и новый запуск. Ожидание, вопрос агента, draft, watchdog, ручной Stop, завершение плана режим не выключают — только пользователь. Новый ACTIVE-план подхватывается сам. Цель — не писать «Продолжай» вручную.
 - `<userData>/settings.json` (общий последовательный атомарный writer): `autoPlanEnabled` (bool) и `autoPlanCheckpoint = {version: 3, entries: [{key, turnId, status: 'sending'|'sent', generation}], cycles: [{key, generation, busy, legacy}]}`. Текста разговора нет. v2 (`entries` без `cycles`) и v1 (одна запись) читаются без удаления записей; некорректные отбрасываются. Ledger ограничен (`pruneLedger`): по 20 последних записей на разговор и не больше 400 всего, потому что текущая пауза разговора всегда последняя, а файл переписывается при каждой паузе.
+- При старте сохранённый ON восстанавливается до создания окна и живой страницы. Обновление панели в этот момент допустимо: восстановление разговора имеет пустое состояние idle, таймер — null. После создания страницы используются объекты её runtime; выбор AutoPlan сохраняется.
 - Счётчик «№N» — в памяти, по ключу контекста; растёт только от выполненной автоотправки, обнуляется при новом scope/разговоре и после перезапуска; для чужого контекста показывается 0.
 
 ### События и reconcile
@@ -145,7 +146,7 @@ Review и AutoPlan независимы. После PUBLISHED включённы
 
 Автоматические (id из `.harness/workflow.json`):
 - `unit-all`: `tests/auto-plan.test.mjs` (машина состояний, checkpoint и свежие Node-процессы, `readAutoPlanState` на настоящем Git, `continueMessage`), `tests/page-state.test.mjs` (идентичность ответа), `tests/chatgpt-composer.test.mjs` (план до click, очистка своей вставки, unknown после dispatch).
-- `electron-smoke`: `tests/electron-smoke.mjs` + `tests/auto-plan-restart-fixture.cjs` — сохранённый ON → Chat с NONE → ACTIVE во время ответа → одно «Продолжай» с задачей; ON/OFF, Stop, draft, ручной Send, reload, связь, watchdog, все DONE, свежий Electron-процесс.
+- `electron-smoke`: `tests/electron-smoke.mjs` заранее записывает ON в новый временный профиль и запускает настоящий main, проверяя открытие панели и сохранение режима до остальных сценариев. `tests/electron-smoke.mjs` + `tests/auto-plan-restart-fixture.cjs` — сохранённый ON → Chat с NONE → ACTIVE во время ответа → одно «Продолжай» с задачей; ON/OFF, Stop, draft, ручной Send, reload, связь, watchdog, все DONE, свежий Electron-процесс.
 - `release-installed`: `scripts/check-installed-release.mjs` — в установленном `app.asar` `CONTINUE_TEXT`, нет `AUTO_PLAN_INSTRUCTION`, методы машины состояний.
 
 Ручные (пользователь; fixture не заменяет): живой ChatGPT, временный проект — ON в busy и в паузе, OFF, длинный разговор, Work без native ID, перезапуск с ON; ровно одно «Продолжай» с текстом задачи на паузу; draft и ручное сообщение не перетираются; то же на native Windows.
