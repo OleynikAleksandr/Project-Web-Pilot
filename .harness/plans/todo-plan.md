@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1664,
+  "plan_revision": 1666,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -66,7 +66,7 @@
       {
         "path": "docs/planning/project-state-deletion.md",
         "required": true,
-        "revision": "WORKTREE"
+        "revision": "7ab5bb7c1179cf140bf2da13db0bd1593a68fea1"
       }
     ],
     "include_last_completed_task": false,
@@ -313,8 +313,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-state-deletion-20261009",
         "task_id": "DOCS",
@@ -348,7 +348,20 @@
       "acceptance_criteria": [
         "Документы соответствуют результату"
       ],
-      "expected_commit_message": "docs: актуализировать контекст проекта"
+      "expected_commit_message": "docs: актуализировать контекст проекта",
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/chromium-diagnostics.md",
+        "docs/modules/parallel-execution-acceptance.md",
+        "docs/modules/parallel-execution.md",
+        "docs/modules/project-archive.md",
+        "docs/modules/release.md",
+        "docs/modules/session-runtime.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/planning/project-state-deletion.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -456,7 +469,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1664
+Revision: 1666
 
 ## Цель
 
@@ -488,8 +501,8 @@ Revision: 1664
   - Git Commit: [DONE] feat: Очистить полные группы диагностики без гонки записи
   - Reference: project-state-deletion-20261009 / T008 / implementation
   - Файлы: src/common.mjs, src/chromium-diagnostics.mjs, src/project-state-cleanup.mjs, src/workspace-deletion.mjs, src/main.mjs, tests/project-state-cleanup.test.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/project-state-deletion.md
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контекст проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: project-state-deletion-20261009 / DOCS / implementation
   - Файлы: docs/planning/project-state-deletion.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/project-archive.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sessions.md, docs/modules/session-runtime.md, docs/modules/release.md, docs/modules/parallel-execution-acceptance.md, docs/modules/chromium-diagnostics.md
 - [TODO] T004: Собрать парный выпуск 0.6.109 — Ожидает

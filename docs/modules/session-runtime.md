@@ -32,6 +32,8 @@ Checkpoint conversationRecovery={key,used,cooldownUntil,stoppedAt} сохран�
 
 Явная сверка может возобновить ContextSession после CONTEXT_INPUTS_UNAVAILABLE/CONTEXT_CHANGED/PROJECT_READ_FAILED только до Send, без pending-операции и manualStart, сохраняя attempt. Отправленные/sending/UNKNOWN не переигрываются — [context-delivery](context-delivery.md).
 
+Перед окончательным удалением проекта приложение проверяет остановку его чатов и команд, приостанавливает собственную очередь и освобождает только связанные runtime. Активная работа блокирует удаление; скрытие и архивирование по-прежнему не уничтожают страницы. После удаления watchers и проекции этого проекта очищены.
+
 ## Проверки и пределы
 
 Electron smoke запускает настоящий main со старым глобальным AutoPlan ON в свежем временном профиле до окна/страницы; проверяет открытие панели и миграцию в OFF. Пользовательские данные не используются.

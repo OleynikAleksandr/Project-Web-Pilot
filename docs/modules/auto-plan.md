@@ -8,9 +8,11 @@ AutoPlan и Review независимы между собой и между пр
 
 По умолчанию OFF. Явное ON до первого плана сразу отображается и сохраняет ожидание его публикации; без подтверждённого плана работа не начинается. OFF отменяет ожидание. Restart сохраняет выбор только своего проекта.
 
-Хранение: settings.json, projectAutoPlan[workspace] = {scopeId,enabled,sessionId,sessions,awaitingPlan}. Ожидание первого плана имеет scopeId="" и awaitingPlan=true; первый scope снимает awaitingPlan. Старое глобальное autoPlanEnabled=true игнорируется. Подтверждённое завершение сохраняет OFF; следующий scope OFF. Staged DONE и незавершённая транзакция не подтверждают завершение. Ошибка чтения запрещает Send/назначение и выключает уже привязанное разрешение.
+Хранение: settings.json, projectAutoPlan[workspace] = {projectId,scopeId,enabled,sessionId,sessions,awaitingPlan}. Ожидание первого плана имеет scopeId="" и awaitingPlan=true; первый scope снимает awaitingPlan. Старое глобальное autoPlanEnabled=true игнорируется. Подтверждённое завершение сохраняет OFF; следующий scope OFF. Staged DONE и незавершённая транзакция не подтверждают завершение. Ошибка чтения запрещает Send/назначение и выключает уже привязанное разрешение.
 
 sessions[sessionId] содержит отдельные autoPlanCheckpoint/automationCheckpoint без текста беседы. Защита Review/AutoPlan от повторной отправки сохраняется при смене scope; UNKNOWN не повторяется.
+
+Разрешение проверяется по projectId из зарегистрированного проекта. Другой projectId в той же папке начинает с OFF и пустыми журналами. Старая запись без projectId допускается только для прежнего зарегистрированного Session ID. Окончательное удаление очищает разрешение и checkpoints; архивирование сохраняет их. При старте убираются записи отсутствующих проектов и устаревшие адреса отправки; UNKNOWN существующего проекта сохраняется.
 
 ## Контроллеры
 
