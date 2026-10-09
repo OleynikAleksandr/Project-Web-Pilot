@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1603,
+  "plan_revision": 1605,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -151,7 +151,7 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": null,
+  "current_task_id": "T024",
   "context_pack": {
     "documents": [
       {
@@ -1664,7 +1664,7 @@
         "Версия 0.6.106 и evidence согласованы; исходники проверены, сборка ещё не выполнялась"
       ],
       "expected_commit_message": "feat: Подготовить исправленный выпуск 0.6.106",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
@@ -1823,8 +1823,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: нет
-Revision: 1603
+Current Task: T024
+Revision: 1605
 
 ## Цель
 
@@ -1940,7 +1940,7 @@ Revision: 1603
   - Git Commit: [DONE] feat: Обновить локальный Kit и согласовать инструкции и контракты
   - Reference: parallel-chat-execution-20261009 / T022 / implementation
   - Файлы: package-lock.json, tests/workflow-kit-upgrade.test.mjs, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sidebar-ui.md, docs/architecture/OVERVIEW.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/planning/parallel-autoplan-fix.md
-- [TODO] T024: Подготовить исправленный выпуск 0.6.106 — Ожидает
+- [IN_PROGRESS] T024: Подготовить исправленный выпуск 0.6.106 — В работе
   - Git Commit: [PENDING] feat: Подготовить исправленный выпуск 0.6.106
   - Reference: parallel-chat-execution-20261009 / T024 / implementation
   - Файлы: package.json, package-lock.json, .harness/workflow.json, docs/modules/session-runtime.md
