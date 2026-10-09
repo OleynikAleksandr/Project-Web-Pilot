@@ -144,3 +144,40 @@ test('install --update refuses commit preconditions before writing runtime or ma
   assert.equal(JSON.parse(fs.readFileSync(manifest,'utf8')).version,VERSION);
   assert.match(run('git',['log','-1','--format=%B']),/Workflow-Role: kit-update/);
 });
+
+test('released 1.7.0 parallel main task survives real update, handoff and checked integration', async t => {
+  const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'kit-170-handoff-upgrade-')));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const source=fileURLToPath(new URL('..',import.meta.url)),old=path.join(root,'old'),project=path.join(root,'main');
+  fs.mkdirSync(old);fs.mkdirSync(project);
+  const env={...process.env,GIT_AUTHOR_NAME:'Fixture',GIT_AUTHOR_EMAIL:'fixture@example.invalid',GIT_COMMITTER_NAME:'Fixture',GIT_COMMITTER_EMAIL:'fixture@example.invalid'};
+  for(const key of ['GIT_DIR','GIT_INDEX_FILE','GIT_WORK_TREE','GIT_COMMON_DIR'])delete env[key];
+  execFileSync('tar',['-x','-C',old],{input:execFileSync('git',['archive','v0.6.105','.harness/kit'],{cwd:source,maxBuffer:8*1024*1024})});
+  const run=(exe,args)=>execFileSync(exe,args,{cwd:project,env,encoding:'utf8',maxBuffer:4*1024*1024});
+  const cli=(...args)=>JSON.parse(run(process.execPath,['scripts/workflow.mjs',...args]));
+  run('git',['init','-q','-b','main']);run('git',['config','user.name','Fixture']);run('git',['config','user.email','fixture@example.invalid']);fs.writeFileSync(path.join(project,'README.md'),'# Base\n');
+  run('git',['add','README.md']);run('git',['commit','-m','fixture baseline']);
+  run(process.execPath,[path.join(old,'.harness/kit/install.mjs'),'--project',project]);cli('install:commit');
+  assert.equal(cli('status').version,'1.7.0');
+  const actions=await import(pathToFileURL(path.join(old,'.harness/kit/lib/actions.mjs')).href);
+  actions.createScope(project,{scope_id:'upgrade-parallel',objective:'Recover task from released Kit',approval_note:'Automated fixture',
+    parallel_allowed:true,max_workers:2,execution_strategy:'parallel',execution_reason:'Independent work',acceptance_criteria:['Preserve bytes'],
+    approved_scope:{functional_paths:[],documentation_paths:['README.md']},context_pack:{documents:[],dependency_task_ids:[],include_last_completed_task:false},
+    tasks:[{id:'T001',title:'Foundation',why:'Fixture',dependencies:[],parallel_safe:false,functional_paths:[],documentation_paths:['README.md'],
+      verification_ids:[],acceptance_criteria:['Preserve bytes'],expected_commit_message:'docs: foundation'}]});
+  actions.startTask(project,'T001');fs.writeFileSync(path.join(project,'README.md'),'# Recovered released work\n');
+  assert.equal(install({project,update:true}).upgraded,true);assert.equal(cli('status').version,VERSION);
+  assert.match(run('git',['log','-1','--format=%B']),/Workflow-Role: kit-update/);
+  const {handoffParallelTask}=await import('@webpilot/workflow-kit/lib/task-handoff');
+  const input={id:'upgraded',task_id:'T001',base_commit:run('git',['rev-parse','HEAD']).trim(),worktree:path.join(root,'worker')};
+  handoffParallelTask(project,input,readPlan(project).plan_revision);
+  assert.equal(readPlan(project).current_task_id,null);assert.equal(run('git',['status','--porcelain']).trim(),'');
+  assert.equal(fs.readFileSync(path.join(input.worktree,'README.md'),'utf8'),'# Recovered released work\n');
+  const {startTask}=await import('@webpilot/workflow-kit/lib/actions');
+  const {commitTask}=await import('@webpilot/workflow-kit/lib/transaction');
+  const {startIntegration}=await import('@webpilot/workflow-kit/lib/task-integration');
+  startTask(input.worktree,'T001');const committed=commitTask(input.worktree,'T001');
+  startIntegration(project,{id:input.id,source_commit:committed.sha});
+  assert.equal(readPlan(project).tasks[0].commit_status,'DONE');
+  assert.equal(fs.readFileSync(path.join(project,'README.md'),'utf8'),'# Recovered released work\n');
+});
