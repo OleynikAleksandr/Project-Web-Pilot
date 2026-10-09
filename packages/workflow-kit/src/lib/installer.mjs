@@ -14,7 +14,7 @@ import { inspectionInputs } from './inspection-inputs.mjs';
 const hookNames = ['pre-commit', 'commit-msg', 'post-commit', 'pre-push'];
 const hookName = entry => path.posix.basename(entry.path.replaceAll('\\', '/'));
 // Versions this installer upgrades in place. Consumers (Web Pilot Workspace Setup) read the same list.
-export const upgradeFrom = new Set(['1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5', '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', '1.4.13', '1.5.0', '1.5.1', '1.5.2', '1.5.3', '1.5.4', '1.5.5', '1.5.6', '1.6.0', '1.6.1', '1.6.2', '1.6.3']);
+export const upgradeFrom = new Set(['1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5', '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', '1.4.13', '1.5.0', '1.5.1', '1.5.2', '1.5.3', '1.5.4', '1.5.5', '1.5.6', '1.6.0', '1.6.1', '1.6.2', '1.6.3', '1.6.4']);
 function migrateNonePlanForContinuity(root) {
   const file = path.join(root, PLAN);
   if (!fs.existsSync(file)) return false;
@@ -179,6 +179,16 @@ function upgradeInstallation(root, preview) {
   return locked(root, () => {
     const old = readJSON(path.join(root, MANIFEST));
     check(upgradeFrom.has(old.version), 'UNSUPPORTED_MIGRATION', 'Версия установки изменилась после preview.');
+    // Worktree contracts pin their inherited runtime. Never migrate a live
+    // assignment or merge journal as a side effect of upgrading its parent.
+    check(!fs.existsSync(localPath(root,'assignment.json'))&&!fs.existsSync(localPath(root,'integration.json')),
+      'PARALLEL_UPGRADE_PENDING','Сначала завершите назначение или интеграцию. Runtime не изменён.');
+    const assignments=localPath(root,'assignments');
+    for(const name of fs.existsSync(assignments)?fs.readdirSync(assignments):[]) {
+      if(!name.endsWith('.json'))continue;
+      check(readJSON(path.join(assignments,name)).phase==='INTEGRATED','PARALLEL_UPGRADE_PENDING',
+        'Есть незавершённое назначение. Обновление Kit не меняет его контракт; сначала завершите интеграцию.');
+    }
     // Validate the canonical current plan before any upgrade write. Legacy plans
     // are inventoried only as history and never compete to become current.
     const legacyBefore = preflightPlanMigration(root);

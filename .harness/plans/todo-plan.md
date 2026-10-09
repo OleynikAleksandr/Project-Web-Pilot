@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1559,
+  "plan_revision": 1560,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -85,7 +85,8 @@
       "src/session-plans.mjs",
       "tests/codex-app-server-mcp.test.mjs",
       "tools/codex-app-server-mcp/server.py",
-      "src/execution-projection.mjs"
+      "src/execution-projection.mjs",
+      "packages/workflow-kit/src/lib/installer.mjs"
     ],
     "documentation_paths": [
       "docs/planning/parallel-execution-spec.md",
@@ -121,11 +122,12 @@
       "docs/planning/live-session-runtime.md",
       "docs/planning/parallel-dispatch.md",
       "docs/planning/parallel-ui.md",
-      "docs/planning/parallel-recovery.md"
+      "docs/planning/parallel-recovery.md",
+      "docs/planning/parallel-kit-upgrade.md"
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": "T009",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -764,8 +766,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T009",
@@ -778,10 +780,13 @@
         "packages/workflow-kit/package.json",
         "packages/workflow-kit/src/lib/common.mjs",
         "packages/workflow-kit/src/install.mjs",
-        "tests/workflow-kit-upgrade.test.mjs"
+        "tests/workflow-kit-upgrade.test.mjs",
+        "package-lock.json",
+        "packages/workflow-kit/src/lib/installer.mjs"
       ],
       "documentation_paths": [
-        "docs/planning/parallel-execution-spec.md"
+        "docs/planning/parallel-execution-spec.md",
+        "docs/planning/parallel-kit-upgrade.md"
       ],
       "verification_ids": [
         "kit-check",
@@ -807,7 +812,15 @@
         ],
         "include_last_completed_task": false,
         "dependency_task_ids": []
-      }
+      },
+      "actual_files": [
+        "docs/planning/parallel-kit-upgrade.md",
+        "package-lock.json",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "tests/workflow-kit-upgrade.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -986,7 +999,8 @@
         "docs/planning/live-session-runtime.md",
         "docs/planning/parallel-dispatch.md",
         "docs/planning/parallel-ui.md",
-        "docs/planning/parallel-recovery.md"
+        "docs/planning/parallel-recovery.md",
+        "docs/planning/parallel-kit-upgrade.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git.",
@@ -1115,8 +1129,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: T009
-Revision: 1559
+Current Task: нет
+Revision: 1560
 
 ## Цель
 
@@ -1164,10 +1178,10 @@ Revision: 1559
   - Git Commit: [DONE] feat: Восстановление назначений и сессий
   - Reference: parallel-chat-execution-20261009 / T008 / implementation
   - Файлы: src/parallel-execution.mjs, src/conversation-recovery.mjs, src/automation-send-state.mjs, src/auto-plan-state.mjs, src/session-runtime.mjs, src/workspace-session.mjs, src/main.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/task-integration.mjs, packages/workflow-kit/src/lib/actions.mjs, tests/parallel-execution-recovery.test.mjs, tests/conversation-recovery.test.mjs, packages/workflow-kit/scripts/check-task-assignment-fixture.mjs, packages/workflow-kit/scripts/check-task-integration-fixture.mjs, src/execution-projection.mjs, src/parallel-kit.mjs, src/preload.cjs, src/ui/index.html, src/ui/sidebar.mjs, docs/planning/parallel-execution-spec.md, docs/planning/parallel-recovery.md
-- [IN_PROGRESS] T009: Обновить локальный runtime Kit управляемым установщиком — В работе
-  - Git Commit: [PENDING] feat: Обновить локальный runtime Kit управляемым установщиком
+- [DONE] T009: Обновить локальный runtime Kit управляемым установщиком — Завершено
+  - Git Commit: [DONE] feat: Обновить локальный runtime Kit управляемым установщиком
   - Reference: parallel-chat-execution-20261009 / T009 / implementation
-  - Файлы: packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/install.mjs, tests/workflow-kit-upgrade.test.mjs, docs/planning/parallel-execution-spec.md
+  - Файлы: packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/install.mjs, tests/workflow-kit-upgrade.test.mjs, package-lock.json, packages/workflow-kit/src/lib/installer.mjs, docs/planning/parallel-execution-spec.md, docs/planning/parallel-kit-upgrade.md
 - [TODO] T010: Сквозная регрессия готового сценария — Ожидает
   - Git Commit: [PENDING] test: Сквозная регрессия готового сценария
   - Reference: parallel-chat-execution-20261009 / T010 / implementation
@@ -1183,7 +1197,7 @@ Revision: 1559
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/modules/release.md, README.md, docs/modules/auto-plan.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/chromium-diagnostics.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-review.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/workspace-setup.md, docs/modules/workspace-sidebar-ui.md, docs/planning/parallel-execution-plan-draft.md, docs/planning/technical-audit-20261008.md, docs/planning/technical-audit-findings-lifecycle.md, docs/planning/technical-audit-findings-summary.md, docs/planning/technical-audit-findings-unused.md, docs/planning/technical-audit-findings.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/parallel-integration.md, docs/planning/live-session-runtime.md, docs/planning/parallel-dispatch.md, docs/planning/parallel-ui.md, docs/planning/parallel-recovery.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/modules/release.md, README.md, docs/modules/auto-plan.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/chromium-diagnostics.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-review.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/workspace-setup.md, docs/modules/workspace-sidebar-ui.md, docs/planning/parallel-execution-plan-draft.md, docs/planning/technical-audit-20261008.md, docs/planning/technical-audit-findings-lifecycle.md, docs/planning/technical-audit-findings-summary.md, docs/planning/technical-audit-findings-unused.md, docs/planning/technical-audit-findings.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/parallel-integration.md, docs/planning/live-session-runtime.md, docs/planning/parallel-dispatch.md, docs/planning/parallel-ui.md, docs/planning/parallel-recovery.md, docs/planning/parallel-kit-upgrade.md
 - [TODO] T013: Собрать парный выпуск macOS и Windows — Ожидает
   - Git Commit: [PENDING] build: собрать новый парный выпуск
   - Reference: parallel-chat-execution-20261009 / T013 / implementation
