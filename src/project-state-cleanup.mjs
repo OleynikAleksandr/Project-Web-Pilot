@@ -71,3 +71,8 @@ export async function purgeProjectStateFiles(dataDir,identities) {
     if(lines.length!==kept.length)await write(file,kept.length?kept.join('\n')+'\n':'');
   }
 }
+
+// Share the settings writer tail so purge cannot remove an active atomic write.
+export function queueProjectStatePurge(previous, dataDir, identities) {
+  return previous.catch(()=>{}).then(()=>purgeProjectStateFiles(dataDir,identities));
+}

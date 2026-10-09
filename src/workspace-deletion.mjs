@@ -13,8 +13,8 @@ const identity = stat => ({ dev: String(stat.dev), ino: String(stat.ino) });
 const same = (stat, expected) => stat?.isDirectory() && !stat.isSymbolicLink() && String(stat.dev) === expected.dev && String(stat.ino) === expected.ino;
 
 export class WorkspaceDeletion {
-  constructor({ store, journalDir, protectedPaths = [], home = os.homedir(), prepare=async()=>{}, cleanup=async()=>{} }) {
-    Object.assign(this, { store, journalDir, protectedPaths, home, prepare, cleanup });
+  constructor({ store, journalDir, protectedPaths = [], home = os.homedir(), prepare=async()=>{}, cleanup=async()=>{}, purgeState=purgeProjectStateFiles }) {
+    Object.assign(this, { store, journalDir, protectedPaths, home, prepare, cleanup, purgeState });
     this.tickets = new Map(); this.pending = new Set();
   }
   clear() { this.tickets.clear(); }
@@ -59,7 +59,7 @@ export class WorkspaceDeletion {
       const stat=await lstatOrNull(item.workspace);
       if(stat) {
         const expected=path.join(path.dirname(project.workspace),'.web-pilot-worktrees',createHash('sha256').update(project.workspace).digest('hex').slice(0,16),item.id??'');
-        if(!item.id||item.workspace!==expected||!stat.isDirectory()||stat.isSymbolicLink()||await fs.realpath(item.workspace)!==item.workspace)
+        if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(item.id??'')||item.workspace!==expected||!stat.isDirectory()||stat.isSymbolicLink()||await fs.realpath(item.workspace)!==item.workspace)
           fail('DELETE_WORKTREE_CHANGED','Путь исполнителя не подтверждён. Удаление остановлено.');
         const gitFile=await fs.readFile(path.join(item.workspace,'.git'),'utf8');
         const pointer=gitFile.trim().replace(/^gitdir: /,'');
@@ -157,7 +157,7 @@ export class WorkspaceDeletion {
     if (quarantined) await fs.rm(job.quarantine, { recursive: true });
     for(const item of job.related??[]) {
       const expected=path.join(path.dirname(job.workspace),'.web-pilot-worktrees',createHash('sha256').update(job.workspace).digest('hex').slice(0,16),item.id??'');
-      if(!item.id||item.workspace!==expected)fail('DELETE_WORKTREE_CHANGED','Путь в журнале удаления не подтверждён.');
+      if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(item.id??'')||item.workspace!==expected)fail('DELETE_WORKTREE_CHANGED','Путь в журнале удаления не подтверждён.');
       const stat=await lstatOrNull(item.workspace);
       if(stat) {
         if(!item.identity||!same(stat,item.identity)||await fs.realpath(item.workspace)!==item.workspace)
@@ -165,9 +165,11 @@ export class WorkspaceDeletion {
         await fs.rm(item.workspace,{recursive:true});
       }
     }
+    const group=path.join(path.dirname(job.workspace),'.web-pilot-worktrees',createHash('sha256').update(job.workspace).digest('hex').slice(0,16));
+    await fs.rmdir(group).catch(e=>{if(!['ENOENT','ENOTEMPTY','EEXIST'].includes(e.code))throw e;});
     const identities=[{workspace:job.workspace,projectId:job.projectId,sessionIds:job.sessionIds??[]},...(job.related??[])];
     await this.cleanup(job);
-    await purgeProjectStateFiles(path.dirname(this.store.file),identities);
+    await this.purgeState(path.dirname(this.store.file),identities);
     for(const item of identities)await this.purgeCopies(item.workspace);
     await this.store.removeTemporaries();
     await this.store.forgetDeletedProject(job.workspace, job.projectId);

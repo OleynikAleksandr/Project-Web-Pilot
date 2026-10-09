@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import {belongsToProject,removeProjectSettings,purgeProjectStateFiles} from '../src/project-state-cleanup.mjs';
+import {belongsToProject,removeProjectSettings,purgeProjectStateFiles,queueProjectStatePurge} from '../src/project-state-cleanup.mjs';
 
 test('project cleanup removes exact nested delivery owners, preserves neighbours and does not change input',()=>{
   const ids=[{workspace:'/projects/a',projectId:'id-a',sessionIds:['session-a']}];
@@ -50,4 +50,18 @@ test('stale permission never removes a current project UNKNOWN execution ledger'
  const saved={projectAutoPlan:{'/a':{projectId:'old'}},parallelExecutionBook:{live:{workspace:'/a',projectId:'new',assignments:{reserved:{phase:'unknown'}}}}};
  const result=pruneOrphanProjectSettings(saved,[{workspace:'/a',projectId:'new',sessions:[]}]);
  assert.deepEqual(result.projectAutoPlan,{});assert.equal(result.parallelExecutionBook.live.assignments.reserved.phase,'unknown');
+});
+
+
+test('purge waits for the active settings writer and preserves its neighbour update',async t=>{
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'queued-cleanup-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+  let release;const gate=new Promise(resolve=>{release=resolve;});
+  const file=path.join(dir,'settings.json'),temporary=file+'.tmp';
+  await fs.writeFile(temporary,JSON.stringify({projectAutoPlan:{'/gone':{enabled:true},'/kept':{enabled:true}},theme:'new'}));
+  const writer=gate.then(()=>fs.rename(temporary,file));
+  const purge=queueProjectStatePurge(writer,dir,[{workspace:'/gone'}]);
+  assert.equal((await fs.stat(temporary)).isFile(),true);
+  release();await purge;
+  const result=JSON.parse(await fs.readFile(file));
+  assert.deepEqual(result.projectAutoPlan,{'/kept':{enabled:true}});assert.equal(result.theme,'new');
 });

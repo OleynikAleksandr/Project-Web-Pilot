@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1657,
+  "plan_revision": 1659,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -248,13 +248,20 @@
         "Подтверждённые worktree очищены вместе с пустой группой, произвольные пути журнала запрещены"
       ],
       "expected_commit_message": "feat: Сериализовать очистку с фоновой записью настроек",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-state-deletion-20261009",
         "task_id": "T007",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/main.mjs",
+        "src/project-state-cleanup.mjs",
+        "src/workspace-deletion.mjs",
+        "tests/project-state-cleanup.test.mjs",
+        "tests/workspace-deletion.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -398,7 +405,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1657
+Revision: 1659
 
 ## Цель
 
@@ -422,8 +429,8 @@ Revision: 1657
   - Git Commit: [DONE] feat: Сквозная регрессия удаления и подготовка 0.6.109
   - Reference: project-state-deletion-20261009 / T003 / implementation
   - Файлы: tests/electron-smoke.mjs, tests/parallel-execution-smoke-fixture.cjs, package.json, package-lock.json, src/main.mjs, src/project-state-cleanup.mjs, tests/project-state-cleanup.test.mjs, docs/planning/project-state-deletion.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/project-archive.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sessions.md, docs/modules/session-runtime.md, docs/modules/release.md, docs/modules/parallel-execution-acceptance.md
-- [TODO] T007: Сериализовать очистку с фоновой записью настроек — Ожидает
-  - Git Commit: [PENDING] feat: Сериализовать очистку с фоновой записью настроек
+- [DONE] T007: Сериализовать очистку с фоновой записью настроек — Завершено
+  - Git Commit: [DONE] feat: Сериализовать очистку с фоновой записью настроек
   - Reference: project-state-deletion-20261009 / T007 / implementation
   - Файлы: src/main.mjs, src/workspace-deletion.mjs, src/project-state-cleanup.mjs, tests/project-state-cleanup.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/project-state-deletion.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

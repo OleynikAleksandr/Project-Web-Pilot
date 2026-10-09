@@ -36,7 +36,7 @@ import { configureExecutor,executorPageState } from './executor-session.mjs';
 import { projectExecutors } from './execution-projection.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
-import { removeProjectSettings, pruneOrphanProjectSettings, belongsToProject } from './project-state-cleanup.mjs';
+import { removeProjectSettings, pruneOrphanProjectSettings, belongsToProject, queueProjectStatePurge } from './project-state-cleanup.mjs';
 import { appendDiagnostic } from './common.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
@@ -340,6 +340,7 @@ async function prepareProjectRemoval(job) {
   for(const workspace of workspaces)await execution.suspend(workspace);
   for(const record of records)if(!liveSessions.release(record))
     throw Object.assign(new Error('Чат ещё занят. Повторите удаление после остановки.'),{code:'DELETE_PROJECT_BUSY'});
+  await store.mutationTail;
   await settingsSaveTail;
 }
 async function cleanupDeletedProject(job) {
@@ -1524,7 +1525,9 @@ else {
         : path.join(sourceDir, '../.harness/runtime/windows-payload', WINDOWS_RUNTIME_ARCHIVE);
       windowsBootstrap = new WindowsExecutorBootstrap({ payloadFile, stateDir: runtimeFolder });
     }
-    deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder], prepare:prepareProjectRemoval, cleanup:cleanupDeletedProject });
+    deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder], prepare:prepareProjectRemoval, cleanup:cleanupDeletedProject, purgeState:(dir,identities)=>{
+      settingsSaveTail=queueProjectStatePurge(settingsSaveTail,dir,identities);return settingsSaveTail;
+    } });
     if (!storageError) {
       const errors = await deletion.recover();
       if (errors.length) { startupError = errors[0]; settingsState = { workspace: errors[0].workspace }; }

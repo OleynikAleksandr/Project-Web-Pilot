@@ -129,5 +129,15 @@ test('deletion removes only verified worktrees and all child sessions',async t=>
   await fs.writeFile(path.join(a,'.git/workflow-kit/assignments',id+'.json'),JSON.stringify(binding));
   const data=store.data.projects[0];store.data.projects.push({...structuredClone(data),workspace:child,parentWorkspace:a,projectId:'child',sessions:[{...data.sessions[0],sessionId:'worker',assignmentId:id}]});await store.save();
   await store.setArchived(a,true);const p=await service.preview(a);await service.apply(p.token,p.name);
-  await assert.rejects(fs.stat(child),{code:'ENOENT'});assert.equal(store.project(child),null);assert.equal(store.project(a),null);
+  await assert.rejects(fs.stat(child),{code:'ENOENT'});await assert.rejects(fs.stat(path.dirname(child)),{code:'ENOENT'});assert.equal(store.project(child),null);assert.equal(store.project(a),null);
+});
+
+
+test('a traversal assignment cannot authorize removal outside its worktree group',async t=>{
+  const {root,store,service,project}=await fixture(t),a=await project('A');
+  const victim=path.join(root,'keep');await fs.mkdir(victim);await fs.writeFile(path.join(victim,'keep'),'safe');
+  const assignments=path.join(a,'.git/workflow-kit/assignments');await fs.mkdir(assignments,{recursive:true});
+  await fs.writeFile(path.join(assignments,'invalid.json'),JSON.stringify({id:'../keep',parent_root:a,worktree:victim}));
+  await store.setArchived(a,true);await assert.rejects(service.preview(a),{code:'DELETE_WORKTREE_CHANGED'});
+  assert.equal(await fs.readFile(path.join(victim,'keep'),'utf8'),'safe');assert.ok(await fs.stat(a));
 });
