@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1576,
+  "plan_revision": 1577,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Реализовать опциональное параллельное выполнение плана через чат-сессии Web Pilot и отдельные worktree с проверенной последовательной интеграцией в main.",
   "acceptance_criteria": [
     "Снимок разрешения и лимита фиксируется при новой основной сессии; существующее выполнение не меняется от Settings.",
@@ -158,6 +158,11 @@
         "path": "docs/planning/parallel-execution-spec.md",
         "required": true,
         "revision": "dcdb9132bec59b2e1e26e4cc17e332dbc7412f19"
+      },
+      {
+        "path": "docs/modules/auto-plan.md",
+        "required": true,
+        "revision": "WORKTREE"
       }
     ],
     "include_last_completed_task": false,
@@ -1221,6 +1226,165 @@
         "role": "implementation"
       },
       "actual_files": []
+    },
+    {
+      "id": "T016",
+      "title": "Исправить запуск с сохранённым AutoPlan ON и подготовить версию 0.6.105",
+      "why": "Устранить падение при раннем обновлении панели до создания runtime чат-сессии.",
+      "dependencies": [
+        "T015"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "tests/electron-smoke.mjs",
+        "package.json",
+        "package-lock.json",
+        ".harness/workflow.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/session-runtime.md",
+        "docs/architecture/OVERVIEW.md",
+        "README.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke",
+        "codex-tools-live"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Обновление панели до создания живой страницы возвращает корректное пустое состояние восстановления и таймера, без ошибки чтения view.",
+        "Electron TEST FIXTURE запускает настоящий main.mjs с заранее сохранённым AutoPlan ON, до создания окна; панель и чат открываются, режим остаётся ON.",
+        "Проверка воспроизводит прежний сбой на коде без исправления; пользовательские настройки и профиль не используются и не меняются.",
+        "Существующие проверки ON/OFF, checkpoint, повторных отправок, Review и параллельных сессий проходят.",
+        "Следующая свободная версия 0.6.105 согласована в package.json/lock и evidence конфигурации; до DOCS сборка не запускается."
+      ],
+      "expected_commit_message": "fix: исправить запуск с сохранённым AutoPlan ON",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T016",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "DOCS-2",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "DOCS-2",
+        "role": "implementation",
+        "iteration": 2
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T016"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/session-runtime.md",
+        "README.md",
+        "docs/modules/release.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта"
+    },
+    {
+      "id": "T017",
+      "title": "Собрать исправленный парный выпуск 0.6.105",
+      "why": "Собрать исправленный парный выпуск 0.6.105",
+      "dependencies": [
+        "T016",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "DOCS нового раунда завершена; paired-release выполняет сборку один раз при коммите, готовит шесть assets и manifest с sourceCommit после DOCS; корневой app сохраняет identity и действующую подпись."
+      ],
+      "expected_commit_message": "build: собрать исправленный выпуск 0.6.105",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T017",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T018",
+      "title": "Установить и проверить выпуск 0.6.105",
+      "why": "Установить и проверить выпуск 0.6.105",
+      "dependencies": [
+        "T017",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Готовый staging установлен в /Applications через installMacBundle без пересборки; обе постоянные копии, identity, подпись и поставка проверены; профиль и настройки сохранены."
+      ],
+      "expected_commit_message": "build: установить исправленный выпуск 0.6.105",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T018",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T019",
+      "title": "Опубликовать выпуск 0.6.105 и исходники на GitHub",
+      "why": "Опубликовать выпуск 0.6.105 и исходники на GitHub",
+      "dependencies": [
+        "T018",
+        "DOCS-2"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "По прямому поручению пользователя опубликованы main и тег v0.6.105 на manifest.sourceCommit; GitHub Release содержит шесть готовых assets; после финального push коммита задачи remote main, тег и assets проверены; живая приёмка и закрытие плана остаются за пользователем."
+      ],
+      "expected_commit_message": "release: опубликовать исправленный выпуск 0.6.105",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T019",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1246,10 +1410,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1576
+Revision: 1577
 
 ## Цель
 
@@ -1329,11 +1493,32 @@ Revision: 1576
   - Git Commit: [DONE] release: опубликовать выпуск на GitHub
   - Reference: parallel-chat-execution-20261009 / T015 / implementation
   - Файлы: docs/planning/parallel-execution-spec.md, docs/modules/release.md
+- [TODO] T016: Исправить запуск с сохранённым AutoPlan ON и подготовить версию 0.6.105 — Ожидает
+  - Git Commit: [PENDING] fix: исправить запуск с сохранённым AutoPlan ON
+  - Reference: parallel-chat-execution-20261009 / T016 / implementation
+  - Файлы: src/main.mjs, tests/electron-smoke.mjs, package.json, package-lock.json, .harness/workflow.json, docs/modules/auto-plan.md, docs/modules/session-runtime.md, docs/architecture/OVERVIEW.md, README.md, docs/modules/release.md
+- [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: parallel-chat-execution-20261009 / DOCS-2 / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/session-runtime.md, README.md, docs/modules/release.md
+- [TODO] T017: Собрать исправленный парный выпуск 0.6.105 — Ожидает
+  - Git Commit: [PENDING] build: собрать исправленный выпуск 0.6.105
+  - Reference: parallel-chat-execution-20261009 / T017 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T018: Установить и проверить выпуск 0.6.105 — Ожидает
+  - Git Commit: [PENDING] build: установить исправленный выпуск 0.6.105
+  - Reference: parallel-chat-execution-20261009 / T018 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T019: Опубликовать выпуск 0.6.105 и исходники на GitHub — Ожидает
+  - Git Commit: [PENDING] release: опубликовать исправленный выпуск 0.6.105
+  - Reference: parallel-chat-execution-20261009 / T019 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 
 ## Context Pack For This Cycle
 
 - docs/planning/parallel-execution-plan-draft.md
 - docs/architecture/OVERVIEW.md
 - docs/planning/parallel-execution-spec.md
+- docs/modules/auto-plan.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
