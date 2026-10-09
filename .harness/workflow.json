@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.7.0 / Codex 0.161.0",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.7.0 / Codex 0.162.0",
   "checks": [
     {
       "required": false,
@@ -48,7 +48,7 @@
         "run",
         "check:codex-tools"
       ],
-      "evidence": "Определения сверены с openai/codex rust-v0.161.0; три определения инструментов побайтно сохранены"
+      "evidence": "Определения сверены с установленным Codex и openai/codex rust-v0.162.0; shell_spec меняет только внутреннее имя поля include_login_parameter, остальные два файла неизменны; формы MCP сохранены"
     },
     {
       "required": false,

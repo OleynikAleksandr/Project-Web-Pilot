@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1566,
+  "plan_revision": 1567,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1182,7 +1182,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: T012
-Revision: 1566
+Revision: 1567
 
 ## Цель
 
