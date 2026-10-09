@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1640,
+  "plan_revision": 1642,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -2202,13 +2202,14 @@
         "После DOCS одна сборка готовит обе платформы и шесть assets; identity корневого app сохранена"
       ],
       "expected_commit_message": "feat: Собрать парный выпуск 0.6.108 для macOS и Windows",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T035",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T036",
@@ -2295,7 +2296,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1640
+Revision: 1642
 
 ## Цель
 
@@ -2467,8 +2468,8 @@ Revision: 1640
   - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS-5 / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/release.md, docs/modules/session-runtime.md, README.md, docs/modules/parallel-execution.md, docs/modules/workspace-sidebar-ui.md, docs/modules/plan-view.md, docs/modules/parallel-execution-acceptance.md, docs/modules/workspace-setup.md
-- [TODO] T035: Собрать парный выпуск 0.6.108 для macOS и Windows — Ожидает
-  - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.108 для macOS и Windows
+- [DONE] T035: Собрать парный выпуск 0.6.108 для macOS и Windows — Завершено
+  - Git Commit: [DONE] feat: Собрать парный выпуск 0.6.108 для macOS и Windows
   - Reference: parallel-chat-execution-20261009 / T035 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 - [TODO] T036: Установить выпуск 0.6.108 — Ожидает
