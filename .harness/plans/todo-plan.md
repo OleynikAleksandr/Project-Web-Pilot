@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1567,
+  "plan_revision": 1568,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -90,7 +90,8 @@
       "src/context-inputs.mjs",
       "src/workspace-readiness.mjs",
       "src/workspace-setup.mjs",
-      "tests/workspace-readiness.test.mjs"
+      "tests/workspace-readiness.test.mjs",
+      "tools/codex-app-server-mcp/codex-tools.lock.json"
     ],
     "documentation_paths": [
       "docs/planning/parallel-execution-spec.md",
@@ -129,11 +130,12 @@
       "docs/planning/parallel-recovery.md",
       "docs/planning/parallel-kit-upgrade.md",
       "docs/planning/parallel-regression.md",
-      "docs/planning/parallel-acceptance.md"
+      "docs/planning/parallel-acceptance.md",
+      "docs/planning/parallel-release-preparation.md"
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": "T012",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -962,10 +964,12 @@
       "functional_paths": [
         "package.json",
         "package-lock.json",
-        ".harness/workflow.json"
+        ".harness/workflow.json",
+        "tools/codex-app-server-mcp/codex-tools.lock.json"
       ],
       "documentation_paths": [
-        "docs/planning/parallel-execution-spec.md"
+        "docs/planning/parallel-execution-spec.md",
+        "docs/planning/parallel-release-preparation.md"
       ],
       "verification_ids": [
         "unit-all",
@@ -980,13 +984,19 @@
         "Все обязательные проверки исходников пройдены до DOCS; сборка не запускается в этой задаче."
       ],
       "expected_commit_message": "chore: подготовить версию приложения к выпуску",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T012",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/planning/parallel-release-preparation.md",
+        "package-lock.json",
+        "package.json",
+        "tools/codex-app-server-mcp/codex-tools.lock.json"
+      ]
     },
     {
       "id": "DOCS",
@@ -1052,7 +1062,8 @@
         "docs/planning/parallel-recovery.md",
         "docs/planning/parallel-kit-upgrade.md",
         "docs/planning/parallel-regression.md",
-        "docs/planning/parallel-acceptance.md"
+        "docs/planning/parallel-acceptance.md",
+        "docs/planning/parallel-release-preparation.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git.",
@@ -1181,8 +1192,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: T012
-Revision: 1567
+Current Task: нет
+Revision: 1568
 
 ## Цель
 
@@ -1242,14 +1253,14 @@ Revision: 1567
   - Git Commit: [DONE] docs: подготовить приёмку нового выпуска
   - Reference: parallel-chat-execution-20261009 / T011 / implementation
   - Файлы: docs/planning/parallel-execution-spec.md, docs/planning/parallel-acceptance.md
-- [IN_PROGRESS] T012: Подготовить новую версию приложения к выпуску — В работе
-  - Git Commit: [PENDING] chore: подготовить версию приложения к выпуску
+- [DONE] T012: Подготовить новую версию приложения к выпуску — Завершено
+  - Git Commit: [DONE] chore: подготовить версию приложения к выпуску
   - Reference: parallel-chat-execution-20261009 / T012 / implementation
-  - Файлы: package.json, package-lock.json, .harness/workflow.json, docs/planning/parallel-execution-spec.md
+  - Файлы: package.json, package-lock.json, .harness/workflow.json, tools/codex-app-server-mcp/codex-tools.lock.json, docs/planning/parallel-execution-spec.md, docs/planning/parallel-release-preparation.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/modules/release.md, README.md, docs/modules/auto-plan.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/chromium-diagnostics.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-review.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/workspace-setup.md, docs/modules/workspace-sidebar-ui.md, docs/planning/parallel-execution-plan-draft.md, docs/planning/technical-audit-20261008.md, docs/planning/technical-audit-findings-lifecycle.md, docs/planning/technical-audit-findings-summary.md, docs/planning/technical-audit-findings-unused.md, docs/planning/technical-audit-findings.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/parallel-integration.md, docs/planning/live-session-runtime.md, docs/planning/parallel-dispatch.md, docs/planning/parallel-ui.md, docs/planning/parallel-recovery.md, docs/planning/parallel-kit-upgrade.md, docs/planning/parallel-regression.md, docs/planning/parallel-acceptance.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/modules/release.md, README.md, docs/modules/auto-plan.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/chromium-diagnostics.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-review.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/workspace-setup.md, docs/modules/workspace-sidebar-ui.md, docs/planning/parallel-execution-plan-draft.md, docs/planning/technical-audit-20261008.md, docs/planning/technical-audit-findings-lifecycle.md, docs/planning/technical-audit-findings-summary.md, docs/planning/technical-audit-findings-unused.md, docs/planning/technical-audit-findings.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/parallel-integration.md, docs/planning/live-session-runtime.md, docs/planning/parallel-dispatch.md, docs/planning/parallel-ui.md, docs/planning/parallel-recovery.md, docs/planning/parallel-kit-upgrade.md, docs/planning/parallel-regression.md, docs/planning/parallel-acceptance.md, docs/planning/parallel-release-preparation.md
 - [TODO] T013: Собрать парный выпуск macOS и Windows — Ожидает
   - Git Commit: [PENDING] build: собрать новый парный выпуск
   - Reference: parallel-chat-execution-20261009 / T013 / implementation
