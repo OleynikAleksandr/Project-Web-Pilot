@@ -2,6 +2,19 @@ import { randomUUID } from 'node:crypto';
 import { normalizeChatUrl, conversationUrlCompatibleWithExperience } from './workspace-session.mjs';
 import { CONTEXT_PROTOCOL, validateContextPacket } from './mcp-runtime.mjs';
 import { chatGPTUrlMatchesExperience, isPendingChatGPTConversation } from './chatgpt-experience.mjs';
+import { validateParallelSettings } from './parallel-settings.mjs';
+
+export function sessionExecutionMessage(project) {
+  const settings = validateParallelSettings(project.executionSnapshot);
+  const snapshot = project.executionSnapshot === undefined
+    ? 'Legacy-сессия без снимка: параллельное выполнение выключено.'
+    : 'Снимок настроек этой основной сессии для нового плана: ' + JSON.stringify(settings) + '.';
+  const current = ['ACTIVE', 'BLOCKED'].includes(project.scopeStatus)
+    ? ' Текущий план продолжает свои параметры: ' + (project.planExecution ? JSON.stringify(project.planExecution) : 'legacy, последовательное выполнение')
+      + '. Не перенастраивай его и не создавай второй план; снимок сессии относится только к следующему новому плану.'
+    : ' Разрешение не обязывает выбирать parallel: при планировании оцени зависимости и объясни выбранный способ.';
+  return snapshot + current + ' Изменения Settings не меняют этот снимок.';
+}
 
 export function packetMatchesProject(packet, project) {
   const expected = { project_id: project.projectId, project_name: project.name, plan_revision: project.planRevision,
@@ -27,6 +40,7 @@ export function startupMessage(project, requestId, packet, toolRules = []) {
     `Проект: ${project.name}`,
     `Workspace (точная абсолютная папка, JSON-строка): ${JSON.stringify(project.workspace)}`,
     `Session ID для этого чата: ${project.sessionId}`,
+    sessionExecutionMessage(project),
     `При подготовке review:prepare передай в JSON верхнего уровня ${JSON.stringify({recipient_session_id:project.sessionId})}. Это получатель продолжения, не владелец плана. Не подставляй ID выбранного в панели чужого чата.`,
     `Идентификатор отправки: ${requestId}`,
     `Частей контекста: ${packet.parts.length}. Читай их в порядке номеров.`,

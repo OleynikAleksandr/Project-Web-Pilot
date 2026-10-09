@@ -1046,6 +1046,18 @@ export async function run({ app, window, browser, sidebar, store, controller, se
   await waitFor(() => !!snapshot().settings, 'gear opens settings', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.querySelector("#archive-list, #archive-empty, #archive-detail, #settings-notice, #delete-form")'), null);
   assert.deepEqual(Object.keys(snapshot().settings), ['workspace']);
+  const executionSnapshots = () => store.snapshot().projects.flatMap(project => project.sessions.map(session => [session.sessionId, session.executionSnapshot]));
+  const existingExecutionSnapshots = executionSnapshots();
+  assert.deepEqual(snapshot().parallelExecution, { parallel_allowed: false, max_workers: 2 });
+  await sidebar.executeJavaScript('document.getElementById("parallel-allowed").click()');
+  await waitFor(() => snapshot().parallelExecution.parallel_allowed, 'parallel permission saved through real IPC', snapshot);
+  await waitFor(() => sidebar.executeJavaScript('!document.getElementById("parallel-options").hidden && !document.getElementById("parallel-max-workers").disabled'), 'parallel limit visible', snapshot);
+  await sidebar.executeJavaScript('document.getElementById("parallel-max-workers").value = "3"; document.getElementById("parallel-max-workers").dispatchEvent(new Event("change", {bubbles:true}))');
+  await waitFor(() => snapshot().parallelExecution.max_workers === 3, 'parallel limit saved through real IPC', snapshot);
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).parallelExecution, { parallel_allowed: true, max_workers: 3 });
+  assert.deepEqual(executionSnapshots(), existingExecutionSnapshots, 'settings never reconfigure existing sessions');
+  assert.equal((await sidebar.executeJavaScript('window.webPilot.setParallelExecution({parallel_allowed:false,max_workers:2})')).ok, true);
+  await waitFor(() => sidebar.executeJavaScript('document.getElementById("parallel-options").hidden'), 'OFF hides the limit', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("open-archive-window").textContent'), 'Архив…');
   assert.equal(snapshot().platform, process.platform);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("windows-runtime-section")'), null, 'the settings have one local tools section for both systems');

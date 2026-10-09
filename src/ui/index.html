@@ -266,6 +266,16 @@ SOFTWARE.
       </section>
       <section id="settings-panel" class="setup" hidden>
         <div class="heading"><h2>Настройки</h2><button id="close-settings" class="icon-button" title="Вернуться к проектам" aria-label="Закрыть настройки">✕</button></div>
+        <section class="settings-section" aria-labelledby="parallel-settings-title">
+          <h3 id="parallel-settings-title">Параллельное выполнение</h3>
+          <label style="display:flex;align-items:center;gap:8px"><input id="parallel-allowed" type="checkbox" style="width:auto;margin:0">Разрешить параллельное выполнение</label>
+          <div id="parallel-options" hidden>
+            <label for="parallel-max-workers">Максимум одновременно работающих исполнителей</label>
+            <input id="parallel-max-workers" type="number" min="1" max="9007199254740991" step="1" value="2" inputmode="numeric" aria-describedby="parallel-settings-help parallel-settings-error">
+          </div>
+          <p id="parallel-settings-help" class="settings-help">Применяется только к новым сессиям. Агент определит, полезно ли выполнять задачи параллельно.</p>
+          <p id="parallel-settings-error" class="settings-help" role="alert" hidden></p>
+        </section>
         <section id="doctor-panel" class="settings-section" aria-label="Доктор проекта">
           <p class="eyebrow">Доктор проекта</p>
           <label for="doctor-workspace">Проект для проверки</label><select id="doctor-workspace"></select>

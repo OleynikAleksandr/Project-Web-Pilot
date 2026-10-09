@@ -5,8 +5,79 @@ import path from 'node:path';
 import os from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { WorkspaceSessions, readWorkspace, normalizeChatUrl, conversationExperience, conversationUrlCompatibleWithExperience, activeSessionsNewestFirst } from '../src/workspace-session.mjs';
+import { sessionExecutionMessage } from '../src/context-session.mjs';
 
 const directoryLink = (target, link) => fs.symlink(target, link, process.platform === 'win32' ? 'junction' : 'dir');
+
+test('execution settings are captured at creation, independent of edits, selection and restart', async t => {
+  const { project, store } = await fixture(t);
+  let settings = { parallel_allowed: true, max_workers: 3 };
+  store.getExecutionSettings = () => settings;
+  const first = await store.select(await project('Execution snapshots'), { experience: 'work' });
+  settings.max_workers = 5;
+  const second = await store.newSession(first.workspace, 'chat');
+  assert.deepEqual(first.executionSnapshot, { parallel_allowed: true, max_workers: 3 });
+  assert.deepEqual(second.executionSnapshot, { parallel_allowed: true, max_workers: 5 });
+  settings = { parallel_allowed: false, max_workers: 1 };
+  await store.selectSession(first.workspace, first.sessionId);
+  assert.deepEqual(store.selected().executionSnapshot, first.executionSnapshot);
+  first.executionSnapshot.max_workers = 99;
+  assert.equal(store.selected().executionSnapshot.max_workers, 3, 'returned views cannot mutate storage');
+  await assert.rejects(store.updateSession(first.workspace, first.sessionId, { executionSnapshot: settings }), /INVALID_SESSION_PATCH/);
+  const restarted = new WorkspaceSessions(store.file, { getExecutionSettings: () => settings });
+  await restarted.load();
+  assert.equal(restarted.selected().experience, 'work');
+  assert.equal(restarted.selected().executionSnapshot.max_workers, 3);
+  assert.deepEqual((await restarted.newSession(first.workspace, 'work')).executionSnapshot, settings);
+  restarted.getExecutionSettings = () => { throw new Error('Inherited snapshot must not read Settings'); };
+  const inherited = { parallel_allowed: true, max_workers: 3 };
+  assert.deepEqual((await restarted.newSession(first.workspace, 'chat', { executionSnapshot: inherited })).executionSnapshot, inherited);
+});
+
+test('new sessions preserve active plan parameters without creating or rewriting a plan', async t => {
+  const { project, store } = await fixture(t);
+  const folder = await fs.realpath(await project('Active policy'));
+  const policy = { parallel_allowed: true, max_workers: 4, execution_strategy: 'parallel', execution_reason: 'Independent tasks' };
+  await changeScopePlan(folder, policy);
+  const file = path.join(folder, '.harness/plans/todo-plan.md'), before = await fs.readFile(file, 'utf8');
+  store.getExecutionSettings = () => ({ parallel_allowed: false, max_workers: 1 });
+  await store.select(folder);
+  const fresh = await store.newSession(folder, 'work');
+  assert.deepEqual(fresh.planExecution, policy);
+  assert.deepEqual(fresh.executionSnapshot, { parallel_allowed: false, max_workers: 1 });
+  assert.match(sessionExecutionMessage(fresh), /следующему новому плану/);
+  assert.ok(sessionExecutionMessage(fresh).includes(JSON.stringify(policy)));
+  assert.equal(await fs.readFile(file, 'utf8'), before);
+  assert.equal('planExecution' in JSON.parse(await fs.readFile(store.file, 'utf8')).projects[0], false, 'plan policy is a projection, not another plan');
+  const restarted = new WorkspaceSessions(store.file); await restarted.load();
+  assert.deepEqual((await restarted.select(folder)).planExecution, policy);
+  await changeScopePlan(folder, { max_workers: 0 });
+  await assert.rejects(readWorkspace(folder), { code: 'WORKFLOW_PLAN_INVALID' });
+});
+
+test('legacy sessions retain data and never acquire current execution settings', async t => {
+  const { project, store } = await fixture(t);
+  const first = await store.select(await project('Legacy snapshots'));
+  await store.bindChat(first.workspace, first.sessionId, 'https://chatgpt.com/c/legacy-snapshot-chat');
+  await store.renameSession(first.workspace, first.sessionId, 'Ручное имя');
+  await store.recordAgentTime(first.workspace, first.sessionId, 1250);
+  await store.updateSession(first.workspace, first.sessionId, { attempt: { state: 'sent', requestId: 'preserved' }, receipt: { preserved: true } });
+  await store.newSession(first.workspace, 'work');
+  await store.setSessionArchived(first.workspace, first.sessionId, true);
+  const legacy = store.snapshot();
+  for (const session of legacy.projects[0].sessions) delete session.executionSnapshot;
+  const original = JSON.stringify(legacy); await fs.writeFile(store.file, original);
+  const restarted = new WorkspaceSessions(store.file, { getExecutionSettings: () => ({ parallel_allowed: true, max_workers: 7 }) });
+  await restarted.load();
+  assert.deepEqual(restarted.snapshot(), legacy);
+  assert.equal(await fs.readFile(store.file, 'utf8'), original, 'no unnecessary migration rewrites');
+  assert.match(sessionExecutionMessage(restarted.selected()), /Legacy-сессия.*выключено/);
+  assert.equal((await restarted.newSession(first.workspace, 'work')).executionSnapshot.max_workers, 7);
+  const broken = restarted.snapshot(); broken.projects[0].sessions[0].executionSnapshot = { parallel_allowed: true, max_workers: 0 };
+  const bad = JSON.stringify(broken); await fs.writeFile(store.file, bad);
+  await assert.rejects(new WorkspaceSessions(store.file).load(), { code: 'SESSIONS_INVALID' });
+  assert.equal(await fs.readFile(store.file, 'utf8'), bad, 'invalid input is not overwritten');
+});
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'web-pilot-workspaces-'));

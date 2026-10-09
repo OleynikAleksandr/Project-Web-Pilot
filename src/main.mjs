@@ -18,6 +18,7 @@ import os from 'node:os';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WorkspaceSessions, normalizeChatUrl, activeSessionsNewestFirst } from './workspace-session.mjs';
+import { DEFAULT_PARALLEL_SETTINGS, validateParallelSettings } from './parallel-settings.mjs';
 import { ChatGPTComposer } from './chatgpt-composer.mjs';
 import { installChatGPTAutoScroll } from './chatgpt-auto-scroll.mjs';
 import { ChatColors, normalizeChatColors, validateColorChange, DEFAULT_COLORS } from './chatgpt-colors.mjs';
@@ -55,7 +56,8 @@ app.setPath('userData', smoke ? fs.mkdtempSync(path.join(os.tmpdir(), 'web-pilot
 const dataDir = app.getPath('userData');
 const settingsFile = path.join(dataDir, 'settings.json');
 const chromiumDiagnosticsFile = path.join(dataDir, 'diagnostics', 'chromium-events.jsonl');
-const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'));
+let parallelExecution = { ...DEFAULT_PARALLEL_SETTINGS };
+const store = new WorkspaceSessions(path.join(dataDir, 'workspaces.json'), { getExecutionSettings: () => parallelExecution });
 const planMonitor = new PlanMonitor({ selected: () => store.selected(),
   inspect: (workspace, sessionId) => store.inspect(workspace, sessionId), onChange: (_info, change) => {
     publish();
@@ -253,7 +255,7 @@ function saveSettings(overrides = {}) {
     ...(process.platform === 'darwin' ? { macRuntimeMode: 'app-server' } : {}),
     [legacyRetiredSetting]: legacyRuntimeRetired, ...(legacyRuntimeRetired ? {} : { legacyRuntimeRoots }),
   };
-  const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, reviewCheckpoint, automationCheckpoint, ...overrides };
+  const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, reviewCheckpoint, automationCheckpoint, parallelExecution, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
@@ -314,7 +316,7 @@ function snapshot() {
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
-    archives: projectedArchives(), settings: settingsState, doctor: doctorState,
+    archives: projectedArchives(), settings: settingsState, doctor: doctorState, parallelExecution: { ...parallelExecution },
     conversationRecovery: conversationRecovery.view(),
     autoPlan: autoPlan.view(),
     planReview: {...planReview.view(),...(reviewContinuation.persistenceError?{message:reviewContinuation.flow.state.message,indicator:'attention'}: {})},
@@ -943,6 +945,12 @@ function registerIpc() {
     else autoPlan.disable();
   });
   registerAction('pilot:plan-review', input => planReview.setEnabled(input));
+  registerAction('pilot:set-parallel-execution', async input => {
+    if (!settingsState) throw new Error('Откройте настройки.');
+    const next = validateParallelSettings(input ?? null);
+    await saveSettings({ parallelExecution: next });
+    parallelExecution = next;
+  });
   registerAction('pilot:reconnect', () => conversationRecovery.requestRetry());
   registerAction('pilot:startup', action => startupAction(action), { navigation: true });
   registerAction('pilot:open-archive-window', input => openArchiveWindow(typeof input === 'string' ? input : null));
@@ -1369,6 +1377,7 @@ else {
       if (CHATGPT_CHANNELS.includes(settings.chatgptChannel)) chatgptChannel = settings.chatgptChannel;
       if (['light', 'dark'].includes(settings.shellTheme)) shellTheme = settings.shellTheme;
       if (typeof settings.hideToolCalls === 'boolean') hideToolCalls = settings.hideToolCalls;
+      parallelExecution = validateParallelSettings(settings.parallelExecution);
       autoPlanEnabled = settings.autoPlanEnabled === true;
       autoPlanCheckpoint = settings.autoPlanCheckpoint ?? null;
       reviewCheckpoint = settings.reviewCheckpoint ?? null;

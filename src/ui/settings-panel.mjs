@@ -1,4 +1,5 @@
 import { projectDoctorView } from './project-doctor.mjs';
+import { DEFAULT_PARALLEL_SETTINGS, validateParallelSettings } from '../parallel-settings.mjs';
 
 function vpsLine(vps) {
   if (!vps) return 'Состояние VPS ещё не проверено.';
@@ -25,6 +26,22 @@ export function settingsPanelView(action) {
   $('theme-dark').addEventListener('click', () => action('setTheme', 'dark'));
   $('tool-calls-hide').addEventListener('click', () => action('setHideToolCalls', true));
   $('tool-calls-show').addEventListener('click', () => action('setHideToolCalls', false));
+  const parallelToggle = $('parallel-allowed'), parallelLimit = $('parallel-max-workers');
+  const saveParallel = () => {
+    try {
+      const value = validateParallelSettings({ parallel_allowed: parallelToggle.checked,
+        max_workers: parallelToggle.checked ? parallelLimit.valueAsNumber : (state?.parallelExecution ?? DEFAULT_PARALLEL_SETTINGS).max_workers });
+      $('parallel-settings-error').hidden = true;
+      parallelLimit.removeAttribute('aria-invalid');
+      action('setParallelExecution', value);
+    } catch (error) {
+      $('parallel-settings-error').textContent = error.message;
+      $('parallel-settings-error').hidden = false;
+      parallelLimit.setAttribute('aria-invalid', 'true');
+    }
+  };
+  parallelToggle.addEventListener('change', saveParallel);
+  parallelLimit.addEventListener('change', saveParallel);
   $('chatgpt-channel-secure').addEventListener('click', () => action('setChatgptChannel', 'secure-tunnel'));
   $('chatgpt-channel-vps').addEventListener('click', () => action('setChatgptChannel', 'vps'));
   $('chatgpt-channel-refresh').addEventListener('click', () => action('refreshChatgptChannel'));
@@ -41,6 +58,12 @@ export function settingsPanelView(action) {
     $('tool-calls-hide').setAttribute('aria-pressed', String(state.hideToolCalls));
     $('tool-calls-show').setAttribute('aria-pressed', String(!state.hideToolCalls));
     $('tool-calls-hide').disabled = pending; $('tool-calls-show').disabled = pending;
+    const parallel = state.parallelExecution ?? DEFAULT_PARALLEL_SETTINGS;
+    parallelToggle.checked = parallel.parallel_allowed;
+    parallelToggle.disabled = pending;
+    $('parallel-options').hidden = !parallel.parallel_allowed;
+    parallelLimit.disabled = pending || !parallel.parallel_allowed;
+    if (document.activeElement !== parallelLimit) parallelLimit.value = String(parallel.max_workers);
     // One pair of sections for both systems: the same executor, the same services, the same two channels.
     const isMac = state.platform === 'darwin', isWindows = state.platform === 'win32';
     const supported = isMac || isWindows, system = isWindows ? 'Windows' : 'macOS';

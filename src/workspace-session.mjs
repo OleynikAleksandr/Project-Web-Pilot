@@ -2,6 +2,7 @@ import { exists, diagnosticFiles } from './common.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { validateParallelSettings } from './parallel-settings.mjs';
 
 export class WorkspaceError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -96,6 +97,16 @@ async function readScopeTitle(workspace, plan) {
 }
 
 function projectPlan(plan, scopeTitle = '') {
+  let planExecution = null;
+  if (['parallel_allowed', 'max_workers', 'execution_strategy', 'execution_reason'].some(key => Object.hasOwn(plan, key))) {
+    try {
+      planExecution = { ...validateParallelSettings({ parallel_allowed: plan.parallel_allowed, max_workers: plan.max_workers }),
+        execution_strategy: plan.execution_strategy, execution_reason: plan.execution_reason };
+      if (!['sequential', 'parallel'].includes(planExecution.execution_strategy)
+          || typeof planExecution.execution_reason !== 'string' || !planExecution.execution_reason.trim()
+          || planExecution.execution_strategy === 'parallel' && (!planExecution.parallel_allowed || planExecution.max_workers < 2)) throw new Error('Invalid policy');
+    } catch { throw new WorkspaceError('WORKFLOW_PLAN_INVALID', 'Некорректные параметры выполнения текущего плана.'); }
+  }
   const tasks = plan.tasks.map(task => {
     if (!task || typeof task.id !== 'string' || !task.id || typeof task.title !== 'string' || !task.title
         || !['TODO', 'IN_PROGRESS', 'DONE'].includes(task.implementation_status)
@@ -114,7 +125,7 @@ function projectPlan(plan, scopeTitle = '') {
         : typeof plan.archived_scope_id === 'string' && plan.archived_scope_id ? 'closed' : 'not-created';
   return { projectId: plan.project_id, name: plan.project_name,
     planRevision: plan.plan_revision, scopeId: plan.scope_id, scopeTitle, objective: typeof plan.objective === 'string' ? plan.objective : '',
-    scopeStatus: plan.execution_scope_status, deliveryStatus: plan.delivery_status,
+    scopeStatus: plan.execution_scope_status, deliveryStatus: plan.delivery_status, planExecution,
     archivedScopeId: typeof plan.archived_scope_id === 'string' ? plan.archived_scope_id : null,
     nextTaskId: current?.id ?? null, nextTaskTitle: current?.title ?? null,
     planView: { state: planState, completed, total: tasks.length, tasks,
@@ -122,9 +133,9 @@ function projectPlan(plan, scopeTitle = '') {
 }
 
 const copy = value => structuredClone(value);
-const persistent = data => JSON.parse(JSON.stringify(data, (key, value) => ['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle', 'watchInputs'].includes(key) ? undefined : value));
+const persistent = data => JSON.parse(JSON.stringify(data, (key, value) => ['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle', 'watchInputs', 'planExecution'].includes(key) ? undefined : value));
 const invalid = () => new WorkspaceError('SESSIONS_INVALID', 'Формат сохранённых проектов не поддерживается. Исходный файл сохранён.');
-const sessionFields = ['planId', 'originSessionId', 'legacyPlanId', 'lastNamedScopeId', 'sessionId', 'experience', 'chatUrl', 'manualStart', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt'];
+const sessionFields = ['planId', 'originSessionId', 'legacyPlanId', 'lastNamedScopeId', 'sessionId', 'experience', 'chatUrl', 'manualStart', 'attempt', 'receipt', 'title', 'titleSource', 'createdAt', 'lastOpenedAt', 'archivedAt', 'executionSnapshot'];
 const explicitTitleSources = new Set(['manual', 'scope']);
 
 function localName(value, { empty = 'Нужно непустое название.', code = 'TITLE_INVALID' } = {}) {
@@ -188,6 +199,10 @@ function validate(data) {
           || (s.chatUrl !== null && (!normalizeChatUrl(s.chatUrl) || normalizeChatUrl(s.chatUrl) !== s.chatUrl
             || !conversationUrlCompatibleWithExperience(s.chatUrl, s.experience)))) throw invalid();
       if (s.manualStart !== undefined && typeof s.manualStart !== 'boolean') throw invalid();
+      // Additive v6 field: missing means a legacy session, never today's Settings.
+      if (s.executionSnapshot !== undefined) {
+        try { validateParallelSettings(s.executionSnapshot); } catch { throw invalid(); }
+      }
       if (s.agentTime !== undefined && s.agentTime !== null && !validAgentTime(s.agentTime)) throw invalid();
       for (const key of ['planId','originSessionId','legacyPlanId','lastNamedScopeId']) {
         if (s[key] !== undefined && s[key] !== null && (typeof s[key] !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(s[key]))) throw invalid();
@@ -312,8 +327,9 @@ function currentView(project) {
 }
 
 export class WorkspaceSessions {
-  constructor(file, { inspect = readWorkspace, uuid = randomUUID, now = Date.now, planService = null } = {}) {
-    Object.assign(this, { file, uuid, now, planService });
+  constructor(file, { inspect = readWorkspace, uuid = randomUUID, now = Date.now, planService = null,
+    getExecutionSettings = () => validateParallelSettings() } = {}) {
+    Object.assign(this, { file, uuid, now, planService, getExecutionSettings });
     this.inspect = (workspace, sessionId = this.project(workspace)?.sessionId) => inspect(workspace, sessionId);
     this.saveTail = Promise.resolve();
     this.mutationTail = Promise.resolve();
@@ -371,7 +387,7 @@ export class WorkspaceSessions {
   }
 
   save(data = this.data, isCurrent = () => true) {
-    const transient = new Set(['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle']);
+    const transient = new Set(['planView', 'preparedPlans', 'unassignedPlans', 'scopeTitle', 'planExecution']);
     const text = JSON.stringify(data, (key, value) => transient.has(key) ? undefined : value, 2) + '\n';
     const operation = this.saveTail.catch(() => {}).then(async () => {
       await fs.mkdir(path.dirname(this.file), { recursive: true, mode: 0o700 });
@@ -401,10 +417,11 @@ export class WorkspaceSessions {
     return operation;
   }
 
-  createSession(experience = 'chat') {
+  createSession(experience = 'chat', executionSnapshot = this.getExecutionSettings()) {
     experience = sessionExperience(experience);
+    executionSnapshot = validateParallelSettings(executionSnapshot);
     return { sessionId: 'web-pilot-' + this.uuid(), planId: null, originSessionId: null, legacyPlanId: null, planBinding: 'none', lastNamedScopeId: null, experience, chatUrl: null, title: '', titleSource: null,
-      createdAt: this.now(), lastOpenedAt: this.now(), archivedAt: null, attempt: null, receipt: null };
+      executionSnapshot, createdAt: this.now(), lastOpenedAt: this.now(), archivedAt: null, attempt: null, receipt: null };
   }
 
   mutate(change, isCurrent = () => true) {
@@ -484,13 +501,14 @@ export class WorkspaceSessions {
     });
   }
 
-  newSession(workspace, experience) {
+  newSession(workspace, experience, { executionSnapshot } = {}) {
     return this.mutate(async data => {
       experience = sessionExperience(experience);
       const project = data.projects.find(p => p.workspace === workspace);
       if (!project) throw new WorkspaceError('WORKSPACE_REQUIRED', 'Сначала выберите проект.');
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
-      const session = this.createSession(experience);
+      // An explicitly inherited snapshot never consults the current Settings.
+      const session = this.createSession(experience, executionSnapshot);
       project.sessions.push(session); project.selectedSessionId = session.sessionId; project.expanded = true;
       const info = await this.inspect(workspace, session.sessionId);
       Object.assign(project, info);
