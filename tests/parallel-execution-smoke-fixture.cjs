@@ -5,7 +5,7 @@ const {execFile}=require('node:child_process');
 const {promisify}=require('node:util');
 const execute=promisify(execFile);
 
-module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectWorkspace,liveSessions,dataDir,waitFor}) {
+module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectWorkspace,liveSessions,dataDir,waitFor,getArchiveWindow}) {
   const node=await workspaceSetup.node(),script=path.resolve(__dirname,'../packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs');
   const run=async(...args)=>JSON.parse((await execute(node,[script,...args],{env:workspaceSetup.environment,maxBuffer:4*1024*1024,timeout:120000})).stdout);
   const git=async(root,...args)=>(await execute('git',['-C',root,...args],{env:workspaceSetup.environment,encoding:'utf8'})).stdout.trim();
@@ -132,7 +132,47 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
     assert.equal(ui.rows,3);assert.match(ui.text,/Завершено · интеграция проверена/);assert.match(ui.text,/Работа/);assert.equal(ui.removed,true);
   }
   assert.equal(snapshot().execution.planView.completed,3);assert.equal(snapshot().autoPlan.enabled,false,'verified parallel completion turns project OFF');
+  // Delete through the same archive preload/IPC used by the user, including all worker trees.
+  const oldProjectId=origin.projectId,oldIds=assignments.map(a=>a.id).concat(c.id);
+  const otherBefore=JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).projectAutoPlan[otherRoot];
+  assert.equal((await ipc('archiveProject',root)).ok,true);
+  assert.equal((await ipc('openArchive',root)).ok,true);
+  await wait(()=>getArchiveWindow()&&!getArchiveWindow().isDestroyed(),'deletion archive ready');
+  const archive=getArchiveWindow().webContents;
+  await wait(()=>archive.executeJavaScript('typeof window.webPilotArchive==="object"'),'deletion preload');
+  const archived=store.project(root),item={workspace:root,projectId:oldProjectId};
+  const preview=await archive.executeJavaScript('window.webPilotArchive.previewDelete('+JSON.stringify(item)+')');
+  assert.equal(preview.ok,true,JSON.stringify(preview));
+  const deletion=await archive.executeJavaScript('window.webPilotArchive.deleteProject('+JSON.stringify(preview.result.token)+','+JSON.stringify(archived.name)+')');
+  assert.equal(deletion.ok,true,JSON.stringify(deletion));
+  await wait(()=>!store.project(root),'project removed from store');
+  await assert.rejects(fs.stat(root),{code:'ENOENT'});
+  for(const a of [assignments[0],assignments[1],c]) {
+    await assert.rejects(fs.stat(a.worktree),{code:'ENOENT'});assert.equal(store.project(a.worktree),null);assert.equal(record(a.worktree),undefined);
+  }
+  assert.equal(record(root),undefined);
+  const settingsAfter=JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8'));
+  assert.equal(settingsAfter.projectAutoPlan[root],undefined);
+  assert.equal(Object.values(settingsAfter.parallelExecutionBook).some(b=>b.workspace===root),false);
+  assert.deepEqual(settingsAfter.projectAutoPlan[otherRoot],otherBefore);
+  const {belongsToProject}=await import('../src/project-state-cleanup.mjs');
+  assert.equal(belongsToProject(settingsAfter,[{workspace:root,projectId:oldProjectId,sessionIds:[origin.sessionId]}]),false);
+  getArchiveWindow().close();
+  // Same folder name and same scope, different identity: no inherited grant or old assignment.
+  await ipc('openSettings');await ipc('setParallelExecution',{parallel_allowed:true,max_workers:2});await ipc('closeSettings');
+  const recreated=(await run('--create',path.dirname(root))).root;assert.equal(recreated,root);
+  await selectWorkspace(root);
+  await wait(()=>store.selected()?.workspace===root&&snapshot().context.phase==='delivered','recreated main context');
+  const newOrigin=store.selected();assert.notEqual(newOrigin.projectId,oldProjectId);assert.equal(snapshot().autoPlan.enabled,false);
+  const newMain=record(root,newOrigin.sessionId);await newMain.view.webContents.executeJavaScript('window.fixtureAssistant("Новый план готов")');
+  await run('--plan',root,newOrigin.sessionId);
+  await wait(()=>snapshot().selected?.scopeId==='parallel-fixture','same scope republished');
+  assert.equal(snapshot().autoPlan.enabled,false);assert.equal(snapshot().execution.assignments.length,0);
+  assert.equal((await ipc('setAutoPlan',true)).ok,true);
+  await wait(()=>snapshot().execution.assignments.length===2,'fresh assignments after deletion');
+  assert.ok(snapshot().execution.assignments.every(a=>!oldIds.includes(a.id)));
+  await ipc('setAutoPlan',false);
   await fs.writeFile(path.join(dataDir,'parallel-execution-result.json'),JSON.stringify({mode:'isolated-fixture',realIpc:true,
-    realDependency:true,workers:3,independentPages:true,conflictCorrectionMainChat:true,mergeCommits:3,liveChatGPT:false,nativeWindows:false,cleanOS:false},null,2));
+    realDependency:true,workers:3,independentPages:true,conflictCorrectionMainChat:true,mergeCommits:3,fullProjectDeletion:true,recreatedProjectFreshAssignments:true,liveChatGPT:false,nativeWindows:false,cleanOS:false},null,2));
   return true;
 };

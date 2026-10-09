@@ -1513,7 +1513,7 @@ else {
         projectAutoPlan.book=cleaned.projectAutoPlan;parallelExecutionBook=cleaned.parallelExecutionBook;execution.book=parallelExecutionBook;
         reviewCheckpoint=cleaned.reviewCheckpoint;automationCheckpoint=cleaned.automationCheckpoint;
         automationSend.entries.clear();automationSend.cycles.clear();automationSend.restore(automationCheckpoint);
-        reviewContinuation.restore(reviewCheckpoint);await saveSettings();
+        reviewContinuation.stops.clear();reviewContinuation.restore(reviewCheckpoint);await saveSettings();
       }
     }
     if (!smoke && app.isPackaged && process.platform === 'darwin' && !storageError

@@ -27,12 +27,12 @@ export function removeProjectSettings(settings, identities) {
 
 export function pruneOrphanProjectSettings(settings, projects) {
   const live=new Map(projects.map(p=>[p.workspace,p]));
-  const stale=[];
-  for(const [workspace,value] of Object.entries(settings.projectAutoPlan??{}))
-    if(!live.has(workspace)||value.projectId&&value.projectId!==live.get(workspace).projectId)stale.push({workspace});
-  for(const value of Object.values(settings.parallelExecutionBook??{}))
-    if(value.workspace&&(!live.has(value.workspace)||value.projectId&&value.projectId!==live.get(value.workspace).projectId))stale.push({workspace:value.workspace});
-  const result=removeProjectSettings(settings,stale);
+  const missing=[...new Set([...Object.keys(settings.projectAutoPlan??{}),...Object.values(settings.parallelExecutionBook??{}).map(v=>v.workspace)].filter(w=>w&&!live.has(w)))];
+  const result=removeProjectSettings(settings,missing.map(workspace=>({workspace})));
+  for(const [workspace,value] of Object.entries(result.projectAutoPlan??{}))
+    if(value.projectId&&value.projectId!==live.get(workspace)?.projectId)delete result.projectAutoPlan[workspace];
+  for(const [key,value] of Object.entries(result.parallelExecutionBook??{}))
+    if(value.projectId&&value.projectId!==live.get(value.workspace)?.projectId)delete result.parallelExecutionBook[key];
   const owner=value=>{
     if(typeof value==='string'){try{return owner(JSON.parse(value));}catch{return null;}}
     if(Array.isArray(value))return typeof value[0]==='string'&&(/^[A-Za-z]:[\\/]/.test(value[0])||value[0].startsWith('/'))?value:owner(value[0]);

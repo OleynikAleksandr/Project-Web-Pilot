@@ -44,3 +44,10 @@ test('startup drops orphan state and delivery keys but retains archived projects
  const next=pruneOrphanProjectSettings(saved,[{workspace:'/kept',projectId:'kept',archivedAt:1,sessions:[{sessionId:'s'}]}]);
  assert.deepEqual(Object.keys(next.projectAutoPlan),['/kept']);assert.deepEqual(Object.keys(next.parallelExecutionBook),['b']);assert.equal(next.parallelExecutionBook.b.assignments.a.phase,'unknown');assert.equal(next.reviewCheckpoint.entries.length,1);
 });
+
+test('stale permission never removes a current project UNKNOWN execution ledger',async()=>{
+ const {pruneOrphanProjectSettings}=await import('../src/project-state-cleanup.mjs');
+ const saved={projectAutoPlan:{'/a':{projectId:'old'}},parallelExecutionBook:{live:{workspace:'/a',projectId:'new',assignments:{reserved:{phase:'unknown'}}}}};
+ const result=pruneOrphanProjectSettings(saved,[{workspace:'/a',projectId:'new',sessions:[]}]);
+ assert.deepEqual(result.projectAutoPlan,{});assert.equal(result.parallelExecutionBook.live.assignments.reserved.phase,'unknown');
+});
