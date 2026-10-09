@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1662,
+  "plan_revision": 1663,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -54,7 +54,7 @@
     ]
   },
   "baseline_commit": "3f30e31295a249326222c4c4869b99b825c6a12c",
-  "current_task_id": "T008",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -295,13 +295,21 @@
         "Освобождение страницы дожидается записи session-stop до очистки"
       ],
       "expected_commit_message": "feat: Очистить полные группы диагностики без гонки записи",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-state-deletion-20261009",
         "task_id": "T008",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "src/chromium-diagnostics.mjs",
+        "src/common.mjs",
+        "src/main.mjs",
+        "src/project-state-cleanup.mjs",
+        "src/workspace-deletion.mjs",
+        "tests/project-state-cleanup.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -445,8 +453,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
-Current Task: T008
-Revision: 1662
+Current Task: нет
+Revision: 1663
 
 ## Цель
 
@@ -474,8 +482,8 @@ Revision: 1662
   - Git Commit: [DONE] feat: Сериализовать очистку с фоновой записью настроек
   - Reference: project-state-deletion-20261009 / T007 / implementation
   - Файлы: src/main.mjs, src/workspace-deletion.mjs, src/project-state-cleanup.mjs, tests/project-state-cleanup.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/project-state-deletion.md
-- [IN_PROGRESS] T008: Очистить полные группы диагностики без гонки записи — В работе
-  - Git Commit: [PENDING] feat: Очистить полные группы диагностики без гонки записи
+- [DONE] T008: Очистить полные группы диагностики без гонки записи — Завершено
+  - Git Commit: [DONE] feat: Очистить полные группы диагностики без гонки записи
   - Reference: project-state-deletion-20261009 / T008 / implementation
   - Файлы: src/common.mjs, src/chromium-diagnostics.mjs, src/project-state-cleanup.mjs, src/workspace-deletion.mjs, src/main.mjs, tests/project-state-cleanup.test.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/project-state-deletion.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

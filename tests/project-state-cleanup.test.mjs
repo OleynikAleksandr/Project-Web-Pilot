@@ -65,3 +65,21 @@ test('purge waits for the active settings writer and preserves its neighbour upd
   const result=JSON.parse(await fs.readFile(file));
   assert.deepEqual(result.projectAutoPlan,{'/kept':{enabled:true}});assert.equal(result.theme,'new');
 });
+
+test('cleanup removes a diagnostic session across rotation and preserves concurrent neighbour writes',async t=>{
+  const {DiagnosticJsonl}=await import('../src/chromium-diagnostics.mjs');
+  const {appendDiagnostic,queueDiagnosticFile}=await import('../src/common.mjs');
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'diagnostic-cleanup-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+  const file=path.join(dir,'diagnostics/chromium-events.jsonl');
+  const log=new DiagnosticJsonl(file,{sessionId:'technical',owner:()=>({sessionId:'deleted-chat'})});await log.init();
+  log.record('test','owned');await log.flush();
+  await fs.writeFile(file+'.1',JSON.stringify({diagnosticSession:'technical',event:'old-navigation'})+'\n');
+  let release;const gate=new Promise(resolve=>{release=resolve;});
+  const blocked=queueDiagnosticFile(file,()=>gate);
+  const purge=purgeProjectStateFiles(dir,[{workspace:'/gone',sessionIds:['deleted-chat']}]);
+  const append=appendDiagnostic(file,JSON.stringify({diagnosticSession:'neighbour',event:'keep'})+'\n');
+  release();await Promise.all([blocked,purge,append]);
+  assert.equal((await fs.readFile(file+'.1','utf8')).trim(),'');
+  const lines=(await fs.readFile(file,'utf8')).trim().split('\n').map(JSON.parse);
+  assert.deepEqual(lines,[{diagnosticSession:'neighbour',event:'keep'}]);
+});

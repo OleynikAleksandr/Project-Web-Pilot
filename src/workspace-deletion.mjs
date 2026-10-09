@@ -3,7 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
 import { readWorkspace, WorkspaceError } from './workspace-session.mjs';
-import { diagnosticFiles } from './common.mjs';
+import { diagnosticFiles, queueDiagnosticFile } from './common.mjs';
 import { purgeProjectStateFiles } from './project-state-cleanup.mjs';
 
 const fail = (code, message) => { throw new WorkspaceError(code, message); };
@@ -130,11 +130,14 @@ export class WorkspaceDeletion {
       if (data.selectedWorkspace === workspace) data.selectedWorkspace = null;
       await fs.writeFile(file + '.tmp', JSON.stringify(data, null, 2) + '\n', { mode: 0o600 }); await fs.rename(file + '.tmp', file);
     }
-    for (const file of diagnosticFiles(path.join(path.dirname(this.store.file), 'diagnostics.jsonl'))) {
+    const diagnostics=path.join(path.dirname(this.store.file),'diagnostics.jsonl');
+    await queueDiagnosticFile(diagnostics,async()=>{
+    for (const file of diagnosticFiles(diagnostics)) {
       if (!await lstatOrNull(file)) continue;
       const lines = (await fs.readFile(file, 'utf8')).split('\n').filter(Boolean).filter(line => JSON.parse(line).workspace !== workspace);
       await fs.writeFile(file + '.tmp', lines.length ? lines.join('\n') + '\n' : '', { mode: 0o600 }); await fs.rename(file + '.tmp', file);
     }
+    });
   }
   async finish(job) {
     const record = this.store.project(job.workspace);

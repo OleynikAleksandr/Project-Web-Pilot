@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { queueDiagnosticFile } from './common.mjs';
 
 // Match complete values (also inside nested JSON delivery keys), never name substrings.
 export function belongsToProject(value, identities) {
@@ -64,12 +65,19 @@ export async function purgeProjectStateFiles(dataDir,identities) {
   for(const name of files.filter(n=>/^settings\.json\.(?:tmp(?:-[\w-]+)?|project-cleanup\.tmp)$/.test(n)))
     await fs.rm(path.join(dataDir,name),{force:true});
   const diagnostics=path.join(dataDir,'diagnostics');
-  for(const name of await fs.readdir(diagnostics).catch(e=>{if(e.code==='ENOENT')return [];throw e;})) {
-    if(!/\.jsonl(?:\.\d+)?$/.test(name))continue;
-    const file=path.join(diagnostics,name),raw=await read(file);
-    const lines=raw.split('\n').filter(Boolean),kept=lines.filter(line=>!belongsToProject(JSON.parse(line),identities));
-    if(lines.length!==kept.length)await write(file,kept.length?kept.join('\n')+'\n':'');
-  }
+  const names=(await fs.readdir(diagnostics).catch(e=>{if(e.code==='ENOENT')return [];throw e;})).filter(n=>/\.jsonl(?:\.\d+)?$/.test(n));
+  for(const base of new Set(names.map(n=>n.replace(/(\.jsonl)\.\d+$/,'$1'))))await queueDiagnosticFile(path.join(diagnostics,base),async()=>{
+    const rows=[];
+    for(const name of names.filter(n=>n===base||n.startsWith(base+'.'))) {
+      const file=path.join(diagnostics,name),raw=await read(file);
+      rows.push({file,lines:(raw??'').split('\n').filter(Boolean).map(line=>({line,value:JSON.parse(line)}))});
+    }
+    const diagnosticIds=new Set(rows.flatMap(r=>r.lines.filter(l=>belongsToProject(l.value,identities)).map(l=>l.value.diagnosticSession)).filter(Boolean));
+    for(const {file,lines} of rows) {
+      const kept=lines.filter(l=>!belongsToProject(l.value,identities)&&!diagnosticIds.has(l.value.diagnosticSession));
+      if(lines.length!==kept.length)await write(file,kept.length?kept.map(l=>l.line).join('\n')+'\n':'');
+    }
+  });
 }
 
 // Share the settings writer tail so purge cannot remove an active atomic write.

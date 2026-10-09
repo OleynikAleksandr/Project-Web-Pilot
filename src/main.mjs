@@ -338,6 +338,8 @@ async function prepareProjectRemoval(job) {
     if(commands.length)throw Object.assign(new Error('Дождитесь завершения команд удаляемого проекта.'),{code:'DELETE_PROJECT_BUSY'});
   }
   for(const workspace of workspaces)await execution.suspend(workspace);
+  job.sessionIds=[...new Set([...(job.sessionIds??[]),...records.map(r=>r.diagnostics?.log.sessionId).filter(Boolean)])];
+  for(const record of records)await record.diagnostics?.stop();
   for(const record of records)if(!liveSessions.release(record))
     throw Object.assign(new Error('Чат ещё занят. Повторите удаление после остановки.'),{code:'DELETE_PROJECT_BUSY'});
   await store.mutationTail;
@@ -1056,6 +1058,7 @@ function decorateSessionRuntime(record) {
   secureRemote(contents);
   record.colors=new ChatColors(contents,chatColors);
   record.diagnostics=new ChromiumDiagnostics(contents,{file:chromiumDiagnosticsFile,allowFixture:smoke,
+    owner:()=>({workspace:record.identity?.workspace,sessionId:record.identity?.sessionId}),
     onConversationRateLimit:(id,seconds)=>record.recovery.rateLimited(id,seconds),
     startupNetwork:!smoke&&!record.identity&&store.snapshot().projects.length===0});
   void record.diagnostics.start({appVersion:app.getVersion(),platform:process.platform,electron:process.versions.electron,

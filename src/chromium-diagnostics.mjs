@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
+import { queueDiagnosticFile } from './common.mjs';
 import { StartupNetworkTrace } from './startup-network-trace.mjs';
 
 const STARTUP_EVENTS = new Set(['session-start', 'navigation-requested', 'navigation-waiting', 'load-url-failed',
@@ -292,11 +293,11 @@ export function payloadMetadata(data) {
 }
 
 export class DiagnosticJsonl {
-  constructor(file, { maxBytes = 25 * 1024 * 1024, now = () => new Date(), sessionId = randomUUID() } = {}) {
+  constructor(file, { maxBytes = 25 * 1024 * 1024, now = () => new Date(), sessionId = randomUUID(), owner = () => ({}) } = {}) {
     this.file = file;
     this.maxBytes = maxBytes;
     this.now = now;
-    this.sessionId = sessionId;
+    this.sessionId = sessionId;this.owner=owner;
     this.size = 0;
     this.sequence = 0;
     this.startupBeginning = []; this.startupRecent = []; this.startupCount = 0;
@@ -309,7 +310,7 @@ export class DiagnosticJsonl {
   }
 
   record(source, event, fields = {}) {
-    const entry = { ts: this.now().toISOString(), seq: ++this.sequence, diagnosticSession: this.sessionId, source, event, ...fields };
+    const entry = { ts: this.now().toISOString(), seq: ++this.sequence, diagnosticSession: this.sessionId, source, event, ...this.owner(), ...fields };
     if (STARTUP_EVENTS.has(event)) {
       this.startupCount++;
       if (this.startupBeginning.length < 31) this.startupBeginning.push(entry);
@@ -321,11 +322,14 @@ export class DiagnosticJsonl {
     return entry;
   }
 
-  async #append(line) {
+  #append(line) {
+   return queueDiagnosticFile(this.file,async()=>{
+    this.size=(await fs.stat(this.file).catch(e=>{if(e.code==='ENOENT')return null;throw e;}))?.size??0;
     const bytes = Buffer.byteLength(line);
     if (this.size > 0 && this.size + bytes > this.maxBytes) await this.#rotate();
     await fs.appendFile(this.file, line, { encoding: 'utf8', mode: 0o600 });
     this.size += bytes;
+   });
   }
 
   async #rotate() {
@@ -343,12 +347,12 @@ const IGNORED_CDP = new Set([
 ]);
 
 export class ChromiumDiagnostics {
-  constructor(contents, { file, maxBytes, allowFixture = false, startupNetwork = false, onConversationRateLimit = () => {} } = {}) {
+  constructor(contents, { file, maxBytes, allowFixture = false, startupNetwork = false, onConversationRateLimit = () => {}, owner } = {}) {
     if (!contents || !file) throw new TypeError('ChromiumDiagnostics requires contents and file');
     this.contents = contents;
     this.onConversationRateLimit = onConversationRateLimit;
     this.allowFixture = allowFixture;
-    this.log = new DiagnosticJsonl(file, { maxBytes });
+    this.log = new DiagnosticJsonl(file, { maxBytes, owner });
     this.networkTrace = startupNetwork ? new StartupNetworkTrace(contents.session?.netLog, path.join(path.dirname(file), 'startup-network.json')) : null;
     this.handlers = [];
     this.lastDomPulse = null;
