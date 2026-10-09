@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1628,
+  "plan_revision": 1630,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Реализовать опциональное параллельное выполнение плана через чат-сессии Web Pilot и отдельные worktree с проверенной последовательной интеграцией в main.",
   "acceptance_criteria": [
     "Снимок разрешения и лимита фиксируется при новой основной сессии; существующее выполнение не меняется от Settings.",
@@ -2027,13 +2027,14 @@
         "main, тег и шесть assets сверены после окончательного push; живая приёмка остаётся пользователю"
       ],
       "expected_commit_message": "feat: Опубликовать выпуск 0.6.107 и синхронизировать GitHub",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T032",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -2059,10 +2060,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1628
+Revision: 1630
 
 ## Цель
 
@@ -2218,8 +2219,8 @@ Revision: 1628
   - Git Commit: [DONE] feat: Установить исправленный выпуск 0.6.107
   - Reference: parallel-chat-execution-20261009 / T031 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
-- [TODO] T032: Опубликовать выпуск 0.6.107 и синхронизировать GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать выпуск 0.6.107 и синхронизировать GitHub
+- [DONE] T032: Опубликовать выпуск 0.6.107 и синхронизировать GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать выпуск 0.6.107 и синхронизировать GitHub
   - Reference: parallel-chat-execution-20261009 / T032 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 
