@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1595,
+  "plan_revision": 1596,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -95,7 +95,8 @@
       "packages/workflow-kit/src/lib/task-handoff.mjs",
       "packages/workflow-kit/scripts/check-task-handoff-fixture.mjs",
       "src/project-auto-plan.mjs",
-      "tests/project-auto-plan.test.mjs"
+      "tests/project-auto-plan.test.mjs",
+      "packages/workflow-kit/src/lib/task-files.mjs"
     ],
     "documentation_paths": [
       "docs/planning/parallel-execution-spec.md",
@@ -148,7 +149,7 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": "T020",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -1414,7 +1415,9 @@
         "packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs",
         "packages/workflow-kit/scripts/check-task-handoff-fixture.mjs",
         "packages/workflow-kit/package.json",
-        "packages/workflow-kit/src/lib/common.mjs"
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/task-files.mjs"
       ],
       "documentation_paths": [
         "docs/modules/session-runtime.md",
@@ -1433,13 +1436,29 @@
         "Повтор и прерывание восстановления проверены временной fixture; стартовые инструкции однозначно передают выполнение parallel-плана приложению"
       ],
       "expected_commit_message": "feat: Защитить основной parallel-план и восстановить ошибочно начатую задачу",
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T020",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs",
+        "packages/workflow-kit/scripts/check-task-handoff-fixture.mjs",
+        "packages/workflow-kit/src/cli.mjs",
+        "packages/workflow-kit/src/lib/actions.mjs",
+        "packages/workflow-kit/src/lib/command-help.mjs",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/recovery.mjs",
+        "packages/workflow-kit/src/lib/task-files.mjs",
+        "packages/workflow-kit/src/lib/task-handoff.mjs",
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md",
+        "packages/workflow-kit/src/templates/STAGES.md"
+      ]
     },
     {
       "id": "T023",
@@ -1598,8 +1617,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: T020
-Revision: 1595
+Current Task: нет
+Revision: 1596
 
 ## Цель
 
@@ -1699,10 +1718,10 @@ Revision: 1595
   - Git Commit: [DONE] release: опубликовать исправленный выпуск 0.6.105
   - Reference: parallel-chat-execution-20261009 / T019 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
-- [IN_PROGRESS] T020: Защитить основной parallel-план и восстановить ошибочно начатую задачу — В работе
-  - Git Commit: [PENDING] feat: Защитить основной parallel-план и восстановить ошибочно начатую задачу
+- [DONE] T020: Защитить основной parallel-план и восстановить ошибочно начатую задачу — Завершено
+  - Git Commit: [DONE] feat: Защитить основной parallel-план и восстановить ошибочно начатую задачу
   - Reference: parallel-chat-execution-20261009 / T020 / implementation
-  - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/task-handoff.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs, packages/workflow-kit/scripts/check-task-handoff-fixture.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, docs/modules/session-runtime.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/STAGES.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/docs/modules/parallel-assignments.md
+  - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/task-handoff.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs, packages/workflow-kit/scripts/check-task-handoff-fixture.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/task-files.mjs, docs/modules/session-runtime.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/STAGES.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/docs/modules/parallel-assignments.md
 - [TODO] T023: Привязать AutoPlan к проекту и выключать после завершения плана — Ожидает
   - Git Commit: [PENDING] feat: Привязать AutoPlan к проекту и выключать после завершения плана
   - Reference: parallel-chat-execution-20261009 / T023 / implementation

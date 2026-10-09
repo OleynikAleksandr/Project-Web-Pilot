@@ -150,8 +150,9 @@ try {
     const recovery=recover(root).text;
     assert.match(recovery,/"execution_strategy":"parallel"/);
     assert.match(recovery,/исключительное выполнение; в parallel-плане отдельный исполнитель/);
-    startTask(root,'T001'); write(root,'README.md','# Worker output is not integration\n');
-    const before=git(root,'rev-parse','HEAD'); commit(root,'PLAN_SCHEMA');
+    const before=git(root,'rev-parse','HEAD'), beforePlan=fs.readFileSync(path.join(root,'.harness/plans/todo-plan.md'),'utf8');
+    expect('PARALLEL_MAIN_READ_ONLY',()=>startTask(root,'T001'));
+    assert.equal(fs.readFileSync(path.join(root,'.harness/plans/todo-plan.md'),'utf8'),beforePlan);
     assert.equal(git(root,'rev-parse','HEAD'),before);
     assert.equal(readPlan(root).tasks[0].commit_status,'PENDING');
   }

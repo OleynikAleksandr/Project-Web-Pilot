@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { handoffParallelTask, assertHandoffCommand } from './lib/task-handoff.mjs';
 import { startIntegration, continueIntegration, integrationStatus, assertIntegrationCommand } from './lib/task-integration.mjs';
 import { createAssignment, assignmentStatus, setupAssignment, assertAssignmentCommand } from './lib/task-assignment.mjs';
 import path from 'node:path';
@@ -42,6 +43,7 @@ export async function main(argv = process.argv.slice(2)) {
     if (command === 'help' || opts.help || rest.includes('help')) return { value: commandHelp(command === 'help' ? (aliases[rest[0]] ?? rest[0] ?? 'help') : command), json: false };
     if (['install', 'install:commit', 'inspect', 'remove', 'doctor'].includes(command)) {
       if(opts.project && fs.existsSync(path.join(opts.project,'.git'))) {
+        assertHandoffCommand(repoRoot(opts.project),command);
         assertAssignmentCommand(repoRoot(opts.project),command);
         assertIntegrationCommand(repoRoot(opts.project),command);
       }
@@ -51,6 +53,7 @@ export async function main(argv = process.argv.slice(2)) {
 
     let event; if (isHook) event = JSON.parse(fs.readFileSync(0, 'utf8'));
     const root = repoRoot(opts.project || event?.cwd || process.cwd());
+    assertHandoffCommand(root,command);
     assertAssignmentCommand(root,command);
     assertIntegrationCommand(root,command);
     let result;
@@ -68,6 +71,7 @@ export async function main(argv = process.argv.slice(2)) {
       case 'integration:start': result = startIntegration(root,input()); break;
       case 'integration:continue': result = continueIntegration(root,opts.id); break;
       case 'integration:status': result = integrationStatus(root); break;
+      case 'assignment:handoff': result = handoffParallelTask(root,input(),opts['expected-revision']); break;
       case 'assignment:create': result = createAssignment(root,input(),opts['expected-revision']); break;
       case 'assignment:status': result = assignmentStatus(root,opts.id); break;
       case 'assignment:setup': result = setupAssignment(root,opts.id,{npmCi:!!opts['npm-ci']}); break;
