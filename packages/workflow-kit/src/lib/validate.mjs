@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { verifyIntegrationCommit } from './task-integration.mjs';
 import { assertAssignment } from './task-assignment.mjs';
 import path from 'node:path';
 import { check, CONFIG, PLAN, planPath, readJSON, textFile, hash, contextPath, relativePath } from './common.mjs';
@@ -119,14 +120,15 @@ function commitIteration(commit) {
   check(values.length === 1 && /^[1-9][0-9]*$/.test(values[0]), 'AMBIGUOUS_COMMIT', 'Некорректный Workflow-Iteration: ' + commit.sha);
   return Number(values[0]);
 }
-export function resolveReferences(root, p, pending = journal(root)) {
+export function resolveReferences(root, p, pending = journal(root), tip = 'HEAD') {
   const PLAN = planPath(root);
-  const history = p.scope_id ? commitHistory(root, p.baseline_commit) : [];
+  const history = p.scope_id ? commitHistory(root, p.baseline_commit, tip) : [];
   const resolved = {};
   for (const task of p.tasks) {
     const targetIteration = task.commit_ref?.iteration ?? 1;
     check(Number.isSafeInteger(targetIteration) && targetIteration > 0, 'PLAN_SCHEMA', 'commit_ref.iteration должна быть положительным целым: ' + task.id);
-    const taskHistory = history.filter(c => c.trailers['Workflow-Scope']?.includes(p.scope_id) && c.trailers['Workflow-Task']?.includes(task.id) && c.trailers['Workflow-Role']?.includes('implementation'));
+    const role = task.commit_ref.role;
+    const taskHistory = history.filter(c => c.trailers['Workflow-Scope']?.includes(p.scope_id) && c.trailers['Workflow-Task']?.includes(task.id) && c.trailers['Workflow-Role']?.includes(role));
     for (const c of taskHistory) for (const key of ['Workflow-Scope', 'Workflow-Task', 'Workflow-Role']) check(c.trailers[key]?.length === 1, 'AMBIGUOUS_COMMIT', 'Дублированные trailers: ' + c.sha);
     const candidates = taskHistory.filter(c => commitIteration(c) === targetIteration);
     check(candidates.length <= 1, 'AMBIGUOUS_COMMIT', 'Найдено несколько коммитов задачи ' + task.id + ' iteration ' + targetIteration);
@@ -138,6 +140,10 @@ export function resolveReferences(root, p, pending = journal(root)) {
     }
     const c = candidates[0];
     check(task.commit_status === 'DONE', 'PLAN_COMMIT_MISMATCH', 'Коммит уже существует, а задача не закрыта: ' + task.id);
+    if (role === 'integration') {
+      resolved[task.id] = verifyIntegrationCommit(root, c, task, p);
+      continue;
+    }
     check(c.parents.length === 1, 'HISTORY_NOT_LINEAR', 'Коммит микрозадачи должен иметь одного родителя.');
     const changed = commitPaths(root, c.sha);
     // Historical task commits predate adoption; inspect the path in THAT commit.
@@ -157,7 +163,7 @@ export function resolveReferences(root, p, pending = journal(root)) {
       const depTask = committed.tasks.find(item => item.id === dep);
       const depIteration = depTask?.commit_ref?.iteration ?? 1;
       const earlier = history.find(h => h.trailers['Workflow-Scope']?.[0] === p.scope_id && h.trailers['Workflow-Task']?.[0] === dep
-        && h.trailers['Workflow-Role']?.[0] === 'implementation' && commitIteration(h) === depIteration);
+        && h.trailers['Workflow-Role']?.[0] === (depTask?.commit_ref?.role ?? 'implementation') && commitIteration(h) === depIteration);
       check(earlier, 'DEPENDENCY_ORDER', 'Зависимость не предшествует задаче ' + task.id);
       return earlier.sha;
     });

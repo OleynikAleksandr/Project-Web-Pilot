@@ -130,10 +130,10 @@ export function areAncestors(root, from, to) {
   const result = git(root, ['rev-list', '--max-count=1', ...commits, '--not', to, '--'], { allowFailure: true });
   return result.status === 0 && result.stdout.trim() === '';
 }
-export function commitHistory(root, baseline) {
+export function commitHistory(root, baseline, tip = 'HEAD') {
   if (!head(root)) return [];
-  if (baseline) check(isAncestor(root, baseline), 'BASELINE_MISMATCH', 'Baseline не принадлежит текущей истории.');
-  const raw = git(root, ['log', '-z', '--format=%H%x00%P%x00%B%x00%(trailers:only,unfold)', baseline ? baseline + '..HEAD' : 'HEAD']).stdout;
+  if (baseline) check(isAncestor(root, baseline, tip), 'BASELINE_MISMATCH', 'Baseline не принадлежит текущей истории.');
+  const raw = git(root, ['log', '-z', '--format=%H%x00%P%x00%B%x00%(trailers:only,unfold)', baseline ? baseline + '..' + tip : tip]).stdout;
   const fields = raw.split('\0');
   if (fields.at(-1) === '') fields.pop();
   check(fields.length % 4 === 0, 'HISTORY_FORMAT', 'Git вернул неполную историю коммитов.');
