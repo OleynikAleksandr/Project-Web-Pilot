@@ -1055,13 +1055,6 @@ function decorateSessionRuntime(record) {
 }
 
 function registerIpc() {
-  const executionWorkspace=input=>{
-    const selected=store.selected(),workspace=selected?.parentWorkspace??selected?.workspace;
-    if(!input||Object.keys(input).some(key=>key!=='workspace')||input.workspace!==workspace)
-      throw Object.assign(new Error('Выберите проект текущего плана.'),{code:'EXECUTION_SELECTION_CHANGED'});
-    return workspace;
-  };
-  registerAction('pilot:correct-integration',input=>execution.correct(executionWorkspace(input)));
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:auto-plan', async enabled => {
     const selected=store.selected(),workspace=selected?.parentWorkspace??selected?.workspace;

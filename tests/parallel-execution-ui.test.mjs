@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
-import { executorStatus,projectExecutors } from '../src/execution-projection.mjs';
+import { executorStatus,projectExecutors,projectExecutionPlan,integrationProblem } from '../src/execution-projection.mjs';
 
 test('status distinguishes observed work, unknown, source readiness and verified integration without inventing a user question',()=>{
   const record={pageState:{current:{state:{busy:true,lastMessageRole:'assistant'}}}};
@@ -34,14 +34,14 @@ test('real sidebar renders executor group, worktree/status/time, protected actio
   const query=document.querySelectorAll.bind(document);
   document.querySelectorAll=selector=>query(selector.replaceAll(':popover-open','[data-test-open]'));
   let listener;
-  const executor={workspace:'/tree',sessionId:'child',originSessionId:'author',taskId:'T1',title:'T1 — Worker',experience:'work',
+  const executor={workspace:'/tree',sessionId:'child',assignmentId:'a',originSessionId:'author',taskId:'T1',title:'T1 — Worker',experience:'work',
     phase:'ready',label:'Готово к слиянию',time:{activeMs:2000,waitingMs:3000,phase:'unknown'}};
   let state={projects:[{workspace:'/main',name:'Main',expanded:true,sessions:[{sessionId:'author',title:'Планировщик',createdAt:1000}],executors:[executor]}],
     selected:{workspace:'/main',sessionId:'author',scopeId:'scope',planExecution:{execution_strategy:'parallel'},planView:{state:'working',completed:0,total:1,tasks:[{id:'T1',title:'Task',status:'current'}]}},
     execution:{phase:'waiting',scopeId:'scope',assignments:[],planView:{state:'working',completed:0,total:1,tasks:[{id:'T1',title:'Task',status:'current'}]}},context:{phase:'delivered'}};
   const action=name=>async(...args)=>{calls.push([name,...args]);return {state};};
   window.webPilot={getState:async()=>state,onState:fn=>{listener=fn;},
-    correctIntegration:action('correctIntegration'),selectSession:action('selectSession')};
+    selectSession:action('selectSession')};
   window.eval('const createProgress=()=>({show(){},destroy(){}});const operationLabel=()=>"";const settingsPanelView=()=>({render(){}});const workspaceSetupView=()=>({render(){}});\n'+source.replace(/^import .*;\n/gm,''));
   const settle=()=>new Promise(resolve=>setTimeout(resolve,0));await settle();
   assert.match(document.querySelector('.executor-group summary').textContent,/Исполнители · Планировщик/);
@@ -56,7 +56,27 @@ test('real sidebar renders executor group, worktree/status/time, protected actio
     execution:{...state.execution,phase:'integration',integration:{status:'CONFLICT'}}};
   listener(state);
   assert.equal(document.querySelector('.executor-row').getAttribute('aria-current'),'page');
-  assert.match(document.getElementById('plan-status').textContent,/0 из 1/,'local DONE does not complete main');
-  assert.equal(document.getElementById('correct-integration').hidden,false);
-  document.getElementById('correct-integration').click();await settle();assert.deepEqual(calls.pop(),['correctIntegration','/main']);
+  assert.equal(document.getElementById('plan-card').hidden,true);
+  assert.equal(document.getElementById('assignment-card').hidden,false);
+  assert.match(document.getElementById('assignment-status').textContent,/Готово к слиянию/);
+  assert.equal(document.getElementById('correct-integration'),null);
+  state={...state,selected:{workspace:'/main',sessionId:'author',scopeId:'scope',planExecution:{execution_strategy:'parallel'},
+    planView:{state:'working',completed:0,total:1,tasks:[{id:'T1',title:'Task',status:'pending'}]}}};
+  listener(state);
+  assert.equal(document.getElementById('assignment-card').hidden,true);
+  assert.equal(document.getElementById('plan-card').hidden,false);
+  assert.equal(document.querySelector('.plan-task').dataset.status,'current','main uses assignment projection, not stale main TODO');
+});
+
+test('parent projection distinguishes assigned, ready and integrated results; launch failure is not a code conflict',()=>{
+  const plan={tasks:[{id:'T1',title:'Base',commit_status:'PENDING'}]},assignment={id:'a',parent_task_id:'T1',status:'READY'};
+  assert.equal(projectExecutionPlan(plan,[],{}).tasks[0].status,'pending');
+  assert.equal(projectExecutionPlan(plan,[assignment],{}).tasks[0].status,'current');
+  assignment.status='READY_FOR_INTEGRATION';
+  assert.equal(projectExecutionPlan(plan,[assignment],{}).tasks[0].label,'Готово к интеграции');
+  assert.equal(projectExecutionPlan(plan,[assignment],{}).completed,0);
+  plan.tasks[0].commit_status='DONE';assert.equal(projectExecutionPlan(plan,[assignment],{}).completed,1);
+  const failure={status:'CHECKS_FAILED',error:JSON.stringify({details:{result:{id:'test',status:'FAILED',exit_code:null,output:'spawnSync node ENOENT'}}})};
+  assert.equal(integrationProblem(failure).code,'INTEGRATION_CHECK_START_FAILED');
+  failure.error=JSON.stringify({details:{result:{status:'FAILED',exit_code:1}}});assert.equal(integrationProblem(failure),null);
 });

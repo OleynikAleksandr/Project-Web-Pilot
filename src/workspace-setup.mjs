@@ -51,8 +51,18 @@ export class WorkspaceSetup {
       } else this.environment[key] = value;
     }
   }
+  includeNodePath() {
+    const api = this.platform === 'win32' ? path.win32 : path.posix;
+    if (!this.nodeExecutable || !api.isAbsolute(this.nodeExecutable)) return;
+    const separator = this.platform === 'win32' ? ';' : ':';
+    const oldPath = Object.entries(this.environment).find(([key]) => key.toLowerCase() === 'path')?.[1] ?? '';
+    const directory = api.dirname(this.nodeExecutable);
+    const same = value => this.platform === 'win32' ? value.toLowerCase() === directory.toLowerCase() : value === directory;
+    for (const key of Object.keys(this.environment)) if (key.toLowerCase() === 'path') delete this.environment[key];
+    this.environment[this.platform === 'win32' ? 'Path' : 'PATH'] = [directory, ...oldPath.split(separator).filter(value => !same(value))].join(separator);
+  }
   async node() {
-    if (this.nodeExecutable) return this.nodeExecutable;
+    if (this.nodeExecutable) { this.includeNodePath(); return this.nodeExecutable; }
     const nodeIssues = [];
     for (const candidate of this.nodeCandidates) {
       if (!executableCandidateAllowed(candidate, this.platform)) continue;
@@ -62,8 +72,11 @@ export class WorkspaceSetup {
           ...(this.platform === 'win32' ? { windowsHide: true } : {}),
         });
         const version = /^v(\d+)\.(\d+)\.(\d+)\s*$/.exec(stdout);
-        if (version && Number(version[1]) === 24 && Number(version[2]) >= 21)
-          return this.nodeExecutable = candidate;
+        if (version && Number(version[1]) === 24 && Number(version[2]) >= 21) {
+          this.nodeExecutable = candidate;
+          this.includeNodePath();
+          return candidate;
+        }
         if (version || this.platform === 'win32') nodeIssues.push({
           candidate, code: version
             ? (Number(version[1]) > 24 ? 'NODE_UNSUPPORTED' : 'NODE_TOO_OLD')

@@ -1,91 +1,76 @@
 # Краткая архитектура проекта
 
-Стек: Workflow Kit 1.7.1, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
+Стек: Workflow Kit 1.7.1, Electron 44.5.1, Node 24.21.0. Версия и установка — [README](../../README.md), ход работы — current plan и Git, факты выпуска — release-manifest.json и GitHub Release. Постоянные ограничения — [AGENTS.md](../../AGENTS.md).
 
-## Назначение и границы
+## Назначение
 
-Electron-приложение для macOS и Windows: одно окно, слева собственный сайдбар локальных проектов, их чатов и текущего плана, справа ChatGPT Web во встроенном Chromium (`BaseWindow` + `WebContentsView`). Модель работает через веб-аккаунт пользователя, без модельного API. Web Pilot готовит и доставляет стартовый контекст. Локальный исполнитель Codex App Server выполняет команды через MCP. ChatGPT подключается к нему через Secure MCP Tunnel или VPS.
+Electron-приложение для macOS и Windows: одно окно, слева локальные проекты, чаты и план, справа ChatGPT Web во встроенном Chromium (`BaseWindow` + `WebContentsView`). Модель работает через веб-аккаунт, без модельного API. Web Pilot доставляет контекст; Codex App Server выполняет локальные команды через MCP, подключённый к ChatGPT через Secure MCP Tunnel или VPS.
 
-Один Git checkout/worktree имеет один current plan (`.harness/plans/todo-plan.md`), которым управляет Workflow Kit. Сессии хранят разговор и состояние, но плана не владеют. Parallel-план в main выдаёт подчинённые задачи в отдельные worktree и Chat/Work, а результаты принимает проверенными интеграциями. Последовательный план сохраняет основной чат. Переключение панели не меняет cwd и не останавливает скрытую страницу.
+Один checkout/worktree имеет один current plan `.harness/plans/todo-plan.md`. Чаты хранят разговор и состояние, но планом не владеют. Sequential-план выполняет основной чат. Parallel-план выдаётся отдельным Chat/Work и worktree, main принимает результаты проверенными последовательными интеграциями. Переключение панели не меняет cwd и не останавливает скрытую страницу.
 
 ## Карта модулей
 
-| Модуль | Код | Документ |
+Модули без префикса лежат в `src/`.
+
+| Модуль | Код | Контракт |
 | --- | --- | --- |
-| Каркас приложения | `src/main.mjs`, `common.mjs`, `platform.mjs` | этот документ |
-| Доставка контекста | `context-session`, `context-cache`, `context-inputs`, `session-plans`, `mcp-runtime`, `conversation-recovery` | [context-delivery](../modules/context-delivery.md) |
-| Граница Kit ↔ Web Pilot | вызов `recover`, проверка пакета | [workflow-kit-recovery](../modules/workflow-kit-recovery.md) |
-| Review нового плана | `plan-review`, `review-continuation`, `automation-send-state`, Kit `plan-review`/`claude-review` | [plan-review](../modules/plan-review.md) |
-| AutoPlan | `auto-plan`, `auto-plan-state`, `project-auto-plan`, `project-session-auto-plan` | [auto-plan](../modules/auto-plan.md) |
-| Параллельные задачи | `parallel-settings`, `parallel-execution`, `parallel-kit`, `executor-session`, `execution-projection` | [parallel-execution](../modules/parallel-execution.md) |
+| Каркас | `main.mjs`, `common.mjs`, `platform.mjs` | этот документ |
+| Контекст | `context-session`, `context-inputs`, `session-plans` | [context-delivery](../modules/context-delivery.md) |
+| Kit ↔ приложение | вызов recover, проверка пакета | [workflow-kit-recovery](../modules/workflow-kit-recovery.md) |
+| Review | `plan-review`, `review-continuation`, Kit review | [plan-review](../modules/plan-review.md) |
+| AutoPlan | `auto-plan`, `project-auto-plan` | [auto-plan](../modules/auto-plan.md), [отправка](../modules/auto-plan-send.md) |
+| Назначения и интеграции | `parallel-execution`, `parallel-kit`, `executor-session` | [parallel-execution](../modules/parallel-execution.md) |
 | Живые страницы | `session-runtime`, `conversation-recovery`, `agent-timer` | [session-runtime](../modules/session-runtime.md) |
-| Текущий план в панели | `plan-monitor`, `project-input-watch` | [plan-view](../modules/plan-view.md) |
-| Проекты и сессии | `workspace-session`, `chatgpt-title`, `agent-timer` | [workspace-sessions](../modules/workspace-sessions.md) |
-| Сайдбар и окно | `preload.cjs`, `src/ui/{index.html,sidebar,progress,settings-panel,chat-colors}`, `chat-colors-window`, `chat-colors-preload.cjs` | [workspace-sidebar-ui](../modules/workspace-sidebar-ui.md) |
-| Быстрое открытие сессии | `workspace-readiness`, поколения навигации в `main.mjs` | [session-opening-performance](../modules/session-opening-performance.md) |
-| Адаптер ChatGPT | `chatgpt-dom`, `chatgpt-composer`, `chatgpt-experience`, `chatgpt-page-observer`, `page-state(-bridge)`, `chatgpt-tool-filter`, `chatgpt-auto-scroll`, `chatgpt-colors` | [chatgpt-dom-compatibility](../modules/chatgpt-dom-compatibility.md) |
+| Проекция плана | `plan-monitor`, `project-input-watch` | [plan-view](../modules/plan-view.md) |
+| Проекты и чаты | `workspace-session`, `chatgpt-title`, `agent-timer` | [workspace-sessions](../modules/workspace-sessions.md) |
+| Сайдбар | `preload.cjs`, `ui/sidebar`, `ui/settings-panel` | [workspace-sidebar-ui](../modules/workspace-sidebar-ui.md) |
+| Открытие сессии | `workspace-readiness`, поколения навигации main | [session-opening-performance](../modules/session-opening-performance.md) |
+| DOM ChatGPT | `chatgpt-dom/composer/experience`, `chatgpt-page-observer`, `page-state` | [chatgpt-dom-compatibility](../modules/chatgpt-dom-compatibility.md) |
 | Диагностика | `chromium-diagnostics`, `startup-network-trace` | [chromium-diagnostics](../modules/chromium-diagnostics.md) |
-| Создание и подключение проекта | `workspace-setup`, `src/ui/workspace-setup.mjs`, `resources/workspace-setup-worker.mjs` | [workspace-setup](../modules/workspace-setup.md) |
-| Архив проектов | `workspace-deletion`, `archive-preload.cjs`, `src/ui/archive*` | [project-archive](../modules/project-archive.md) |
-| Доктор проекта | `project-doctor`, `src/ui/project-doctor.mjs`, `resources/project-doctor*` | [project-doctor](../modules/project-doctor.md) |
-| Первый запуск | `browser-startup`, `startup-readiness`, `startup-platform`, `tunnel-setup`, `tunnel-clipboard`, `src/ui/startup.mjs` | [first-run-onboarding](../modules/first-run-onboarding.md) |
-| Службы и каналы | `mac-runtime-switch`, `windows-runtime`, `vps-tunnel`, `zip-archive`, `tools/codex-app-server-mcp/control.py`, `resources/runtime-control/` | [runtime-lifecycle](../modules/runtime-lifecycle.md) |
+| Подготовка проекта | `workspace-setup`, `ui/workspace-setup`, `resources/workspace-setup-worker.mjs` | [workspace-setup](../modules/workspace-setup.md) |
+| Архив | `workspace-deletion`, `archive-preload.cjs`, `ui/archive*` | [project-archive](../modules/project-archive.md) |
+| Доктор | `project-doctor`, `ui/project-doctor`, `resources/project-doctor*` | [project-doctor](../modules/project-doctor.md) |
+| Первый запуск | `browser-startup`, `startup-readiness`, `ui/startup` | [first-run-onboarding](../modules/first-run-onboarding.md) |
+| Службы | `mac-runtime-switch`, `windows-runtime`, `vps-tunnel`, `zip-archive`, `control.py`, `resources/runtime-control/` | [runtime-lifecycle](../modules/runtime-lifecycle.md) |
 | Исполнитель | `tools/codex-app-server-mcp/*`, `scripts/check-codex-tools.mjs` | [codex-app-server-executor](../modules/codex-app-server-executor.md) |
-| Выпуск | `scripts/release-*`, `sign-mac-bundle`, `prepare-*-toolchain`, `verify-windows-package`, `check-*` | [release](../modules/release.md) |
-| Workflow Kit | `packages/workflow-kit/**`, `scripts/stage-workflow-kit.mjs`, `scripts/workflow*` | [контракт пакета](../../packages/workflow-kit/docs/modules/workflow-kit-package.md) |
+| Выпуск | `scripts/release-*`, `prepare-*-toolchain`, `check-*` | [release](../modules/release.md) |
+| Kit | `packages/workflow-kit/**`, `scripts/workflow*` | [workflow-kit-package](../../packages/workflow-kit/docs/modules/workflow-kit-package.md) |
 
-Модули без префикса пути лежат в `src/`.
+## Поток выполнения
 
-## Поток новой сессии
+1. Пользователь создаёт Chat или Work выбранного проекта. Новая основная сессия сохраняет неизменяемый снимок разрешения параллельности; настройки не меняют уже созданные сессии.
+2. Kit строит recovery: Workflow Core, PROTOTYPE, проектный AGENTS, OVERVIEW, план и выбранные документы целиком. Части ≤28000 байт, весь пакет ≤7 частей и ≤180000 байт; превышение даёт CONTEXT_TOO_LARGE без усечения.
+3. Web Pilot проверяет пакет, прикрепляет части как файлы и отправляет короткий транспортный текст один раз после их загрузки (до 120 с). UNKNOWN Send не повторяется. Агент читает каждое вложение отдельно и кратко подтверждает проект; MCP в первом ответе основного агента не вызывается. Обычное открытие сохранённого чата контекст повторно не отправляет.
+4. Review ON согласует новый план с Claude CLI, каждый успешный отзыв требует сохранённой позиции автора. Ошибки и существенные споры возвращаются пользователю. Получатель Review — явный Session ID, он не владеет планом.
+5. AutoPlan независим от Review и других проектов. По умолчанию OFF; явное ON до первого плана ждёт его публикации и привязывается к первому scope. Последний подтверждённый DONE сохраняет OFF; следующий scope OFF. Разрешение незавершённого плана переживает restart; legacy global ON игнорируется.
+6. Sequential получает «Продолжай» в собственный основной чат. В parallel все задачи получают назначения; task:start в main запрещён. Источник снимка отдельно от получателя Review. У исполнителя собственные view, Composer, доставка, наблюдатель и recovery; локальный DONE означает готовность к интеграции. Общий прогресс main подтверждается Git. Точный протокол — [parallel-execution](../modules/parallel-execution.md).
 
-1. Пользователь выбирает проект и создаёт Chat или Work. Web Pilot открывает новую беседу в выбранном режиме.
-2. Kit проекта строит recovery: Workflow Core, PROTOTYPE, проектная часть AGENTS, OVERVIEW, текущий план и выбранные им документы целиком. Пакет делится на части по `budget.document_bytes` (28000 байт), всего ≤ 7 частей и ≤ 180000 байт; превышение — `CONTEXT_TOO_LARGE` без усечения.
-3. Web Pilot проверяет актуальность и целостность пакета, прикрепляет части как файлы и вставляет короткий транспортный текст. Send — один раз, сразу после загрузки всех вложений (ожидание до 120 с). Неопределённый Send автоматически не повторяется.
-4. Основной агент читает каждое вложение отдельным вызовом и кратко подтверждает восстановление; MCP проекта в первом ответе не вызывает. Автоматически созданный исполнитель после чтения выполняет только назначенную задачу через task:start/commit.
-5. При Review ON новый план согласуется с Claude CLI; каждый успешный отзыв требует сохранённой позиции автора через Kit. Ошибки и споры возвращаются пользователю ([plan-review](../modules/plan-review.md)). Продолжение Review доставляется по явному Session ID, который планом не владеет. AutoPlan независим: если включён, после публикации отправляет «Продолжай» с данными следующей задачи.
+## Состояние и безопасность
 
-Сохранённый чат при обычном открытии контекст заново не получает. Подробности — [context-delivery](../modules/context-delivery.md), [auto-plan](../modules/auto-plan.md), [граница с Kit](../modules/workflow-kit-recovery.md).
+Наблюдение событийное: PageStateSource, ProjectInputWatch, события служб. Функционального polling в простое нет; ограниченные ожидания/watchdog допустимы. Сбой наблюдения видим, без тихой остановки. При старте до первой страницы панель возвращает пустое восстановление и agentRun=null, не требует runtime.
 
-Новая основная сессия сохраняет снимок разрешения параллельности. AutoPlan проекта ON запускает первую и последующие готовые группы parallel-плана. Основной чат не начинает задачи в main; все задачи передаются назначениям. Новый scope получает OFF, кроме первого плана после явного включения ожидания пользователем; подтверждённое завершение сохраняет OFF. Происхождение снимка отдельно от получателя Review; legacy остаётся последовательным. У каждого живого чата собственные view, Composer, доставка, наблюдатель и восстановление; окно показывает выбранную страницу, не уничтожая остальные.
+Адаптер работает с видимым DOM без cookies/localStorage/внутренних функций. Узкое исключение: название через недокументированный `/backend-api/conversation/<id>` в авторизованной странице, fail-closed — [workspace-sessions](../modules/workspace-sessions.md). Пассивная CDP-диагностика не хранит тела и текст. IPC проверяет своё окно/mainFrame/URL; универсального shell/write API нет. Профиль, ключи, адрес коннектора, настройки и пользовательское состояние не попадают в Git и журналы диагностики.
 
-Старт восстанавливает настройки до создания окна и первой живой страницы. Публикация состояния в этот момент возвращает пустое восстановление разговора и null для таймера; существование runtime не требуется. Electron smoke проверяет этот путь со старым глобальным ON, который мигрирует в OFF. Разрешение незавершённого плана хранится по проекту и scope; каждый основной чат имеет собственный контроллер, включая скрытые страницы.
+## Платформы и исходники
 
-## Состояние, события, безопасность
+Единственный backend — Codex App Server, подключения «Codex App Server Local Mac/Windows»: девять MCP tools для команд, stdin, patch, изображений, статуса, watchdog и наблюдения экрана. Управления интерфейсом, модельных ходов и доставки контекста через MCP нет. Codex CLI устанавливает пользователь, версия закреплена в codex-tools.lock.json.
 
-- Состояние наблюдается событиями: наблюдатель страницы (PageStateSource), файловые события проекта (ProjectInputWatch), события служб. Функциональных опросов в простое нет; допустимы ограниченные ожидания и watchdog. Сбой наблюдения даёт видимую ошибку с повтором, а не тихую остановку.
-- Адаптер ChatGPT работает только с видимым DOM: без cookies, localStorage и внутренних функций страницы. Исключение — синхронизация названия беседы через недокументированный `/backend-api/conversation/<id>` в авторизованной странице, fail-closed ([workspace-sessions](../modules/workspace-sessions.md)); пассивная диагностика наблюдает сеть через CDP, тела и текст не сохраняет ([chromium-diagnostics](../modules/chromium-diagnostics.md)).
-- IPC узкие, отправитель проверяется по своему окну (`assertLocalSender` сайдбара, `assertArchiveSender` архива, проверка в `chat-colors-window`); универсального shell- или write-API нет.
-- Профиль ChatGPT, настройки и состояние приложения — в пользовательских данных, не в Git. Диагностика хранит технические признаки, без тел recovery, беседы и секретов. Ключ туннеля и адрес коннектора не попадают в репозиторий, журналы и чат.
+MCP и туннели живут вне окна, стартуют при входе через LaunchAgent/macOS или HKCU Run/Windows. Предпочтительные порты 17852/17853, при занятости сохраняется свободный; selector/туннель/VPS следуют фактическому адресу. Удалённый VPS-порт 17842. Детали — [runtime-lifecycle](../modules/runtime-lifecycle.md).
 
-## Исполнитель и платформы
+`packages/workflow-kit` — единственный источник; `resources/workflow-kit` генерируется stage и не хранится в Git, `.harness/kit` обновляется только installer. `scripts/` может импортировать `src/`, обратное запрещено. Workers/Доктор в resources не импортируют src.
 
-На macOS и Windows работает один backend — Codex App Server (`tools/codex-app-server-mcp`), имя подключения «Codex App Server Local Mac/Windows». Он отдаёт ровно девять MCP-инструментов: команды, stdin, patch, изображения, статус, watchdog и наблюдение экрана. Управления интерфейсом и модельных ходов нет, контекст через MCP не передаётся. Codex CLI устанавливает пользователь, версия закреплена в `codex-tools.lock.json`.
+Web Pilot Sidebar — отдельный репозиторий; публичные экспорты и pageScript `chatgpt-dom/composer/experience` переиспользуются по закреплённым SHA. Production Host API не реализован.
 
-Службы (MCP, tunnel-client, VPS-проброс) живут вне окна и стартуют при входе пользователя: LaunchAgent на macOS, HKCU Run на Windows. Предпочтительные порты: MCP 17852, tunnel-client 17853; если порт занят другой программой, служба переходит на свободный и сохраняет его, а selector, туннель и VPS-проброс следуют фактическому адресу. Удалённый порт VPS — 17842. Подробности — [runtime-lifecycle](../modules/runtime-lifecycle.md) и [codex-app-server-executor](../modules/codex-app-server-executor.md).
+## Проверки и документы
 
-## Исходники и потребители
+`npm start` запускает исходники; `npm test` — Node suite; `npm run smoke` — Electron TEST FIXTURE; `npm run build` — парный выпуск macOS arm64 + Windows x64. Назначенные verification_ids запускает Kit при commit. Сборка только в delivery после DOCS, установка и публикация без пересборки — [release](../modules/release.md).
 
-- `packages/workflow-kit` — единственный источник Kit (`@webpilot/workflow-kit`). `resources/workflow-kit` — копия для приложения, создаётся `npm run stage:workflow-kit` и в Git не хранится. `.harness/kit` — установленный runtime этого checkout, его обновляет только `install --update`.
-- Web Pilot Sidebar — отдельный репозиторий. Он переиспользует `chatgpt-dom`, `chatgpt-composer` и `chatgpt-experience` по закреплённым SHA; их экспорты и формат `pageScript` — внешний контракт ([chatgpt-dom-compatibility](../modules/chatgpt-dom-compatibility.md)). Production Host API для Sidebar не реализован — будущая работа.
-- Направление импорта: `scripts/` может импортировать `src/`, обратное запрещено. Workers в `resources/` и Доктор не импортируют `src/`.
+Fixtures не подтверждают живой ChatGPT, native Windows или чистую ОС; это [пользовательская приёмка](../modules/parallel-execution-acceptance.md). [Отложенный аудит](../modules/technical-audit-followups.md) в выпуск не входит.
 
-## Запуск и проверки
+README — для пользователя; OVERVIEW — карта; docs/modules — контракты; docs/planning — невыпущенные требования. При DOCS действующее содержание спецификаций переносится в модули, временные документы удаляются; история остаётся в Git. Каждый .md ≤28000 байт UTF-8. Вне текущей задачи документы фиксируются docs:commit.
 
-- `npm start` — запуск из исходников; `npm test` — Node suite (`tests/*.test.mjs`); `npm run smoke` — Electron smoke на TEST FIXTURE, не живой ChatGPT; `npm run build` — парная сборка macOS arm64 + Windows x64 ([release](../modules/release.md)).
-- Проверки задач задаются в `.harness/workflow.json` и назначаются в плане через `verification_ids`: `unit-all`, `electron-smoke`, `executor-channel`, `codex-tools-live`, `kit-check`, `paired-release`, `release-installed`, `github-release`, `workflow-kit-archive`.
-- Fixtures, smoke и упаковка проверяют разные уровни. Живой ChatGPT, чистую установку и native Windows принимает пользователь. Ручные протоколы — в документах модулей, раздел «Проверки».
-- [Приёмка параллельного выполнения](../modules/parallel-execution-acceptance.md) остаётся открытой после установки. [Отложенные замечания статического аудита](../modules/technical-audit-followups.md) не входят в этот выпуск.
+## Отложенные решения
 
-## Документация
+Удалённая видимость с мобильных устройств требует нового решения: сначала read-only MCP UI с проверкой клиентов, затем при неудаче web-компаньон. Без копии плана, shell и прямой записи; с allowlist проектов и аутентификацией. Electron не собирается под iOS/Android, Secure MCP Tunnel не даёт стороннего HTTP-доступа.
 
-- Документы описывают текущее устройство, требования, ограничения и краткие причины решений. История не накапливается: ход работы — в плане, коммитах и диффах.
-- Каждый `.md` ≤ `budget.document_bytes` (28000 байт UTF-8); при росте документ делится на самостоятельные.
-- `docs/modules/*.md` — контракты модулей. `docs/planning/*.md` — только невыпущенные рабочие спецификации; при DOCS выпуска их действующее содержание переносится в модули, а сами они удаляются. README — для пользователя. Полная актуализация — в DOCS перед каждым выпуском.
-- Вне задачи (план NONE или ACTIVE без текущей задачи) документы фиксируются `./scripts/workflow docs:commit`.
-
-## Отложенные направления
-
-- Удалённая видимость проектов, разговоров и current plan работающего Mac с iPad/iPhone/Android. Решение о реализации не принято. Если начнётся, порядок такой: read-only MCP UI с проверкой каждого клиента; при неудаче — web-панель-компаньон. Без своей копии плана, с явной ссылкой на project/worktree, без shell и прямой записи `todo-plan.md`, с аутентификацией и allowlist проектов, без model API. Ограничения: Electron не собирается под iOS/Android; Secure MCP Tunnel не даёт стороннему приложению HTTP-доступа к Mac.
-- Отвергнуто: адаптер ChatGPT MCP App и автоматизация навигации в нативном приложении ChatGPT. Spike не переключил нативную беседу; модель `owner_session_id` несовместима с одним current plan на checkout. Не возобновлять.
-- Коннектор Claude через VPS: канал общий, подключение Claude не создавалось и не проверялось.
-- Сигнал внутреннего compact в ChatGPT не найден; восстановление после compact не заявляется ([context-delivery](../modules/context-delivery.md)).
+Не возобновлять адаптер ChatGPT MCP App и навигацию нативного ChatGPT: spike не переключил беседу, owner_session_id несовместим с планом checkout. Claude через VPS не проверялся. Сигнал compact ChatGPT не найден, восстановление после него не заявлено.

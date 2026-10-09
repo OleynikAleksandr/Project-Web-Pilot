@@ -14,6 +14,12 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
     .filter(r=>r.identity?.assignmentId).map(r=>({identity:r.identity,ready:r.ready,loading:r.loading,
       phase:r.controller.state.phase,error:r.controller.state.error,runtimeError:r.error,url:r.view.webContents.getURL()}))}));
   const root=(await run('--create',path.join(dataDir+'-projects','parallel-e2e'))).root;
+  const {SessionPlans}=await import('../src/session-plans.mjs');
+  const plans=new SessionPlans({setup:workspaceSetup});
+  const config=JSON.parse(await fs.readFile(path.join(root,'.harness/workflow.json'),'utf8'));
+  config.checks.find(check=>check.id==='dependency').executable='node';
+  config.checks.find(check=>check.id==='dependency').args=['--test','verify.mjs'];
+  await plans.call(root,'config:apply',[],config);
   await ipc('setAutoPlan',false);await ipc('openSettings');
   assert.equal((await ipc('setParallelExecution',{parallel_allowed:true,max_workers:2})).ok,true);
   await ipc('closeSettings');await selectWorkspace(root);
@@ -76,24 +82,32 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   assert.equal(first.pageState.current.state.busy,true);
   await ipc('selectSession',a.worktree,store.project(a.worktree).sessionId);
   assert.equal(await first.view.webContents.executeJavaScript('window.parallelMarker'),71);
+  await wait(()=>sidebar.executeJavaScript('document.getElementById("plan-card").hidden&&!document.getElementById("assignment-card").hidden'),'executor shows only assignment');
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("correct-integration")'),null);
+  await ipc('selectSession',root,origin.sessionId);
+  await wait(()=>sidebar.executeJavaScript('!document.getElementById("plan-card").hidden&&document.querySelectorAll(".plan-task[data-status=current]").length===2'),'main shows both assigned tasks');
   assert.equal(await git(root,'rev-parse','HEAD'),base);
   await run('--complete',a.worktree);await run('--complete',b.worktree);
   assert.equal(await git(root,'rev-parse','HEAD'),base,'local commits do not change main');
   assert.equal(await fs.readFile(path.join(root,'README.md'),'utf8'),'# Original\n');
   await run('--conflict',root);
+  const fullPath=workspaceSetup.environment.PATH;
+  workspaceSetup.setRuntimeEnvironment({PATH:'/usr/bin:/bin'});
+  await workspaceSetup.node();
+  assert.equal(workspaceSetup.environment.PATH.split(':')[0],path.dirname(node));
   await finish(first);
   await wait(()=>snapshot().execution.integration?.status==='CONFLICT','merge conflict retained in main');
   assert.equal(snapshot().execution.planView.completed,0);
   assert.equal(second.pageState.current.state.busy,true,'independent worker keeps its page during main conflict');
   const operation=snapshot().execution.integration.operation_id;
-  await wait(()=>snapshot().execution.canCorrect===true,'main ready for explicit correction');
   const before=await main.view.webContents.executeJavaScript('window.fixtureMessages.length');
-  const correction=await ipc('correctIntegration',root);
-  assert.equal(correction.ok,true,JSON.stringify(correction.error));assert.equal(correction.result.state,'sent',JSON.stringify(correction.result));
+  assert.equal(snapshot().execution.correctionStatus,null,'OFF does not request correction');
+  await ipc('setAutoPlan',true);
+  await wait(()=>snapshot().execution.correctionStatus==='sent','AutoPlan requests correction without an extra button');
   await wait(async()=>await main.view.webContents.executeJavaScript('window.fixtureMessages.length')===before+1,'correction in exact main chat');
   const message=await main.view.webContents.executeJavaScript('window.fixtureMessages.at(-1).text');
   assert.ok(message.includes(root)&&message.includes(operation)&&message.includes('integration:continue'));
-  await ipc('correctIntegration',root);
+  await ipc('setAutoPlan',false);
   assert.equal(await main.view.webContents.executeJavaScript('window.fixtureMessages.length'),before+1,'no duplicate correction');
   await run('--correct',root,operation);await finish(main);
   await wait(()=>snapshot().execution.assignments.find(x=>x.id===a.id)?.status==='INTEGRATED','corrected merge proof');
@@ -101,6 +115,8 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   await wait(()=>snapshot().execution.planView.completed===2,'second integration');
   assert.equal(snapshot().execution.assignments.length,2,'AutoPlan OFF does not dispatch the dependent task');
   const combined=await git(root,'rev-parse','HEAD');
+  workspaceSetup.setRuntimeEnvironment({PATH:fullPath});
+  await workspaceSetup.node();
   assert.equal((await ipc('setAutoPlan',true)).ok,true);
   await wait(()=>snapshot().execution.assignments.length===3,'AutoPlan resumes dependent task');
   const c=snapshot().execution.assignments.find(x=>x.parent_task_id==='T003');assert.equal(c.base_commit,combined);
@@ -112,7 +128,7 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   assert.equal(await git(root,'rev-list','--count','--merges',base+'..HEAD'),'3');
   for(const theme of ['dark','light']) {
     await ipc('setTheme',theme);
-    const ui=await sidebar.executeJavaScript('({rows:document.querySelectorAll(".executor-row").length,text:document.querySelector(".executor-group")?.textContent,removed:!document.getElementById("reconcile-execution")&&!document.getElementById("execute-tasks")})');
+    const ui=await sidebar.executeJavaScript('({rows:document.querySelectorAll(".executor-row").length,text:document.querySelector(".executor-group")?.textContent,removed:!document.getElementById("reconcile-execution")&&!document.getElementById("execute-tasks")&&!document.getElementById("correct-integration")})');
     assert.equal(ui.rows,3);assert.match(ui.text,/Завершено · интеграция проверена/);assert.match(ui.text,/Работа/);assert.equal(ui.removed,true);
   }
   assert.equal(snapshot().execution.planView.completed,3);assert.equal(snapshot().autoPlan.enabled,false,'verified parallel completion turns project OFF');

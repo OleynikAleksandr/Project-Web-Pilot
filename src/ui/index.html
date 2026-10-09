@@ -344,6 +344,11 @@ SOFTWARE.
         <div class="actions"><button id="setup-apply" class="primary" hidden>Создать и открыть</button><button id="setup-doctor" type="button" class="primary" hidden>Доктор проекта</button><button id="setup-refresh" class="secondary" hidden>Проверить ещё раз</button><button id="setup-cancel" class="text-button">Отмена</button></div>
       </section>
       <section id="workspace-details" hidden>
+        <section id="assignment-card" class="card" aria-live="polite" hidden>
+          <p class="eyebrow">Назначение исполнителя</p>
+          <h3 id="assignment-title"></h3>
+          <p id="assignment-status" class="description" role="status"></p>
+        </section>
         <section id="plan-card" class="card plan-card" aria-live="polite">
           <div class="plan-head"><p class="eyebrow">Текущий план проекта</p><span id="agent-time" class="agent-time" role="timer" hidden></span></div>
           <h3 id="plan-title" class="own-plan-title"></h3>
@@ -352,7 +357,6 @@ SOFTWARE.
           <p id="plan-reason" class="plan-reason" hidden></p>
           <ul id="plan-tasks" class="plan-tasks" aria-label="Микрозадачи плана"></ul>
           <div id="execution-actions" class="actions" hidden>
-            <button id="correct-integration" class="secondary" type="button" hidden>Передать исправление основному агенту</button>
             <p id="execution-message" class="description" role="status"></p>
           </div>
           <div class="actions">

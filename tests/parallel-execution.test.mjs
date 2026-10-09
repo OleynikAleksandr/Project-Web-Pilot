@@ -202,3 +202,37 @@ test('published-plan diagnostics retain actual Kit reason instead of a generic l
     assert.equal(f.runtime.view('/main').error.code,code);assert.equal(f.calls.created.length,0);
   }
 });
+
+test('AutoPlan requests a conflict correction once, waits for readiness and respects OFF and UNKNOWN',async t=>{
+  const f=fixture(t);await f.grant();
+  f.state.integration={status:'CONFLICT',operation_id:'integration-auto',task_id:'A',conflicts:['src/A.mjs']};
+  await f.runtime.signal('/main');assert.equal(f.calls.corrections.length,0);
+  f.runtime.mainState=()=>({stopped:true,canSend:false});f.runtime.setEnabled(true);
+  await f.runtime.signal('/main');assert.equal(f.calls.corrections.length,0,'draft blocks correction');
+  f.runtime.mainState=()=>({stopped:true,canSend:true});f.state.commandActive=true;
+  await f.runtime.signal('/main');assert.equal(f.calls.corrections.length,0,'command blocks correction');
+  f.state.commandActive=false;await f.runtime.signal('/main');
+  assert.equal(f.calls.corrections.length,1);
+  await Promise.all([f.runtime.signal('/main'),f.runtime.signal('/main')]);assert.equal(f.calls.corrections.length,1);
+  f.state.integration.operation_id='integration-unknown';let attempts=0;
+  f.runtime.sendCorrection=async()=>{attempts++;return {state:'unknown'};};
+  await f.runtime.signal('/main');await f.runtime.signal('/main');assert.equal(attempts,1);
+});
+
+test('a failed launch is visible and never sent as a code correction',async t=>{
+  const f=fixture(t);await f.grant();f.runtime.setEnabled(true);
+  f.state.integration={status:'CHECKS_FAILED',operation_id:'launch-failed',error:JSON.stringify({details:{result:{id:'test',status:'FAILED',exit_code:null,output:'spawnSync node ENOENT'}}})};
+  await f.runtime.signal('/main');assert.equal(f.calls.corrections.length,0);
+  assert.equal(f.runtime.view('/main').error.code,'INTEGRATION_CHECK_START_FAILED');
+  await assert.rejects(f.runtime.correct('/main'),{code:'INTEGRATION_CHECK_START_FAILED'});
+});
+
+test('a genuine test failure is corrected automatically, but OFF before Send cancels permission',async t=>{
+  const f=fixture(t);await f.grant();f.runtime.setEnabled(true);
+  f.state.integration={status:'CHECKS_FAILED',operation_id:'test-failed',error:JSON.stringify({details:{result:{status:'FAILED',exit_code:1}}})};
+  f.runtime.sendCorrection=async(_origin,text,ready,before)=>{
+    assert.match(text,/Причина проверки/);f.runtime.setEnabled(false);
+    assert.equal(ready(),false);assert.equal(await before(),false);return {state:'cancelled'};
+  };
+  await f.runtime.signal('/main');assert.equal(f.runtime.view('/main').correctionStatus,null);
+});

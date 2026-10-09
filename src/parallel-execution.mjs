@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { parallelTasksCompatible } from '@webpilot/workflow-kit/lib/plan';
 import { validateParallelSettings } from './parallel-settings.mjs';
+import { integrationProblem, projectExecutionPlan } from './execution-projection.mjs';
 
 const fail=(code,message)=>Object.assign(new Error(message),{code});
 const issue=e=>({code:e.code??'PARALLEL_FAILED',message:String(e.message??e).slice(0,1000)});
@@ -63,7 +64,10 @@ export class ParallelExecution {
   recheck(workspace) {this.observe(workspace);return this.enqueue(workspace,true);}
   enqueue(workspace,recovery=false) {
     if(this.closed)return Promise.resolve();
-    if(this.correcting.has(workspace))return Promise.resolve(this.view(workspace));
+    if(this.correcting.has(workspace)) {
+      const current=this.queues.get(workspace);if(current){current.again=true;current.recovery||=recovery;}
+      return Promise.resolve(this.view(workspace));
+    }
     let queue=this.queues.get(workspace);
     if(queue){queue.again=true;queue.recovery||=recovery;return queue.promise;}
     queue={again:true,recovery};this.queues.set(workspace,queue);
@@ -107,13 +111,11 @@ export class ParallelExecution {
       }
     }
     this.publish(workspace,{phase:'waiting',scopeId:plan.scope_id,originSessionId:origin.sessionId,
-      objective:plan.objective,planView:{state:plan.tasks.every(t=>t.commit_status==='DONE')?'awaiting-acceptance':'working',
-        completed:plan.tasks.filter(t=>t.commit_status==='DONE').length,total:plan.tasks.length,
-        tasks:plan.tasks.map(t=>({id:t.id,title:t.title,status:t.commit_status==='DONE'?'done':assignments.some(a=>a.parent_task_id===t.id)?'current':'pending'}))},
+      objective:plan.objective,planView:projectExecutionPlan(plan,assignments,state.integration),
       assignments,integration:state.integration,correctionStatus:ledger.corrections[state.integration.operation_id]??null,
       canCorrect:!state.commandActive&&this.mainState(origin).stopped&&this.mainState(origin).canSend,
       error:recoveryError,maxWorkers:plan.max_workers});
-    // A pending integration owns main. Only its explicit correction action may send to the main agent.
+    // A pending integration owns main; AutoPlan may request one correction in its exact main chat.
     if(state.integration.status!=='IDLE') {
       const operation=state.integration;
       // Resume only Kit's existing journal, never start another merge after an ambiguous call.
@@ -127,9 +129,17 @@ export class ParallelExecution {
         await this.kit.continueIntegration(workspace,operation.operation_id);
         this.queues.get(workspace).again=true;return;
       }
-      this.publish(workspace,{phase:'integration',error:operation.error?{code:'INTEGRATION_PENDING',message:operation.error}:recoveryError??{
+      const launchFailure=integrationProblem(operation);
+      if(!launchFailure&&enabled()&&['CONFLICT','CHECKS_FAILED','RESOLVING'].includes(operation.status)
+        &&!ledger.corrections[operation.operation_id]&&!state.commandActive&&this.mainState(origin).stopped&&this.mainState(origin).canSend) {
+        this.publish(workspace,{phase:'integration',error:null});
+        await this.correct(workspace,{fromQueue:true});return;
+      }
+      this.publish(workspace,{phase:'integration',error:launchFailure??recoveryError??{
         code:'INTEGRATION_PENDING',message:operation.status==='UNKNOWN'?'Исход слияния неизвестен. Проверьте основной чат и integration:status; повторный merge запрещён.'
-          :'Сохранена незавершённая интеграция. После остановки чатов сохранённая операция продолжится автоматически; конфликт передайте основному агенту.'}});return;
+          :ledger.corrections[operation.operation_id]?'Исправление интеграции передано основному чату; ждём подтверждённого результата.'
+          :enabled()?'Интеграция приостановлена. Ждём готовности основного чата для исправления.'
+          :'Интеграция приостановлена. Включите автовыполнение проекта для передачи исправления.'}});return;
     }
     if(state.commandActive)throw fail('COMMAND_ACTIVE','В проекте ещё выполняется команда Kit. После её завершения очередь продолжится автоматически.');
     if(plan.current_task_id||state.handoff) {
@@ -212,17 +222,19 @@ export class ParallelExecution {
       }catch(error){entry.error=issue(error);entry.phase='attention';await this.persist();throw error;}
     }
     const latest=await this.kit.read(workspace);
-    this.publish(workspace,{phase:recoveryError?'attention':'waiting',assignments:latest.assignments.map(a=>({...a,
+    this.publish(workspace,{phase:recoveryError?'attention':'waiting',planView:projectExecutionPlan(latest.plan,latest.assignments,latest.integration),assignments:latest.assignments.map(a=>({...a,
       ...(assignments.find(b=>b.id===a.id)?.error?{error:assignments.find(b=>b.id===a.id).error}:{})}))
       .concat(assignments.filter(a=>a.status==='UNKNOWN'&&!latest.assignments.some(b=>b.id===a.id))),error:recoveryError});
   }
-  async correct(workspace) {
+  async correct(workspace,{fromQueue=false}={}) {
     if(this.correcting.has(workspace))throw fail('PARALLEL_BUSY','Дождитесь текущей операции.');
     this.correcting.add(workspace);
     try {
-    await this.queues.get(workspace)?.promise;
+    if(!fromQueue)await this.queues.get(workspace)?.promise;
     const state=await this.kit.read(workspace),operation=state.integration;
     if(!['CONFLICT','CHECKS_FAILED','RESOLVING'].includes(operation.status))throw fail('INTEGRATION_NOT_CORRECTABLE','Нет интеграции, ожидающей исправления.');
+    const launchFailure=integrationProblem(operation);
+    if(launchFailure)throw fail(launchFailure.code,launchFailure.message);
     const origin=executionOrigin(state.plan,id=>this.origin(workspace,id)),ledger=this.ledger(workspace,state.plan.scope_id);
     if(state.commandActive)throw fail('MAIN_NOT_READY','В main ещё выполняется команда или её завершение не подтверждено.');
     if(ledger.corrections[operation.operation_id])return {state:'unknown',reason:'CORRECTION_ALREADY_REQUESTED'};
@@ -230,13 +242,15 @@ export class ParallelExecution {
     if(this.closed||!initial.stopped||!initial.canSend)throw fail('MAIN_NOT_READY','Откройте основной чат и дождитесь готовности без черновика.');
     const ready=()=>{
       const page=this.mainState(origin);
-      return !this.closed&&(page.canContinueSend??(page.stopped&&page.canSend));
+      return !this.closed&&(!fromQueue||(this.isEnabled?this.isEnabled(workspace,state.plan.scope_id):this.enabled))
+        &&(page.canContinueSend??(page.stopped&&page.canSend));
     };
     ledger.corrections[operation.operation_id]='sending';await this.persist();
     this.publish(workspace,{correctionStatus:'sending'});
     const text=['Исправь незавершённую интеграцию Workflow Kit.',
       'Workspace: '+JSON.stringify(workspace),'Интеграция: '+operation.operation_id,
       'Задача: '+operation.task_id,'Конфликты: '+(operation.conflicts??[]).join(', '),
+      ...(operation.error?['Причина проверки: '+operation.error]:[]),
       'Исправь только область назначенной задачи, сохрани посторонние изменения. Не создавай обычный implementation-коммит.',
       'Проверь integration:status; после исправления выполни integration:continue --id '+operation.operation_id+'.',
       'Не запускай другие записи main; завершение этой интеграции выполняет Kit.'].join('\n');
@@ -249,7 +263,7 @@ export class ParallelExecution {
       else if(result.state!=='unknown')delete ledger.corrections[operation.operation_id];
       await this.persist();this.publish(workspace,{correctionStatus:ledger.corrections[operation.operation_id]??null});return result;
     }catch(error){ledger.corrections[operation.operation_id]='unknown';await this.persist();throw error;}
-    }finally{this.correcting.delete(workspace);void this.signal(workspace);}
+    }finally{this.correcting.delete(workspace);if(!fromQueue)void this.signal(workspace);}
   }
   dispose(){this.closed=true;for(const stop of this.unwatch.values())stop();this.unwatch.clear();}
 }

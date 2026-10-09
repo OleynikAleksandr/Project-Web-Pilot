@@ -1,8 +1,33 @@
+export function integrationProblem(operation) {
+  if (operation?.status !== 'CHECKS_FAILED') return null;
+  let failure;
+  try { failure=JSON.parse(operation.error)?.details?.result; } catch { /* Older Git hooks may return plain text. */ }
+  if (failure?.status==='FAILED' && failure.exit_code===null) return {
+    code:'INTEGRATION_CHECK_START_FAILED',
+    message:'Не удалось запустить проверку интеграции'+(failure.id?' «'+String(failure.id).slice(0,80)+'»':'')+'. Проверьте окружение приложения; изменения сохранены.',
+  };
+  return null;
+}
+
+export function projectExecutionPlan(plan,assignments,integration) {
+  return {state:plan.tasks.every(t=>t.commit_status==='DONE')?'awaiting-acceptance':'working',
+    completed:plan.tasks.filter(t=>t.commit_status==='DONE').length,total:plan.tasks.length,
+    tasks:plan.tasks.map(task=>{
+      const assignment=assignments.find(a=>a.parent_task_id===task.id);
+      const status=task.commit_status==='DONE'?'done':assignment?'current':'pending';
+      const merging=assignment&&integration?.assignment_id===assignment.id&&integration.status!=='IDLE';
+      const label=status==='done'?'Интеграция проверена':merging
+        ?integrationProblem(integration)?.message??(['CONFLICT','CHECKS_FAILED'].includes(integration.status)?'Интеграция требует исправления':'Интегрируется')
+        :assignment?.status==='READY_FOR_INTEGRATION'?'Готово к интеграции':assignment?'Назначено исполнителю':null;
+      return {id:task.id,title:task.title,status,label};
+    })};
+}
+
 export function executorStatus(assignment,record,integration) {
   if(assignment?.status==='INTEGRATED')return {phase:'done',label:'Завершено · интеграция проверена'};
   if(integration?.assignment_id&&integration.assignment_id===assignment?.id&&integration.status!=='IDLE')
     return ['CONFLICT','CHECKS_FAILED','UNKNOWN'].includes(integration.status)
-      ?{phase:'attention',label:integration.status==='UNKNOWN'?'Исход слияния неизвестен':'Нужно исправление в main'}
+      ?{phase:'attention',label:integrationProblem(integration)?.message??(integration.status==='UNKNOWN'?'Исход слияния неизвестен':'Нужно исправление в main')}
       :{phase:'merging',label:'Интегрируется'};
   if(record?.error)return {phase:'attention',label:record.error.message};
   if(record?.controller?.state?.error)return {phase:'attention',label:record.controller.state.error.message+' Повторите сверку или откройте чат.'};

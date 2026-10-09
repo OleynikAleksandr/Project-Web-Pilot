@@ -361,14 +361,16 @@ function render(state) {
   const collapseAll = state.projects.some(project => project.expanded);
   $('toggle-projects').title = collapseAll ? 'Свернуть все проекты' : 'Раскрыть все проекты';
   $('toggle-projects').setAttribute('aria-label', $('toggle-projects').title);
-  $('plan-card').hidden = !selected;
+  $('plan-card').hidden = !selected || !!selected.assignmentId;
+  $('assignment-card').hidden = !selected?.assignmentId;
+  const assigned = selected?.assignmentId && state.projects.flatMap(project => project.executors ?? [])
+    .find(item => item.assignmentId === selected.assignmentId && item.workspace === selected.workspace);
+  $('assignment-title').textContent = assigned?.title ?? selected?.taskId ?? '';
+  $('assignment-status').textContent = assigned?.label ?? 'Состояние назначения ещё не подтверждено.';
   renderExecutorTimes();
   const execution=state.execution??{};
   const parallel=selected?.planExecution?.execution_strategy==='parallel'||!!selected?.assignmentId;
   $('execution-actions').hidden=!parallel;
-  const correcting=['CONFLICT','CHECKS_FAILED','RESOLVING'].includes(execution.integration?.status);
-  $('correct-integration').hidden=!correcting;
-  $('correct-integration').disabled=actionPending||execution.phase==='merging'||!!execution.correctionStatus||execution.canCorrect===false;
   $('execution-message').textContent=execution.error?.message??({sending:'Поручение исправления отправляется…',sent:'Поручение исправления отправлено. Ждём основной чат.',unknown:'Исход отправки исправления неизвестен. Повтор не отправляется.'}[execution.correctionStatus])??({preparing:'Подготавливаем исполнителей…',merging:'Проверяем слияние в main…',
     complete:'Все результаты интегрированы. Ожидается приёмка.',integration:'Интеграция удерживает main. Другие слияния ждут.',
     paused:'Автовыполнение проекта выключено. Новые задачи и сообщения не запускаются.',waiting:'Состояния исполнителей показаны в дереве. Пауза не означает вопрос пользователя.'}[execution.phase]??'Включите автовыполнение этого проекта для запуска готовых задач.');
@@ -394,7 +396,7 @@ function render(state) {
 
   renderAgentTime(selected);
   $('session-actions').hidden = !selected;
-  const plan = (selected?.assignmentId ? execution.planView??{state:'blocked',completed:0,total:0,tasks:[],blockedReason:'Общий план ещё не подтверждён.'}
+  const plan = (selected?.planExecution?.execution_strategy==='parallel' ? execution.planView
     : selected?.planView) ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
   if (selected) {
     const plural = count => count % 10 === 1 && count % 100 !== 11 ? 'задача'
@@ -420,7 +422,9 @@ function render(state) {
       mark.setAttribute('aria-label', task.status === 'done' ? 'выполнена' : task.status === 'current' ? 'текущая' : 'не начата');
       mark.textContent = task.status === 'done' ? '✓' : task.status === 'current' ? '●' : '○';
       const body = document.createElement('div'), title = document.createElement('strong');
-      title.textContent = task.title; body.append(title); item.append(mark, body); return item;
+      title.textContent = task.title; body.append(title);
+      if (task.label) { const status=document.createElement('small'); status.textContent=task.label; body.append(status); }
+      item.append(mark, body); return item;
     }));
   } else { $('plan-tasks').replaceChildren(); $('plan-note').hidden = true; $('plan-reason').hidden = true; }
   const [title, detail, tone] = phases[context.phase] ?? phases.selected;
@@ -463,7 +467,7 @@ function render(state) {
   $('error-banner').hidden = !error;
   $('error-banner').textContent = error ? `${error.message} (${error.code})` : '';
   for (const button of document.querySelectorAll('button')) {
-    if (button.closest('#startup-panel') || ['open-startup','correct-integration'].includes(button.id)) continue;
+    if (button.closest('#startup-panel') || button.id==='open-startup') continue;
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
   const recovery = state.conversationRecovery;
@@ -494,7 +498,6 @@ $('reload-chat').addEventListener('click', () => action('reload'));
 $('workspace-health-retry').addEventListener('click', () => action(kitUpgradeNeeded(currentState?.workspaceHealth) ? 'retry' : 'reload'));
 $('workspace-health-doctor').addEventListener('click', () => action('openDoctor'));
 $('auto-plan-toggle').addEventListener('click', () => action('setAutoPlan', !currentState?.autoPlan?.enabled));
-$('correct-integration').addEventListener('click',()=>action('correctIntegration',currentState?.selected?.parentWorkspace??currentState?.selected?.workspace));
 $('plan-review-toggle').addEventListener('click', () => action('setPlanReview', {workspace:currentState?.selected?.workspace,enabled:!currentState?.planReview?.enabled}));
 $('reconnect-chat').addEventListener('click', () => action('reconnect'));
 $('retry-context').addEventListener('click', () => action('retry'));

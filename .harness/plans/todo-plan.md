@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1631,
+  "plan_revision": 1634,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -2054,10 +2054,14 @@
         "tests/parallel-execution-ui.test.mjs",
         "tests/parallel-execution-smoke-fixture.cjs",
         "tests/electron-smoke.mjs",
-        "tests/parallel-execution.test.mjs"
+        "tests/parallel-execution.test.mjs",
+        "src/preload.cjs",
+        "src/ui/progress.mjs"
       ],
       "documentation_paths": [
-        "docs/modules/auto-plan.md"
+        "docs/modules/auto-plan.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/session-runtime.md"
       ],
       "verification_ids": [
         "unit-all",
@@ -2068,16 +2072,34 @@
         "Kit и вложенные проверки запускают выбранный Node при минимальном PATH приложения; реальная интеграция node --test проходит без передачи ошибки агенту",
         "Общий план основного чата показывает назначенные задачи в работе и готовность к интеграции; DONE только по проверенной интеграции",
         "У исполнителя нет общего плана и кнопок его управления; видны только назначение и состояние; при возврате в основной чат общий прогресс актуален",
-        "Настоящий конфликт или падение теста сохраняют защиту main; ошибки запуска проверок различимы и не трактуются как конфликт кода; данные пользовательского теста не меняются"
+        "Настоящий конфликт или падение теста сохраняют защиту main; ошибки запуска проверок различимы и не трактуются как конфликт кода; данные пользовательского теста не меняются",
+        "Кнопка передачи исправления удалена; AutoPlan ON сам передаёт настоящий конфликт/падение теста основному чату один раз; OFF, черновик, команда и UNKNOWN запрещают новые отправки"
       ],
       "expected_commit_message": "feat: Исправить окружение интеграции и отображение назначений",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T033",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/session-runtime.md",
+        "src/execution-projection.mjs",
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html",
+        "src/ui/progress.mjs",
+        "src/ui/sidebar.mjs",
+        "src/workspace-setup.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/parallel-execution-ui.test.mjs",
+        "tests/parallel-execution.test.mjs",
+        "tests/workspace-setup.test.mjs"
+      ]
     },
     {
       "id": "T034",
@@ -2129,7 +2151,8 @@
       "documentation_paths": [
         "docs/architecture/OVERVIEW.md",
         "docs/modules/auto-plan.md",
-        "docs/modules/release.md"
+        "docs/modules/release.md",
+        "docs/modules/session-runtime.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
@@ -2251,7 +2274,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1631
+Revision: 1634
 
 ## Цель
 
@@ -2411,10 +2434,10 @@ Revision: 1631
   - Git Commit: [DONE] feat: Опубликовать выпуск 0.6.107 и синхронизировать GitHub
   - Reference: parallel-chat-execution-20261009 / T032 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
-- [TODO] T033: Исправить окружение интеграции и отображение назначений — Ожидает
-  - Git Commit: [PENDING] feat: Исправить окружение интеграции и отображение назначений
+- [DONE] T033: Исправить окружение интеграции и отображение назначений — Завершено
+  - Git Commit: [DONE] feat: Исправить окружение интеграции и отображение назначений
   - Reference: parallel-chat-execution-20261009 / T033 / implementation
-  - Файлы: src/workspace-setup.mjs, src/main.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/execution-projection.mjs, src/parallel-execution.mjs, src/session-plans.mjs, tests/workspace-setup.test.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, docs/modules/auto-plan.md
+  - Файлы: src/workspace-setup.mjs, src/main.mjs, src/ui/sidebar.mjs, src/ui/index.html, src/execution-projection.mjs, src/parallel-execution.mjs, src/session-plans.mjs, tests/workspace-setup.test.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, src/preload.cjs, src/ui/progress.mjs, docs/modules/auto-plan.md, docs/architecture/OVERVIEW.md, docs/modules/session-runtime.md
 - [TODO] T034: Подготовить выпуск 0.6.108 — Ожидает
   - Git Commit: [PENDING] feat: Подготовить выпуск 0.6.108
   - Reference: parallel-chat-execution-20261009 / T034 / implementation
@@ -2422,7 +2445,7 @@ Revision: 1631
 - [TODO] DOCS-5: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS-5 / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/release.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/release.md, docs/modules/session-runtime.md
 - [TODO] T035: Собрать парный выпуск 0.6.108 для macOS и Windows — Ожидает
   - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.108 для macOS и Windows
   - Reference: parallel-chat-execution-20261009 / T035 / implementation

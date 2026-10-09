@@ -514,3 +514,33 @@ test('worker Node accepts only supported Node 24 releases on macOS and Windows',
     });
   }
 });
+
+test('selected absolute Node is available to nested Kit checks with a Finder-like PATH', async t => {
+  const { SessionPlans } = await import('../src/session-plans.mjs');
+  const { parent } = await fixture(t);
+  const setup = new WorkspaceSetup({ nodeCandidates: [process.execPath], environment: { ...environment, PATH: '/usr/bin:/bin' } });
+  const preview = await setup.preview({ mode: 'new', parent, name: 'Minimal PATH' });
+  const { workspace } = await setup.apply(preview.token);
+  const plans = new SessionPlans({ setup });
+  await fs.mkdir(path.join(workspace, 'docs/planning'), { recursive: true });
+  await fs.writeFile(path.join(workspace, 'docs/planning/test.md'), '# Minimal PATH\n\n## Result\nNested Node check.\n');
+  await plans.call(workspace, 'plan:create', [], { id: 'nested-node', spec: 'docs/planning/test.md', objective: 'Nested Node', stack: 'Node',
+    checks: [{ id: 'test', executable: 'node', args: ['--test', 'result.test.mjs'] }],
+    tasks: [{ id: 'T001', title: 'Result', files: ['result.test.mjs'], checks: ['test'], acceptance: ['Node executes'] }] });
+  await plans.call(workspace, 'task:start', ['T001']);
+  await fs.writeFile(path.join(workspace, 'result.test.mjs'), "import test from 'node:test';import assert from 'node:assert/strict';test('runtime',()=>assert.equal(process.execPath,"+JSON.stringify(process.execPath)+"));\n");
+  assert.equal((await plans.call(workspace, 'commit', ['--task', 'T001'])).ok, true);
+  const paths = setup.environment.PATH.split(':');
+  assert.equal(paths[0], path.dirname(process.execPath));
+  await setup.node();assert.deepEqual(setup.environment.PATH.split(':'), paths, 'cached Node does not duplicate PATH');
+  assert.equal(environment.PATH, process.env.PATH, 'parent environment is unchanged');
+});
+
+test('Windows cached Node restores its directory after runtime environment preparation', async () => {
+  const setup = new WorkspaceSetup({ platform: 'win32', environment: { PATH: 'C:\\Windows', Path: 'old' },
+    nodeCandidates: ['C:\\Pilot\\node\\node.exe'], executeNode: async () => ({ stdout: 'v24.21.0\n' }) });
+  await setup.node();assert.equal(setup.environment.Path, 'C:\\Pilot\\node;C:\\Windows');
+  setup.setRuntimeEnvironment({ Path: 'C:\\Git\\cmd;C:\\Windows' });
+  await setup.node();assert.equal(setup.environment.Path, 'C:\\Pilot\\node;C:\\Git\\cmd;C:\\Windows');
+  assert.deepEqual(Object.keys(setup.environment).filter(key=>key.toLowerCase()==='path'), ['Path']);
+});
