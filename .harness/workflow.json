@@ -36,7 +36,7 @@
         "run",
         "smoke"
       ],
-      "evidence": "Настоящий main.mjs: legacy global AutoPlan ON мигрирует в OFF; полный Electron TEST FIXTURE через AutoPlan IPC, handoff старого main-старта, worktree, OFF/ON, зависимости, интеграции и завершение OFF. Живой ChatGPT и native Windows принимает пользователь"
+      "evidence": "Electron TEST FIXTURE: реальная кнопка AutoPlan до первого плана, независимые AutoPlan/Review двух проектов, публикация, назначения/интеграции и завершение OFF. Не живая приёмка"
     },
     {
       "required": false,
@@ -60,7 +60,7 @@
         "run",
         "build"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.106: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.7.1 verified. Сборку выполняет эта проверка при коммите задачи, один раз"
+      "evidence": "~/Downloads/WebPilot-0.6.107: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.7.1 verified. Сборку выполняет эта проверка при коммите задачи, один раз"
     },
     {
       "required": false,
@@ -71,7 +71,7 @@
       "args": [
         "scripts/check-installed-release.mjs"
       ],
-      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.106 с Workflow Kit 1.7.1 из готового staging; identity/signature/runtime и release artifacts verified без пересборки"
+      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.107 с Workflow Kit 1.7.1 из готового staging; identity/signature/runtime и release artifacts verified без пересборки"
     },
     {
       "required": false,
@@ -82,7 +82,7 @@
       "args": [
         "scripts/check-github-release.mjs"
       ],
-      "evidence": "GitHub Release v0.6.106 с Workflow Kit 1.7.1: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
+      "evidence": "GitHub Release v0.6.107 с Workflow Kit 1.7.1: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
     },
     {
       "required": false,
