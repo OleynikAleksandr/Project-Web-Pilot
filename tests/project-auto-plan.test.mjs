@@ -79,3 +79,22 @@ test('OFF cancels pre-plan authorization and a read failure cannot carry old sco
  a.set('/a','first',true,'main');a.sync('/a',null);
  assert.equal(a.enabled('/a','first'),false);assert.equal(a.enabled('/a',null),false);
 });
+
+test('a new project identity at the same path and scope cannot inherit ON or checkpoints',()=>{
+ let id='old';const sessions=new Set(['old-chat']);
+ const a=new ProjectAutoPlan({identity:()=>id,ownsSession:(_w,s)=>sessions.has(s)});
+ a.set('/a','scope',true,'old-chat');a.saveCheckpoint('/a','scope','old-chat',{autoPlanCheckpoint:{status:'sending'}});
+ const saved=a.snapshot();assert.equal(saved['/a'].projectId,'old');
+ id='new';sessions.clear();sessions.add('new-chat');
+ const b=new ProjectAutoPlan({saved,identity:()=>id,ownsSession:(_w,s)=>sessions.has(s)});
+ assert.equal(b.enabled('/a','scope'),false);assert.deepEqual(b.checkpoint('/a','scope','new-chat'),{});
+ b.sync('/a','scope');assert.equal(b.state('/a').projectId,'new');assert.equal(b.enabled('/a','scope'),false);
+ b.set('/a','scope',true,'new-chat');b.saveCheckpoint('/a','scope','old-chat',{autoPlanCheckpoint:{status:'sent'}});
+ assert.equal(b.state('/a').sessions['old-chat'],undefined);
+ assert.equal(new ProjectAutoPlan({saved:b.snapshot(),identity:()=>id,ownsSession:(_w,s)=>sessions.has(s)}).enabled('/a','scope'),true);
+});
+test('legacy permission migrates only with its original registered chat',()=>{
+ const saved={'/a':{scopeId:'scope',enabled:true,sessionId:'old',sessions:{}}};
+ const a=new ProjectAutoPlan({saved,identity:()=> 'new',ownsSession:()=>false});assert.equal(a.enabled('/a','scope'),false);
+ const b=new ProjectAutoPlan({saved,identity:()=> 'same',ownsSession:()=>true});assert.equal(b.enabled('/a','scope'),true);assert.equal(b.state('/a').projectId,'same');
+});

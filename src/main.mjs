@@ -36,7 +36,7 @@ import { configureExecutor,executorPageState } from './executor-session.mjs';
 import { projectExecutors } from './execution-projection.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
-import { removeProjectSettings, belongsToProject } from './project-state-cleanup.mjs';
+import { removeProjectSettings, pruneOrphanProjectSettings, belongsToProject } from './project-state-cleanup.mjs';
 import { appendDiagnostic } from './common.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
@@ -85,7 +85,8 @@ let chatgptChannel = CHATGPT_CHANNEL_SECURE;
 let appServerRuntime = null, runtimeSwitcher = null, runtimeActivation = null, vpsTunnel = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
-const projectAutoPlan=new ProjectAutoPlan({onChange:workspace=>{
+const projectAutoPlan=new ProjectAutoPlan({identity:workspace=>store.snapshot().projects.find(p=>p.workspace===workspace)?.projectId,
+  ownsSession:(workspace,id)=>store.snapshot().projects.some(p=>p.workspace===workspace&&p.sessions.some(s=>s.sessionId===id)),onChange:workspace=>{
   for(const record of liveSessions.records.values()) {
     const project=record.project();
     if((project?.parentWorkspace??project?.workspace)!==workspace)continue;
@@ -1505,6 +1506,16 @@ else {
     reviewContinuation.restore(reviewCheckpoint);
     applyShellTheme(shellTheme);
     try { await store.load(); } catch (error) { startupError = publicError(error); storageError = true; }
+    if(!storageError) {
+      const before={projectAutoPlan:projectAutoPlan.snapshot(),parallelExecutionBook,reviewCheckpoint,automationCheckpoint};
+      const cleaned=pruneOrphanProjectSettings(before,store.snapshot().projects);
+      if(JSON.stringify(before)!==JSON.stringify(cleaned)) {
+        projectAutoPlan.book=cleaned.projectAutoPlan;parallelExecutionBook=cleaned.parallelExecutionBook;execution.book=parallelExecutionBook;
+        reviewCheckpoint=cleaned.reviewCheckpoint;automationCheckpoint=cleaned.automationCheckpoint;
+        automationSend.entries.clear();automationSend.cycles.clear();automationSend.restore(automationCheckpoint);
+        reviewContinuation.restore(reviewCheckpoint);await saveSettings();
+      }
+    }
     if (!smoke && app.isPackaged && process.platform === 'darwin' && !storageError
         && await offerMacInstallation({ app, dialog, fresh: store.snapshot().projects.length === 0 })) return;
     if (process.platform === 'win32') {

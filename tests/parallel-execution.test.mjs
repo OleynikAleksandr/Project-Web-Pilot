@@ -236,3 +236,19 @@ test('a genuine test failure is corrected automatically, but OFF before Send can
   };
   await f.runtime.signal('/main');assert.equal(f.runtime.view('/main').correctionStatus,null);
 });
+
+test('recreated project with the same scope discards another project ledger and starts fresh',async t=>{
+ const f=fixture(t);f.state.plan.project_id='new';f.runtime.origin=()=>({workspace:'/main',projectId:'new',sessionId:'author',executionSnapshot:{parallel_allowed:true,max_workers:2}});
+ const key=JSON.stringify(['/main','scope']);f.runtime.book[key]={workspace:'/main',scope:'scope',projectId:'old',started:true,assignments:{old:{id:'old',taskId:'A',phase:'running',sessionId:'old-chat'}},corrections:{}};
+ await f.grant();assert.deepEqual(f.calls.created.map(a=>a.task),['A','B']);assert.equal(f.runtime.book[key].projectId,'new');assert.equal(f.runtime.book[key].assignments.old,undefined);
+});
+test('legacy ledger binds to verified source identity, while unrelated deleted history does not block a new project',async t=>{
+ const f=fixture(t);f.state.plan.project_id='new';f.runtime.origin=()=>({workspace:'/main',projectId:'new',sessionId:'author',executionSnapshot:{parallel_allowed:true,max_workers:2}});
+ const key=JSON.stringify(['/main','scope']);f.runtime.book[key]={workspace:'/main',scope:'scope',started:true,assignments:{old:{id:'old',taskId:'A',base:'deleted-base',phase:'running'}},corrections:{}};
+ f.kit.projectIdentity=async()=>null;await f.grant();assert.equal(f.calls.created.length,2);assert.equal(f.runtime.book[key].assignments.old,undefined);
+});
+test('same project UNKNOWN reservation remains visibly current after the final reconciliation',async t=>{
+ const f=fixture(t);f.state.plan.project_id='same';f.runtime.origin=()=>({workspace:'/main',projectId:'same',sessionId:'author',executionSnapshot:{parallel_allowed:true,max_workers:2}});
+ const key=JSON.stringify(['/main','scope']);f.runtime.book[key]={workspace:'/main',scope:'scope',projectId:'same',started:true,assignments:{old:{id:'old',taskId:'A',phase:'creating'}},corrections:{}};
+ await f.grant();const task=f.runtime.view('/main').planView.tasks.find(t=>t.id==='A');assert.equal(task.status,'current');assert.equal(task.label,'Назначение требует сверки');assert.equal(f.calls.created.some(a=>a.task==='A'),false);
+});

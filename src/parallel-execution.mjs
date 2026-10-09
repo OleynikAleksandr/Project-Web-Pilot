@@ -8,6 +8,7 @@ const issue=e=>({code:e.code??'PARALLEL_FAILED',message:String(e.message??e).sli
 export function executionOrigin(plan,lookup) {
   if(plan.execution_strategy!=='parallel')return null;
   const id=plan.execution_origin_session_id,origin=id&&lookup(id);
+  if(plan.project_id&&origin?.projectId!==plan.project_id)throw fail('EXECUTION_PROJECT_MISMATCH','Сессия принадлежит другому проекту. Запуск остановлен.');
   if(!origin?.executionSnapshot||origin.sessionId!==id||origin.assignmentId||origin.archivedAt||origin.sessionArchivedAt)
     throw fail('EXECUTION_ORIGIN_UNKNOWN','Не найден сохранённый снимок основной сессии этого плана.');
   const snapshot=validateParallelSettings(origin.executionSnapshot);
@@ -52,6 +53,27 @@ export class ParallelExecution {
       throw fail('EXECUTION_LEDGER_INVALID','Журнал исполнения повреждён. Проверьте назначения Kit; новые отправки остановлены.');
     return ledger;
   }
+  async scopedLedger(state,origin) {
+    const {workspace=origin.workspace,plan}=state,key=JSON.stringify([workspace,plan.scope_id]);
+    const old=this.book[key];
+    if(plan.project_id&&old) {
+      let same=old.projectId===plan.project_id;
+      if(!old.projectId) {
+        const entries=Object.values(old.assignments??{});
+        same=!entries.length||entries.every(e=>state.assignments.some(a=>a.id===e.id));
+        if(!same&&this.kit.projectIdentity) {
+          const ids=await Promise.all(entries.map(e=>this.kit.projectIdentity(workspace,e.base)));
+          same=ids.every(id=>id===plan.project_id);
+        }
+      }
+      if(!same)delete this.book[key];
+    }
+    const ledger=this.ledger(workspace,plan.scope_id);
+    if(plan.project_id&&(ledger.projectId!==plan.project_id||ledger.originSessionId!==origin.sessionId)) {
+      ledger.projectId=plan.project_id;ledger.originSessionId=origin.sessionId;await this.persist();
+    }
+    return ledger;
+  }
   persist(){return this.save(structuredClone(this.book));}
   observe(workspace) {
     this.suspended.delete(workspace);
@@ -87,7 +109,8 @@ export class ParallelExecution {
     const enabled=()=>!this.suspended.has(workspace)&&(this.isEnabled?this.isEnabled(workspace,plan.scope_id):this.enabled);
     this.unwatch.get(workspace)?.update?.(state.watchInputs);
     const origin=executionOrigin(plan,id=>this.origin(workspace,id));
-    const ledger=this.ledger(workspace,plan.scope_id);
+    const ledger=await this.scopedLedger(state,origin);
+    if(this.suspended.has(workspace))return;
     const assignments=state.assignments.map(a=>({...a,...(ledger.assignments[a.id]?.readyAt?{readyAt:ledger.assignments[a.id].readyAt}:{})}));
     for(const entry of Object.values(ledger.assignments))if(!assignments.some(a=>a.id===entry.id))
       assignments.push({id:entry.id,parent_task_id:entry.taskId,worktree:entry.worktree,status:'UNKNOWN',
@@ -223,7 +246,7 @@ export class ParallelExecution {
       }catch(error){entry.error=issue(error);entry.phase='attention';await this.persist();throw error;}
     }
     const latest=await this.kit.read(workspace);
-    this.publish(workspace,{phase:recoveryError?'attention':'waiting',planView:projectExecutionPlan(latest.plan,latest.assignments,latest.integration),assignments:latest.assignments.map(a=>({...a,
+    this.publish(workspace,{phase:recoveryError?'attention':'waiting',planView:projectExecutionPlan(latest.plan,[...latest.assignments,...assignments.filter(a=>a.status==='UNKNOWN'&&!latest.assignments.some(b=>b.id===a.id))],latest.integration),assignments:latest.assignments.map(a=>({...a,
       ...(assignments.find(b=>b.id===a.id)?.error?{error:assignments.find(b=>b.id===a.id).error}:{})}))
       .concat(assignments.filter(a=>a.status==='UNKNOWN'&&!latest.assignments.some(b=>b.id===a.id))),error:recoveryError});
   }
@@ -236,7 +259,7 @@ export class ParallelExecution {
     if(!['CONFLICT','CHECKS_FAILED','RESOLVING'].includes(operation.status))throw fail('INTEGRATION_NOT_CORRECTABLE','Нет интеграции, ожидающей исправления.');
     const launchFailure=integrationProblem(operation);
     if(launchFailure)throw fail(launchFailure.code,launchFailure.message);
-    const origin=executionOrigin(state.plan,id=>this.origin(workspace,id)),ledger=this.ledger(workspace,state.plan.scope_id);
+    const origin=executionOrigin(state.plan,id=>this.origin(workspace,id)),ledger=await this.scopedLedger({...state,workspace},origin);
     if(state.commandActive)throw fail('MAIN_NOT_READY','В main ещё выполняется команда или её завершение не подтверждено.');
     if(ledger.corrections[operation.operation_id])return {state:'unknown',reason:'CORRECTION_ALREADY_REQUESTED'};
     const initial=this.mainState(origin);

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1651,
+  "plan_revision": 1653,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -34,7 +34,8 @@
       "tests/electron-smoke.mjs",
       "tests/parallel-execution-smoke-fixture.cjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "src/parallel-kit.mjs"
     ],
     "documentation_paths": [
       "docs/planning/project-state-deletion.md",
@@ -113,8 +114,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-state-deletion-20261009",
         "task_id": "T002",
@@ -132,7 +133,10 @@
         "tests/project-auto-plan.test.mjs",
         "tests/parallel-execution.test.mjs",
         "tests/parallel-execution-recovery.test.mjs",
-        "tests/parallel-execution-ui.test.mjs"
+        "tests/parallel-execution-ui.test.mjs",
+        "src/parallel-kit.mjs",
+        "src/project-state-cleanup.mjs",
+        "tests/project-state-cleanup.test.mjs"
       ],
       "documentation_paths": [
         "docs/planning/project-state-deletion.md"
@@ -148,7 +152,18 @@
         "Уникальный project_id отделяет новый проект в той же папке и scope; старое разрешение не переносится",
         "Существующая подтверждённая работа и UNKNOWN не переотправляются; статусы назначения и плана согласованы"
       ],
-      "expected_commit_message": "feat: Изоляция пересозданного проекта и согласованная проекция"
+      "expected_commit_message": "feat: Изоляция пересозданного проекта и согласованная проекция",
+      "actual_files": [
+        "src/execution-projection.mjs",
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "src/parallel-kit.mjs",
+        "src/project-auto-plan.mjs",
+        "src/project-state-cleanup.mjs",
+        "tests/parallel-execution.test.mjs",
+        "tests/project-auto-plan.test.mjs",
+        "tests/project-state-cleanup.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -335,7 +350,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1651
+Revision: 1653
 
 ## Цель
 
@@ -351,10 +366,10 @@ Revision: 1651
   - Git Commit: [DONE] feat: Полное удаление локального состояния проекта
   - Reference: project-state-deletion-20261009 / T001 / implementation
   - Файлы: src/project-state-cleanup.mjs, src/workspace-deletion.mjs, src/workspace-session.mjs, src/main.mjs, src/parallel-execution.mjs, src/session-runtime.mjs, tests/project-state-cleanup.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/project-state-deletion.md
-- [TODO] T002: Изоляция пересозданного проекта и согласованная проекция — Ожидает
-  - Git Commit: [PENDING] feat: Изоляция пересозданного проекта и согласованная проекция
+- [DONE] T002: Изоляция пересозданного проекта и согласованная проекция — Завершено
+  - Git Commit: [DONE] feat: Изоляция пересозданного проекта и согласованная проекция
   - Reference: project-state-deletion-20261009 / T002 / implementation
-  - Файлы: src/project-auto-plan.mjs, src/project-session-auto-plan.mjs, src/parallel-execution.mjs, src/execution-projection.mjs, src/main.mjs, tests/project-auto-plan.test.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution-ui.test.mjs, docs/planning/project-state-deletion.md
+  - Файлы: src/project-auto-plan.mjs, src/project-session-auto-plan.mjs, src/parallel-execution.mjs, src/execution-projection.mjs, src/main.mjs, tests/project-auto-plan.test.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution-ui.test.mjs, src/parallel-kit.mjs, src/project-state-cleanup.mjs, tests/project-state-cleanup.test.mjs, docs/planning/project-state-deletion.md
 - [TODO] T003: Сквозная регрессия удаления и подготовка 0.6.109 — Ожидает
   - Git Commit: [PENDING] feat: Сквозная регрессия удаления и подготовка 0.6.109
   - Reference: project-state-deletion-20261009 / T003 / implementation

@@ -36,3 +36,11 @@ test('durable cleanup includes settings migration copies, interrupted writes and
   assert.equal((await fs.readFile(path.join(dir,'diagnostics','chromium-events.jsonl'),'utf8')).trim(),JSON.stringify({sessionId:'other'}));
   assert.equal(await fs.readFile(path.join(dir,'Partitions','keep'),'utf8'),'/projects/a');
 });
+
+test('startup drops orphan state and delivery keys but retains archived projects and UNKNOWN for existing identities',async()=>{
+ const {pruneOrphanProjectSettings}=await import('../src/project-state-cleanup.mjs');
+ const saved={projectAutoPlan:{'/gone':{enabled:true},'/kept':{enabled:true,projectId:'kept'}},parallelExecutionBook:{a:{workspace:'/gone'},b:{workspace:'/kept',projectId:'kept',assignments:{a:{phase:'unknown'}}}},
+  reviewCheckpoint:{entries:[{key:JSON.stringify(['/gone','s'])},{key:JSON.stringify(['/kept','old'])},{key:JSON.stringify(['/kept','s'])}]}};
+ const next=pruneOrphanProjectSettings(saved,[{workspace:'/kept',projectId:'kept',archivedAt:1,sessions:[{sessionId:'s'}]}]);
+ assert.deepEqual(Object.keys(next.projectAutoPlan),['/kept']);assert.deepEqual(Object.keys(next.parallelExecutionBook),['b']);assert.equal(next.parallelExecutionBook.b.assignments.a.phase,'unknown');assert.equal(next.reviewCheckpoint.entries.length,1);
+});

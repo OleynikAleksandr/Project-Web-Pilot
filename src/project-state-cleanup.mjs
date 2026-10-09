@@ -25,6 +25,27 @@ export function removeProjectSettings(settings, identities) {
   return result;
 }
 
+export function pruneOrphanProjectSettings(settings, projects) {
+  const live=new Map(projects.map(p=>[p.workspace,p]));
+  const stale=[];
+  for(const [workspace,value] of Object.entries(settings.projectAutoPlan??{}))
+    if(!live.has(workspace)||value.projectId&&value.projectId!==live.get(workspace).projectId)stale.push({workspace});
+  for(const value of Object.values(settings.parallelExecutionBook??{}))
+    if(value.workspace&&(!live.has(value.workspace)||value.projectId&&value.projectId!==live.get(value.workspace).projectId))stale.push({workspace:value.workspace});
+  const result=removeProjectSettings(settings,stale);
+  const owner=value=>{
+    if(typeof value==='string'){try{return owner(JSON.parse(value));}catch{return null;}}
+    if(Array.isArray(value))return typeof value[0]==='string'&&(/^[A-Za-z]:[\\/]/.test(value[0])||value[0].startsWith('/'))?value:owner(value[0]);
+    return null;
+  };
+  for(const field of ['reviewCheckpoint','automationCheckpoint'])if(result[field])
+    for(const [key,list] of Object.entries(result[field]))if(Array.isArray(list))result[field][key]=list.filter(item=>{
+      const address=owner(item.key);if(!address)return true;
+      return live.get(address[0])?.sessions.some(s=>s.sessionId===address[1]);
+    });
+  return result;
+}
+
 const read=async file=>fs.readFile(file,'utf8').catch(e=>{if(e.code==='ENOENT')return null;throw e;});
 const write=async(file,text)=>{
   const temporary=file+'.project-cleanup.tmp';

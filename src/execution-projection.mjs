@@ -18,7 +18,7 @@ export function projectExecutionPlan(plan,assignments,integration) {
       const merging=assignment&&integration?.assignment_id===assignment.id&&integration.status!=='IDLE';
       const label=status==='done'?'Интеграция проверена':merging
         ?integrationProblem(integration)?.message??(['CONFLICT','CHECKS_FAILED'].includes(integration.status)?'Интеграция требует исправления':'Интегрируется')
-        :assignment?.status==='READY_FOR_INTEGRATION'?'Готово к интеграции':assignment?'Назначено исполнителю':null;
+        :assignment?.status==='UNKNOWN'?'Назначение требует сверки':assignment?.status==='READY_FOR_INTEGRATION'?'Готово к интеграции':assignment?'Назначено исполнителю':null;
       return {id:task.id,title:task.title,status,label};
     })};
 }

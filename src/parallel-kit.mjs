@@ -26,6 +26,10 @@ export class ParallelKit {
     return (await execute(this.setup.environment.WORKFLOW_GIT_BIN||'git',['-C',workspace,...args],
       {env:this.setup.environment,windowsHide:true,encoding:'utf8',timeout:10000,maxBuffer:4*1024*1024})).stdout.trim();
   }
+  async projectIdentity(workspace,commit) {
+    if(!commit)return null;
+    try {return parsePlan(await this.git(workspace,['show',commit+':'+planFile])).project_id;}catch{return null;}
+  }
   async read(workspace) {
     const text=await fs.readFile(path.join(workspace,planFile),'utf8'),plan=parsePlan(text);
     if(plan.execution_strategy!=='parallel')return {workspace,plan,assignments:[],integration:{status:'IDLE'}};
