@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1644,
+  "plan_revision": 1646,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Реализовать опциональное параллельное выполнение плана через чат-сессии Web Pilot и отдельные worktree с проверенной последовательной интеграцией в main.",
   "acceptance_criteria": [
     "Снимок разрешения и лимита фиксируется при новой основной сессии; существующее выполнение не меняется от Settings.",
@@ -2262,13 +2262,14 @@
         "main тег и шесть assets сверены после окончательного push; живая приёмка остаётся открытой"
       ],
       "expected_commit_message": "feat: Опубликовать выпуск 0.6.108 на GitHub",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T037",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -2294,10 +2295,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1644
+Revision: 1646
 
 ## Цель
 
@@ -2477,8 +2478,8 @@ Revision: 1644
   - Git Commit: [DONE] feat: Установить выпуск 0.6.108
   - Reference: parallel-chat-execution-20261009 / T036 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
-- [TODO] T037: Опубликовать выпуск 0.6.108 на GitHub — Ожидает
-  - Git Commit: [PENDING] feat: Опубликовать выпуск 0.6.108 на GitHub
+- [DONE] T037: Опубликовать выпуск 0.6.108 на GitHub — Завершено
+  - Git Commit: [DONE] feat: Опубликовать выпуск 0.6.108 на GitHub
   - Reference: parallel-chat-execution-20261009 / T037 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 
