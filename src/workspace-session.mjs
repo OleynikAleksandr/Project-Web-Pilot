@@ -725,6 +725,17 @@ export class WorkspaceSessions {
     });
   }
 
+  forgetDeletedProject(workspace, projectId) {
+    return this.mutate(data=>{
+      const project=data.projects.find(p=>p.workspace===workspace);
+      if(project&&(!project.archivedAt||project.projectId!==projectId))throw new WorkspaceError('DELETE_RECORD_CHANGED','Запись удаляемого проекта изменилась.');
+      const removed=new Set(data.projects.filter(p=>p.workspace===workspace||p.parentWorkspace===workspace).map(p=>p.workspace));
+      data.projects=data.projects.filter(p=>!removed.has(p.workspace));
+      if(removed.has(data.selectedWorkspace))data.selectedWorkspace=null;
+      return true;
+    });
+  }
+
   forgetArchived(workspace, projectId) {
     return this.forgetArchivedMany([{ workspace, projectId }]).then(count => count > 0);
   }

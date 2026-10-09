@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1649,
+  "plan_revision": 1651,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -69,8 +69,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-state-deletion-20261009",
         "task_id": "T001",
@@ -101,7 +101,16 @@
         "Удаление очищает settings, checkpoints, копии, диагностику и связанные локальные назначения; чужие данные и облачный профиль сохранены",
         "Состояние удаления и восстановление включают очистку приложения; незавершённая работа не удаляется скрыто"
       ],
-      "expected_commit_message": "feat: Полное удаление локального состояния проекта"
+      "expected_commit_message": "feat: Полное удаление локального состояния проекта",
+      "actual_files": [
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "src/project-state-cleanup.mjs",
+        "src/workspace-deletion.mjs",
+        "src/workspace-session.mjs",
+        "tests/project-state-cleanup.test.mjs",
+        "tests/workspace-deletion.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -326,7 +335,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1649
+Revision: 1651
 
 ## Цель
 
@@ -338,8 +347,8 @@ Revision: 1649
 
 ## Микрозадачи
 
-- [TODO] T001: Полное удаление локального состояния проекта — Ожидает
-  - Git Commit: [PENDING] feat: Полное удаление локального состояния проекта
+- [DONE] T001: Полное удаление локального состояния проекта — Завершено
+  - Git Commit: [DONE] feat: Полное удаление локального состояния проекта
   - Reference: project-state-deletion-20261009 / T001 / implementation
   - Файлы: src/project-state-cleanup.mjs, src/workspace-deletion.mjs, src/workspace-session.mjs, src/main.mjs, src/parallel-execution.mjs, src/session-runtime.mjs, tests/project-state-cleanup.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/project-state-deletion.md
 - [TODO] T002: Изоляция пересозданного проекта и согласованная проекция — Ожидает

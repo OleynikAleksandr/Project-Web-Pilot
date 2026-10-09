@@ -36,6 +36,7 @@ import { configureExecutor,executorPageState } from './executor-session.mjs';
 import { projectExecutors } from './execution-projection.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
+import { removeProjectSettings, belongsToProject } from './project-state-cleanup.mjs';
 import { appendDiagnostic } from './common.mjs';
 import { WorkspaceSetup } from './workspace-setup.mjs';
 import { ProjectDoctor } from './project-doctor.mjs';
@@ -324,6 +325,33 @@ function saveSettings(overrides = {}) {
   });
   settingsSaveTail = operation;
   return operation;
+}
+
+async function prepareProjectRemoval(job) {
+  const workspaces=[job.workspace,...(job.related??[]).map(p=>p.workspace)];
+  const records=[...liveSessions.records.values()].filter(r=>workspaces.includes(r.identity?.workspace));
+  for(const record of records)if(record.pageState.current?.state.busy||record.controller.pending||record.composer.inFlight)
+    throw Object.assign(new Error('Остановите работу чатов удаляемого проекта перед удалением.'),{code:'DELETE_PROJECT_BUSY'});
+  for(const workspace of workspaces) {
+    const commands=await fsp.readdir(path.join(workspace,'.harness/runtime/command-activity')).catch(e=>{if(e.code==='ENOENT')return [];throw e;});
+    if(commands.length)throw Object.assign(new Error('Дождитесь завершения команд удаляемого проекта.'),{code:'DELETE_PROJECT_BUSY'});
+  }
+  for(const workspace of workspaces)await execution.suspend(workspace);
+  for(const record of records)if(!liveSessions.release(record))
+    throw Object.assign(new Error('Чат ещё занят. Повторите удаление после остановки.'),{code:'DELETE_PROJECT_BUSY'});
+  await settingsSaveTail;
+}
+async function cleanupDeletedProject(job) {
+  const identities=[{workspace:job.workspace,projectId:job.projectId,sessionIds:job.sessionIds??[]},...(job.related??[])];
+  const cleaned=removeProjectSettings({projectAutoPlan:projectAutoPlan.snapshot(),parallelExecutionBook,reviewCheckpoint,automationCheckpoint},identities);
+  projectAutoPlan.book=cleaned.projectAutoPlan;parallelExecutionBook=cleaned.parallelExecutionBook;execution.book=parallelExecutionBook;
+  reviewCheckpoint=cleaned.reviewCheckpoint;automationCheckpoint=cleaned.automationCheckpoint;
+  execution.forget(identities.map(p=>p.workspace));
+  for(const book of [automationSend.entries,automationSend.cycles,reviewContinuation.flow.checkpoints,reviewContinuation.flow.cycles,reviewContinuation.stops])
+    for(const [key,value] of book)if(belongsToProject([key,value],identities))book.delete(key);
+  contextCache.clear();workspaceSetup.invalidateReadiness();
+  if(identities.some(p=>p.workspace===workspaceHealth?.workspace))workspaceHealth=null;
+  await saveSettings();
 }
 
 async function setChatColors(colors) {
@@ -1485,7 +1513,7 @@ else {
         : path.join(sourceDir, '../.harness/runtime/windows-payload', WINDOWS_RUNTIME_ARCHIVE);
       windowsBootstrap = new WindowsExecutorBootstrap({ payloadFile, stateDir: runtimeFolder });
     }
-    deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder] });
+    deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder], prepare:prepareProjectRemoval, cleanup:cleanupDeletedProject });
     if (!storageError) {
       const errors = await deletion.recover();
       if (errors.length) { startupError = errors[0]; settingsState = { workspace: errors[0].workspace }; }

@@ -40,7 +40,7 @@ export class ParallelExecution {
   constructor({kit,origin,openWorker,workerState,mainState,save,book={},onChange=()=>{},watch=()=>()=>{},
     isEnabled=null,onComplete=()=>{},sendCorrection,restoreWorker=async()=>null,restoreOrigin=async()=>{},now=Date.now,uuid=randomUUID}) {
     Object.assign(this,{isEnabled,onComplete,kit,origin,openWorker,workerState,mainState,save,book,onChange,watch,sendCorrection,restoreWorker,restoreOrigin,now,uuid});
-    this.queues=new Map();this.states=new Map();this.unwatch=new Map();this.correcting=new Set();this.enabled=false;this.closed=false;
+    this.queues=new Map();this.states=new Map();this.unwatch=new Map();this.correcting=new Set();this.suspended=new Set();this.enabled=false;this.closed=false;
   }
   view(workspace){return this.states.get(workspace)??{phase:'idle',assignments:[],error:null};}
   publish(workspace,patch){this.states.set(workspace,{...this.view(workspace),...patch});this.onChange();}
@@ -54,6 +54,7 @@ export class ParallelExecution {
   }
   persist(){return this.save(structuredClone(this.book));}
   observe(workspace) {
+    this.suspended.delete(workspace);
     if(!this.unwatch.has(workspace))this.unwatch.set(workspace,this.watch(workspace,()=>this.signal(workspace)));
   }
   setEnabled(value) {
@@ -63,7 +64,7 @@ export class ParallelExecution {
   signal(workspace) {return this.enqueue(workspace,true);}
   recheck(workspace) {this.observe(workspace);return this.enqueue(workspace,true);}
   enqueue(workspace,recovery=false) {
-    if(this.closed)return Promise.resolve();
+    if(this.closed||this.suspended.has(workspace))return Promise.resolve();
     if(this.correcting.has(workspace)) {
       const current=this.queues.get(workspace);if(current){current.again=true;current.recovery||=recovery;}
       return Promise.resolve(this.view(workspace));
@@ -75,7 +76,7 @@ export class ParallelExecution {
       do {queue.again=false;const recover=queue.recovery;queue.recovery=false;
         try {await this.reconcile(workspace,recover);}
         catch(error){this.publish(workspace,{phase:'attention',error:issue(error)});}
-      }while(queue.again&&!this.closed);
+      }while(queue.again&&!this.closed&&!this.suspended.has(workspace));
       return this.view(workspace);
     }).finally(()=>this.queues.delete(workspace));
     return queue.promise;
@@ -83,7 +84,7 @@ export class ParallelExecution {
   async reconcile(workspace,recovery=false) {
     const state=await this.kit.read(workspace),{plan}=state;
     if(plan.execution_strategy!=='parallel') {this.publish(workspace,{phase:'sequential',assignments:[],error:null});return;}
-    const enabled=()=>this.isEnabled?this.isEnabled(workspace,plan.scope_id):this.enabled;
+    const enabled=()=>!this.suspended.has(workspace)&&(this.isEnabled?this.isEnabled(workspace,plan.scope_id):this.enabled);
     this.unwatch.get(workspace)?.update?.(state.watchInputs);
     const origin=executionOrigin(plan,id=>this.origin(workspace,id));
     const ledger=this.ledger(workspace,plan.scope_id);
@@ -264,6 +265,15 @@ export class ParallelExecution {
       await this.persist();this.publish(workspace,{correctionStatus:ledger.corrections[operation.operation_id]??null});return result;
     }catch(error){ledger.corrections[operation.operation_id]='unknown';await this.persist();throw error;}
     }finally{this.correcting.delete(workspace);if(!fromQueue)void this.signal(workspace);}
+  }
+  async suspend(workspace) {
+    this.suspended.add(workspace);
+    this.unwatch.get(workspace)?.();this.unwatch.delete(workspace);
+    const queue=this.queues.get(workspace);if(queue){queue.again=false;await queue.promise;}
+  }
+  forget(workspaces) {
+    for(const workspace of workspaces){this.states.delete(workspace);this.unwatch.get(workspace)?.();this.unwatch.delete(workspace);}
+    for(const [key,value] of Object.entries(this.book))if(workspaces.includes(value.workspace))delete this.book[key];
   }
   dispose(){this.closed=true;for(const stop of this.unwatch.values())stop();this.unwatch.clear();}
 }

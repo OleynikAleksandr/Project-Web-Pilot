@@ -1,0 +1,52 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+// Match complete values (also inside nested JSON delivery keys), never name substrings.
+export function belongsToProject(value, identities) {
+  const tokens=new Set(identities.flatMap(p=>[p.workspace,p.projectId,...(p.sessionIds??[])]).filter(Boolean));
+  const matches=value=>{
+    if(typeof value==='string') {
+      if(tokens.has(value))return true;
+      try {const parsed=JSON.parse(value);return typeof parsed!=='string'&&matches(parsed);}catch{return false;}
+    }
+    if(Array.isArray(value))return value.some(matches);
+    return value&&typeof value==='object'&&Object.entries(value).some(([k,v])=>matches(k)||matches(v));
+  };
+  return !!matches(value);
+}
+
+export function removeProjectSettings(settings, identities) {
+  const result=structuredClone(settings);
+  for(const field of ['projectAutoPlan','parallelExecutionBook'])if(result[field])
+    result[field]=Object.fromEntries(Object.entries(result[field]).filter(entry=>!belongsToProject(entry,identities)));
+  for(const field of ['reviewCheckpoint','automationCheckpoint'])if(result[field])
+    for(const [key,value] of Object.entries(result[field]))if(Array.isArray(value))
+      result[field][key]=value.filter(entry=>!belongsToProject(entry,identities));
+  return result;
+}
+
+const read=async file=>fs.readFile(file,'utf8').catch(e=>{if(e.code==='ENOENT')return null;throw e;});
+const write=async(file,text)=>{
+  const temporary=file+'.project-cleanup.tmp';
+  await fs.writeFile(temporary,text,{mode:0o600});await fs.rename(temporary,file);
+};
+
+// Only application-owned state; browser profiles, cookies and cloud chats are untouched.
+export async function purgeProjectStateFiles(dataDir,identities) {
+  const files=await fs.readdir(dataDir);
+  for(const name of files.filter(n=>/^settings\.json(?:\.v\d+-backup)?$/.test(n))) {
+    const file=path.join(dataDir,name),raw=await read(file);
+    const old=JSON.parse(raw),next=removeProjectSettings(old,identities);
+    if(JSON.stringify(old)!==JSON.stringify(next))await write(file,JSON.stringify(next,null,2)+'\n');
+  }
+  // Interrupted atomic settings writes are not a backup and must not restore deleted data.
+  for(const name of files.filter(n=>/^settings\.json\.(?:tmp(?:-[\w-]+)?|project-cleanup\.tmp)$/.test(n)))
+    await fs.rm(path.join(dataDir,name),{force:true});
+  const diagnostics=path.join(dataDir,'diagnostics');
+  for(const name of await fs.readdir(diagnostics).catch(e=>{if(e.code==='ENOENT')return [];throw e;})) {
+    if(!/\.jsonl(?:\.\d+)?$/.test(name))continue;
+    const file=path.join(diagnostics,name),raw=await read(file);
+    const lines=raw.split('\n').filter(Boolean),kept=lines.filter(line=>!belongsToProject(JSON.parse(line),identities));
+    if(lines.length!==kept.length)await write(file,kept.length?kept.join('\n')+'\n':'');
+  }
+}

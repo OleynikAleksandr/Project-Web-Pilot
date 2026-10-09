@@ -80,10 +80,10 @@ test('cancelled and stale confirmations cannot delete changed files or a replace
 
 test('interrupted local metadata cleanup resumes without deleting a replacement at the old path', async t => {
   const { store, service, project } = await fixture(t); const a = await project('A'); await store.setArchived(a, true);
-  const original = store.forgetArchived.bind(store); store.forgetArchived = async () => { throw new Error('disk failure'); };
+  const original = store.forgetDeletedProject.bind(store); store.forgetDeletedProject = async () => { throw new Error('disk failure'); };
   const p = await service.preview(a); await assert.rejects(service.apply(p.token, p.name), /disk failure/);
   assert.equal(service.isPending(a), true); await assert.rejects(fs.stat(a), { code: 'ENOENT' }); assert.ok(store.project(a).archivedAt);
-  await fs.mkdir(a); await fs.writeFile(path.join(a, 'replacement.txt'), 'preserve'); store.forgetArchived = original;
+  await fs.mkdir(a); await fs.writeFile(path.join(a, 'replacement.txt'), 'preserve'); store.forgetDeletedProject = original;
   const restarted = new WorkspaceDeletion({ store, journalDir: service.journalDir }); assert.deepEqual(await restarted.recover(), []);
   assert.equal(store.project(a), null); assert.equal(await fs.readFile(path.join(a, 'replacement.txt'), 'utf8'), 'preserve');
 });
@@ -102,4 +102,32 @@ test('recovery completes a confirmed rename interrupted before recording removal
   assert.equal(journal.stage, 'confirmed'); assert.ok(await fs.stat(journal.quarantine));
   const restarted = new WorkspaceDeletion({ store, journalDir: service.journalDir }); assert.deepEqual(await restarted.recover(), []);
   await assert.rejects(fs.stat(journal.quarantine), { code: 'ENOENT' }); assert.equal(store.project(a), null);
+});
+
+test('project deletion clears settings and executor metadata; cleanup failure remains recoverable',async t=>{
+  const {root,store,service,project}=await fixture(t),a=await project('A'),b=await project('B');
+  const sessionId=store.project(a).sessionId,settings=path.join(root,'app/settings.json');
+  await fs.writeFile(settings,JSON.stringify({projectAutoPlan:{[a]:{enabled:true},[b]:{enabled:true}},parallelExecutionBook:{old:{workspace:a}},reviewCheckpoint:{cycles:[{key:JSON.stringify([a,sessionId])}]}}));
+  await store.setArchived(a,true);let calls=0;
+  service.cleanup=async()=>{if(!calls++)throw Error('settings disk failure');};
+  const p=await service.preview(a);await assert.rejects(service.apply(p.token,p.name),/settings disk failure/);
+  assert.equal(service.isPending(a),true);assert.ok(store.project(a));
+  const restarted=new WorkspaceDeletion({store,journalDir:service.journalDir});assert.deepEqual(await restarted.recover(),[]);
+  const data=JSON.parse(await fs.readFile(settings));assert.equal(data.projectAutoPlan[a],undefined);assert.equal(data.projectAutoPlan[b].enabled,true);
+  assert.deepEqual(data.parallelExecutionBook,{});assert.deepEqual(data.reviewCheckpoint.cycles,[]);assert.equal(store.project(a),null);
+});
+
+test('deletion removes only verified worktrees and all child sessions',async t=>{
+  const {root,store,service,project}=await fixture(t),a=await project('A');
+  const {createHash}=await import('node:crypto');
+  const id='wp-child',child=path.join(root,'.web-pilot-worktrees',createHash('sha256').update(a).digest('hex').slice(0,16),id);
+  const gitDir=path.join(a,'.git/worktrees/child'),binding={id,parent_root:a,worktree:child};
+  await fs.mkdir(path.join(gitDir,'workflow-kit'),{recursive:true});await fs.mkdir(child,{recursive:true});
+  await fs.mkdir(path.join(a,'.git/workflow-kit/assignments'),{recursive:true});
+  await fs.writeFile(path.join(child,'.git'),'gitdir: '+gitDir+'\n');
+  await fs.writeFile(path.join(gitDir,'workflow-kit/assignment.json'),JSON.stringify(binding));
+  await fs.writeFile(path.join(a,'.git/workflow-kit/assignments',id+'.json'),JSON.stringify(binding));
+  const data=store.data.projects[0];store.data.projects.push({...structuredClone(data),workspace:child,parentWorkspace:a,projectId:'child',sessions:[{...data.sessions[0],sessionId:'worker',assignmentId:id}]});await store.save();
+  await store.setArchived(a,true);const p=await service.preview(a);await service.apply(p.token,p.name);
+  await assert.rejects(fs.stat(child),{code:'ENOENT'});assert.equal(store.project(child),null);assert.equal(store.project(a),null);
 });

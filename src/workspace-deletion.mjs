@@ -4,6 +4,7 @@ import os from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
 import { readWorkspace, WorkspaceError } from './workspace-session.mjs';
 import { diagnosticFiles } from './common.mjs';
+import { purgeProjectStateFiles } from './project-state-cleanup.mjs';
 
 const fail = (code, message) => { throw new WorkspaceError(code, message); };
 const within = (child, parent) => child === parent || child.startsWith(parent + path.sep);
@@ -12,8 +13,8 @@ const identity = stat => ({ dev: String(stat.dev), ino: String(stat.ino) });
 const same = (stat, expected) => stat?.isDirectory() && !stat.isSymbolicLink() && String(stat.dev) === expected.dev && String(stat.ino) === expected.ino;
 
 export class WorkspaceDeletion {
-  constructor({ store, journalDir, protectedPaths = [], home = os.homedir() }) {
-    Object.assign(this, { store, journalDir, protectedPaths, home });
+  constructor({ store, journalDir, protectedPaths = [], home = os.homedir(), prepare=async()=>{}, cleanup=async()=>{} }) {
+    Object.assign(this, { store, journalDir, protectedPaths, home, prepare, cleanup });
     this.tickets = new Map(); this.pending = new Set();
   }
   clear() { this.tickets.clear(); }
@@ -43,10 +44,41 @@ export class WorkspaceDeletion {
       fail('DELETE_PATH_CHANGED', 'Путь больше не указывает на исходную папку проекта.');
     return stat;
   }
+  async related(project) {
+    const records=this.store.snapshot().projects.filter(p=>p.parentWorkspace===project.workspace);
+    const assignments=path.join(project.workspace,'.git/workflow-kit/assignments');
+    const candidates=new Map(records.map(p=>[p.workspace,{workspace:p.workspace,id:p.sessions[0]?.assignmentId,projectId:p.projectId,sessionIds:p.sessions.map(s=>s.sessionId)}]));
+    for(const name of await fs.readdir(assignments).catch(e=>{if(e.code==='ENOENT'||e.code==='ENOTDIR')return [];throw e;})) {
+      if(!/^[A-Za-z0-9_-]+\.json$/.test(name))continue;
+      const a=JSON.parse(await fs.readFile(path.join(assignments,name),'utf8'));
+      if(a.parent_root!==project.workspace)continue;
+      if(!candidates.has(a.worktree))candidates.set(a.worktree,{workspace:a.worktree,id:a.id,sessionIds:[]});
+    }
+    const result=[];
+    for(const item of candidates.values()) {
+      const stat=await lstatOrNull(item.workspace);
+      if(stat) {
+        const expected=path.join(path.dirname(project.workspace),'.web-pilot-worktrees',createHash('sha256').update(project.workspace).digest('hex').slice(0,16),item.id??'');
+        if(!item.id||item.workspace!==expected||!stat.isDirectory()||stat.isSymbolicLink()||await fs.realpath(item.workspace)!==item.workspace)
+          fail('DELETE_WORKTREE_CHANGED','Путь исполнителя не подтверждён. Удаление остановлено.');
+        const gitFile=await fs.readFile(path.join(item.workspace,'.git'),'utf8');
+        const pointer=gitFile.trim().replace(/^gitdir: /,'');
+        if(!gitFile.startsWith('gitdir: ')||!within(pointer,path.join(project.workspace,'.git/worktrees')))
+          fail('DELETE_WORKTREE_CHANGED','Git исполнителя принадлежит другому проекту.');
+        const binding=JSON.parse(await fs.readFile(path.join(pointer,'workflow-kit/assignment.json'),'utf8'));
+        if(binding.id!==item.id||binding.parent_root!==project.workspace||binding.worktree!==item.workspace)
+          fail('DELETE_WORKTREE_CHANGED','Назначение исполнителя не соответствует удаляемому проекту.');
+        item.identity=identity(stat);
+      }
+      result.push(item);
+    }
+    return result;
+  }
   async inspect(workspace) {
     const project = this.record(workspace);
     const stat = await this.guard(workspace);
-    if (!stat) return { workspace, projectId: project.projectId, name: project.name, sessionCount: project.sessions.length, missing: true, bytes: 0, files: 0, fingerprint: 'missing', identity: null };
+    const related=await this.related(project),sessionIds=project.sessions.map(s=>s.sessionId);
+    if (!stat) return { workspace, projectId: project.projectId, name: project.name, sessionCount: project.sessions.length, missing: true, bytes: 0, files: 0, fingerprint: 'missing', identity: null, related, sessionIds };
     const info = await readWorkspace(workspace);
     if (info.projectId !== project.projectId) fail('PROJECT_REPLACED', 'В этой папке теперь другой проект. Удаление остановлено.');
     const hash = createHash('sha256'); let bytes = 0, files = 0;
@@ -58,13 +90,13 @@ export class WorkspaceDeletion {
       else { files++; bytes += Number(item.size); }
     };
     await visit(workspace, '');
-    return { workspace, projectId: project.projectId, name: project.name, sessionCount: project.sessions.length, missing: false, bytes, files, fingerprint: hash.digest('hex'), identity: identity(stat) };
+    return { workspace, projectId: project.projectId, name: project.name, sessionCount: project.sessions.length, missing: false, bytes, files, fingerprint: hash.digest('hex'), identity: identity(stat), related, sessionIds };
   }
   async preview(workspace) {
     if (this.isPending(workspace)) fail('DELETE_PENDING', 'Завершите ранее подтверждённое удаление кнопкой «Повторить очистку».');
     const details = await this.inspect(workspace), token = randomUUID();
     this.clear(); this.tickets.set(token, details);
-    const { fingerprint, identity: ignored, ...visible } = details;
+    const { fingerprint, identity: ignored, related: ignoredRelated, sessionIds: ignoredSessions, ...visible } = details;
     return { ...visible, token };
   }
   async apply(token, confirmation) {
@@ -73,7 +105,7 @@ export class WorkspaceDeletion {
     if (confirmation !== expected.name) fail('DELETE_CONFIRMATION', 'Введите точное имя проекта для подтверждения.');
     this.clear();
     const current = await this.inspect(expected.workspace);
-    if (current.projectId !== expected.projectId || current.fingerprint !== expected.fingerprint || current.sessionCount !== expected.sessionCount)
+    if (current.projectId !== expected.projectId || current.fingerprint !== expected.fingerprint || current.sessionCount !== expected.sessionCount || JSON.stringify(current.related)!==JSON.stringify(expected.related))
       fail('DELETE_PREVIEW_CHANGED', 'Проект изменился после проверки. Откройте подтверждение заново.');
     const id = randomUUID();
     const job = { ...expected, id, quarantine: path.join(path.dirname(expected.workspace), '.web-pilot-delete-' + id), stage: 'confirmed' };
@@ -107,6 +139,7 @@ export class WorkspaceDeletion {
   async finish(job) {
     const record = this.store.project(job.workspace);
     if (record && (!record.archivedAt || record.projectId !== job.projectId)) fail('DELETE_RECORD_CHANGED', 'Запись проекта изменилась. Автоматическая очистка остановлена.');
+    await this.prepare(job);
     await this.guard(job.workspace);
     let quarantined = await lstatOrNull(job.quarantine);
     if (quarantined && !same(quarantined, job.identity)) fail('DELETE_PATH_CHANGED', 'Папка удаления была заменена. Очистка остановлена.');
@@ -122,9 +155,22 @@ export class WorkspaceDeletion {
     // After this durable stage, recovery only touches the renamed directory; a replacement at the old path is preserved.
     job.stage = 'removing'; await this.saveJob(job);
     if (quarantined) await fs.rm(job.quarantine, { recursive: true });
-    await this.purgeCopies(job.workspace);
+    for(const item of job.related??[]) {
+      const expected=path.join(path.dirname(job.workspace),'.web-pilot-worktrees',createHash('sha256').update(job.workspace).digest('hex').slice(0,16),item.id??'');
+      if(!item.id||item.workspace!==expected)fail('DELETE_WORKTREE_CHANGED','Путь в журнале удаления не подтверждён.');
+      const stat=await lstatOrNull(item.workspace);
+      if(stat) {
+        if(!item.identity||!same(stat,item.identity)||await fs.realpath(item.workspace)!==item.workspace)
+          fail('DELETE_WORKTREE_CHANGED','Папка исполнителя была заменена. Очистка остановлена.');
+        await fs.rm(item.workspace,{recursive:true});
+      }
+    }
+    const identities=[{workspace:job.workspace,projectId:job.projectId,sessionIds:job.sessionIds??[]},...(job.related??[])];
+    await this.cleanup(job);
+    await purgeProjectStateFiles(path.dirname(this.store.file),identities);
+    for(const item of identities)await this.purgeCopies(item.workspace);
     await this.store.removeTemporaries();
-    await this.store.forgetArchived(job.workspace, job.projectId);
+    await this.store.forgetDeletedProject(job.workspace, job.projectId);
     await fs.unlink(this.jobFile(job)); this.pending.delete(job.workspace);
   }
   async recover() {
