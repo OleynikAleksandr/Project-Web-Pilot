@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1614,
+  "plan_revision": 1615,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "READY_FOR_ACCEPTANCE",
+  "delivery_status": "IN_PROGRESS",
   "objective": "Реализовать опциональное параллельное выполнение плана через чат-сессии Web Pilot и отдельные worktree с проверенной последовательной интеграцией в main.",
   "acceptance_criteria": [
     "Снимок разрешения и лимита фиксируется при новой основной сессии; существующее выполнение не меняется от Settings.",
@@ -161,6 +161,11 @@
       },
       {
         "path": "docs/modules/session-runtime.md",
+        "required": true,
+        "revision": "WORKTREE"
+      },
+      {
+        "path": "docs/modules/auto-plan.md",
         "required": true,
         "revision": "WORKTREE"
       }
@@ -1822,6 +1827,185 @@
         "role": "implementation"
       },
       "actual_files": []
+    },
+    {
+      "id": "T028",
+      "title": "Исправить включение AutoPlan до публикации первого плана",
+      "why": "Исправить включение AutoPlan до публикации первого плана",
+      "dependencies": [],
+      "functional_paths": [
+        "src/project-auto-plan.mjs",
+        "src/main.mjs",
+        "tests/project-auto-plan.test.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/electron-smoke.mjs"
+      ],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Нажатие реальной кнопки в пустом проекте сохраняет ON и видимое состояние до публикации; явное разрешение относится только к этому проекту и первому плану",
+        "OFF отменяет ожидание; restart сохраняет явный выбор; ошибка чтения не разрешает выполнение; legacy ON и следующий scope остаются OFF",
+        "Публикация parallel-плана после нажатия запускает назначения; подтверждённое завершение выключает режим"
+      ],
+      "expected_commit_message": "feat: Исправить включение AutoPlan до публикации первого плана",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T028",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T029",
+      "title": "Подготовить исправленный выпуск 0.6.107",
+      "why": "Подготовить исправленный выпуск 0.6.107",
+      "dependencies": [
+        "T028"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md"
+      ],
+      "verification_ids": [
+        "codex-tools-live"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Версия и evidence нового выпуска согласованы; сборка до DOCS не выполняется"
+      ],
+      "expected_commit_message": "feat: Подготовить исправленный выпуск 0.6.107",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T029",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "DOCS-4",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "DOCS-4",
+        "role": "implementation",
+        "iteration": 4
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T028",
+        "T029"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта"
+    },
+    {
+      "id": "T030",
+      "title": "Собрать парный выпуск 0.6.107 для macOS и Windows",
+      "why": "Собрать парный выпуск 0.6.107 для macOS и Windows",
+      "dependencies": [
+        "T029",
+        "DOCS-4"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "Одна сборка после DOCS создаёт обе платформы и шесть сверенных assets"
+      ],
+      "expected_commit_message": "feat: Собрать парный выпуск 0.6.107 для macOS и Windows",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T030",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T031",
+      "title": "Установить исправленный выпуск 0.6.107",
+      "why": "Установить исправленный выпуск 0.6.107",
+      "dependencies": [
+        "T030",
+        "DOCS-4"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Установка из готового staging без пересборки; identity и подпись сохранены"
+      ],
+      "expected_commit_message": "feat: Установить исправленный выпуск 0.6.107",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T031",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T032",
+      "title": "Опубликовать выпуск 0.6.107 и синхронизировать GitHub",
+      "why": "Опубликовать выпуск 0.6.107 и синхронизировать GitHub",
+      "dependencies": [
+        "T031",
+        "DOCS-4"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/auto-plan.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "main, тег и шесть assets сверены после окончательного push; живая приёмка остаётся пользователю"
+      ],
+      "expected_commit_message": "feat: Опубликовать выпуск 0.6.107 и синхронизировать GitHub",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T032",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1847,10 +2031,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: READY_FOR_ACCEPTANCE
+Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1614
+Revision: 1615
 
 ## Цель
 
@@ -1986,10 +2170,35 @@ Revision: 1614
   - Git Commit: [DONE] feat: Опубликовать выпуск 0.6.106 и синхронизировать GitHub
   - Reference: parallel-chat-execution-20261009 / T027 / implementation
   - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
+- [TODO] T028: Исправить включение AutoPlan до публикации первого плана — Ожидает
+  - Git Commit: [PENDING] feat: Исправить включение AutoPlan до публикации первого плана
+  - Reference: parallel-chat-execution-20261009 / T028 / implementation
+  - Файлы: src/project-auto-plan.mjs, src/main.mjs, tests/project-auto-plan.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, docs/modules/auto-plan.md
+- [TODO] T029: Подготовить исправленный выпуск 0.6.107 — Ожидает
+  - Git Commit: [PENDING] feat: Подготовить исправленный выпуск 0.6.107
+  - Reference: parallel-chat-execution-20261009 / T029 / implementation
+  - Файлы: package.json, package-lock.json, docs/modules/auto-plan.md
+- [TODO] DOCS-4: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: parallel-chat-execution-20261009 / DOCS-4 / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T030: Собрать парный выпуск 0.6.107 для macOS и Windows — Ожидает
+  - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.107 для macOS и Windows
+  - Reference: parallel-chat-execution-20261009 / T030 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T031: Установить исправленный выпуск 0.6.107 — Ожидает
+  - Git Commit: [PENDING] feat: Установить исправленный выпуск 0.6.107
+  - Reference: parallel-chat-execution-20261009 / T031 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
+- [TODO] T032: Опубликовать выпуск 0.6.107 и синхронизировать GitHub — Ожидает
+  - Git Commit: [PENDING] feat: Опубликовать выпуск 0.6.107 и синхронизировать GitHub
+  - Reference: parallel-chat-execution-20261009 / T032 / implementation
+  - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 
 ## Context Pack For This Cycle
 
 - docs/architecture/OVERVIEW.md
 - docs/modules/session-runtime.md
+- docs/modules/auto-plan.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
