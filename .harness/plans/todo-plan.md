@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1584,
+  "plan_revision": 1586,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1328,13 +1328,14 @@
         "DOCS нового раунда завершена; paired-release выполняет сборку один раз при коммите, готовит шесть assets и manifest с sourceCommit после DOCS; корневой app сохраняет identity и действующую подпись."
       ],
       "expected_commit_message": "build: собрать исправленный выпуск 0.6.105",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T017",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T018",
@@ -1421,7 +1422,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1584
+Revision: 1586
 
 ## Цель
 
@@ -1509,8 +1510,8 @@ Revision: 1584
   - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS-2 / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/modules/auto-plan.md, docs/modules/session-runtime.md, README.md, docs/modules/release.md
-- [TODO] T017: Собрать исправленный парный выпуск 0.6.105 — Ожидает
-  - Git Commit: [PENDING] build: собрать исправленный выпуск 0.6.105
+- [DONE] T017: Собрать исправленный парный выпуск 0.6.105 — Завершено
+  - Git Commit: [DONE] build: собрать исправленный выпуск 0.6.105
   - Reference: parallel-chat-execution-20261009 / T017 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 - [TODO] T018: Установить и проверить выпуск 0.6.105 — Ожидает
