@@ -108,6 +108,22 @@
         "scripts/check-workflow-kit-archive.mjs"
       ],
       "evidence": "Прежний репозиторий OleynikAleksandr/WorkflowKit на GitHub: архивный статус (только чтение) и README со ссылкой на packages/workflow-kit в Project-Web-Pilot подтверждены запросом к GitHub"
+    },
+    {
+      "id": "project-lifecycle",
+      "executable": "node",
+      "args": [
+        "--test",
+        "tests/project-state-cleanup.test.mjs",
+        "tests/workspace-deletion.test.mjs",
+        "tests/project-auto-plan.test.mjs",
+        "tests/parallel-execution.test.mjs",
+        "tests/parallel-execution-recovery.test.mjs"
+      ],
+      "kind": "test",
+      "required": false,
+      "timeout_ms": 180000,
+      "evidence": "Удаление и identity: запись настроек сериализована, защищённые worktree, сохранение соседей, restart и UNKNOWN"
     }
   ],
   "budget": {
