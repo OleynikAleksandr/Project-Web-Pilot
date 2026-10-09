@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1666,
+  "plan_revision": 1668,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -364,8 +364,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "project-state-deletion-20261009",
         "task_id": "T004",
@@ -390,7 +390,8 @@
       "acceptance_criteria": [
         "После DOCS одна сборка создаёт шесть assets и manifest для macOS и Windows; identity корневого app сохранена"
       ],
-      "expected_commit_message": "feat: Собрать парный выпуск 0.6.109"
+      "expected_commit_message": "feat: Собрать парный выпуск 0.6.109",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -469,7 +470,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1666
+Revision: 1668
 
 ## Цель
 
@@ -505,8 +506,8 @@ Revision: 1666
   - Git Commit: [DONE] docs: актуализировать контекст проекта
   - Reference: project-state-deletion-20261009 / DOCS / implementation
   - Файлы: docs/planning/project-state-deletion.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/project-archive.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sessions.md, docs/modules/session-runtime.md, docs/modules/release.md, docs/modules/parallel-execution-acceptance.md, docs/modules/chromium-diagnostics.md
-- [TODO] T004: Собрать парный выпуск 0.6.109 — Ожидает
-  - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.109
+- [DONE] T004: Собрать парный выпуск 0.6.109 — Завершено
+  - Git Commit: [DONE] feat: Собрать парный выпуск 0.6.109
   - Reference: project-state-deletion-20261009 / T004 / implementation
   - Файлы: docs/planning/project-state-deletion.md, docs/modules/release.md
 - [TODO] T005: Установить и проверить выпуск 0.6.109 — Ожидает
