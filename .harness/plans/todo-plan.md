@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1572,
+  "plan_revision": 1574,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1181,13 +1181,14 @@
         "Пользователю доступна новая версия для живой приёмки после полного перезапуска приложения."
       ],
       "expected_commit_message": "build: установить и проверить выпуск",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T014",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T015",
@@ -1247,7 +1248,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1572
+Revision: 1574
 
 ## Цель
 
@@ -1319,8 +1320,8 @@ Revision: 1572
   - Git Commit: [DONE] build: собрать новый парный выпуск
   - Reference: parallel-chat-execution-20261009 / T013 / implementation
   - Файлы: docs/planning/parallel-execution-spec.md, docs/modules/release.md
-- [TODO] T014: Установить и проверить готовый выпуск — Ожидает
-  - Git Commit: [PENDING] build: установить и проверить выпуск
+- [DONE] T014: Установить и проверить готовый выпуск — Завершено
+  - Git Commit: [DONE] build: установить и проверить выпуск
   - Reference: parallel-chat-execution-20261009 / T014 / implementation
   - Файлы: docs/planning/parallel-execution-spec.md, docs/modules/release.md
 - [TODO] T015: Опубликовать исходники и GitHub Release — Ожидает
