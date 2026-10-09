@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1577,
+  "plan_revision": 1578,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -160,7 +160,7 @@
         "revision": "dcdb9132bec59b2e1e26e4cc17e332dbc7412f19"
       },
       {
-        "path": "docs/modules/auto-plan.md",
+        "path": "docs/modules/session-runtime.md",
         "required": true,
         "revision": "WORKTREE"
       }
@@ -1413,7 +1413,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1577
+Revision: 1578
 
 ## Цель
 
@@ -1519,6 +1519,6 @@ Revision: 1577
 - docs/planning/parallel-execution-plan-draft.md
 - docs/architecture/OVERVIEW.md
 - docs/planning/parallel-execution-spec.md
-- docs/modules/auto-plan.md
+- docs/modules/session-runtime.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
