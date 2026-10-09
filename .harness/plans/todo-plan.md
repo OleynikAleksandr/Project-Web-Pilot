@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1663,
+  "plan_revision": 1664,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -50,7 +50,8 @@
       "docs/modules/workspace-sessions.md",
       "docs/modules/session-runtime.md",
       "docs/modules/release.md",
-      "docs/modules/parallel-execution-acceptance.md"
+      "docs/modules/parallel-execution-acceptance.md",
+      "docs/modules/chromium-diagnostics.md"
     ]
   },
   "baseline_commit": "3f30e31295a249326222c4c4869b99b825c6a12c",
@@ -337,7 +338,8 @@
         "docs/modules/workspace-sessions.md",
         "docs/modules/session-runtime.md",
         "docs/modules/release.md",
-        "docs/modules/parallel-execution-acceptance.md"
+        "docs/modules/parallel-execution-acceptance.md",
+        "docs/modules/chromium-diagnostics.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -454,7 +456,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1663
+Revision: 1664
 
 ## Цель
 
@@ -489,7 +491,7 @@ Revision: 1663
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: project-state-deletion-20261009 / DOCS / implementation
-  - Файлы: docs/planning/project-state-deletion.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/project-archive.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sessions.md, docs/modules/session-runtime.md, docs/modules/release.md, docs/modules/parallel-execution-acceptance.md
+  - Файлы: docs/planning/project-state-deletion.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/project-archive.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sessions.md, docs/modules/session-runtime.md, docs/modules/release.md, docs/modules/parallel-execution-acceptance.md, docs/modules/chromium-diagnostics.md
 - [TODO] T004: Собрать парный выпуск 0.6.109 — Ожидает
   - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.109
   - Reference: project-state-deletion-20261009 / T004 / implementation
