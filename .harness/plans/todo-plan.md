@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1610,
+  "plan_revision": 1612,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1784,13 +1784,14 @@
         "Готовая сборка установлена в /Applications без пересборки; подпись, identity, обе платформы и поставка сверены"
       ],
       "expected_commit_message": "feat: Установить и проверить готовый выпуск 0.6.106",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T026",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T027",
@@ -1848,7 +1849,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1610
+Revision: 1612
 
 ## Цель
 
@@ -1976,8 +1977,8 @@ Revision: 1610
   - Git Commit: [DONE] feat: Собрать парный выпуск 0.6.106 для macOS и Windows
   - Reference: parallel-chat-execution-20261009 / T025 / implementation
   - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
-- [TODO] T026: Установить и проверить готовый выпуск 0.6.106 — Ожидает
-  - Git Commit: [PENDING] feat: Установить и проверить готовый выпуск 0.6.106
+- [DONE] T026: Установить и проверить готовый выпуск 0.6.106 — Завершено
+  - Git Commit: [DONE] feat: Установить и проверить готовый выпуск 0.6.106
   - Reference: parallel-chat-execution-20261009 / T026 / implementation
   - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
 - [TODO] T027: Опубликовать выпуск 0.6.106 и синхронизировать GitHub — Ожидает
