@@ -2,7 +2,7 @@
 
 `SessionRuntimes` в `src/session-runtime.mjs` на уровне приложения хранит отдельные WebContentsView, PageState, Composer, ContextSession, AgentTimer и ConversationRecovery. Ключ — workspace/sessionId/assignmentId/taskId. Страницы используют общий профиль входа ChatGPT, фоновые страницы работают с backgroundThrottling=false.
 
-До создания первой страницы snapshot панели не требует runtime: conversationRecovery = {phase: 'idle', message: '', canRetry: false}, agentRun = null. Это позволяет восстановить сохранённый AutoPlan ON и опубликовать состояние до создания окна. После выбора страницы проекция использует её recovery и timer.
+До создания первой страницы snapshot панели не требует runtime: conversationRecovery = {phase: 'idle', message: '', canRetry: false}, agentRun = null. Это позволяет загрузить разрешения AutoPlan проектов и опубликовать состояние до создания окна. После выбора страницы проекция использует её recovery и timer.
 
 ## Представление и адресация
 
@@ -15,6 +15,10 @@
 show/hide не уничтожают сессию. Отдельный release без force отказывает при busy, pending-доставке или inFlight Composer; при освобождении снимает подписки. Закрытие приложения освобождает реестр, не останавливая независимые службы MCP. Контроллер не владеет BaseWindow; detach/attach и дополнительные окна чатов не реализованы.
 
 Обычный AgentTimer теперь остаётся у своей страницы при переключении. Для назначений дополнительно сохраняются раздельные activeMs/waitingMs через ExecutorTimer — [параллельное выполнение](parallel-execution.md).
+
+## AutoPlan проекта
+
+Каждый основной runtime имеет собственные AutoPlan, AutomationSendState и PlanMonitor через project-session-auto-plan. Отправка привязана к record.project(), Composer и Session ID этой страницы, включая скрытую. ProjectAutoPlan хранит разрешение по workspace/scope и журналы по Session ID; один основной чат продолжает последовательный план, назначения наследуют разрешение родителя. Выбор другого проекта и окна не переносит отправку. Новый scope и подтверждённое завершение выключают режим. Контракт — [AutoPlan](auto-plan.md).
 
 ## Восстановление разговора
 
@@ -34,6 +38,6 @@ Checkpoint `conversationRecovery {key,used,cooldownUntil,stoppedAt}` сохра�
 
 ## Проверки и пределы
 
-Electron smoke начинает настоящий main с сохранённым AutoPlan ON в свежем временном профиле, до создания окна и страницы; проверяет открывшуюся панель и сохранённый режим. Пользовательские данные не используются.
+Electron smoke начинает настоящий main со старым глобальным AutoPlan ON в свежем временном профиле, до создания окна и страницы; проверяет открывшуюся панель и миграцию в OFF. Пользовательские данные не используются.
 
 Unit-тесты покрывают адресацию, независимость страниц, переключение/перенос представления без пересоздания, отказ release при работе, позднюю навигацию, сохранение recovery и фоновой очереди. Electron TEST FIXTURE проверяет разные настоящие WebContents и события скрытой страницы. Живые Chat/Work и native Windows остаются пользовательской приёмкой.

@@ -112,6 +112,6 @@ Prepare требует явного получателя либо manual; respon
 - Пользователь: живой ChatGPT, native Windows (`workflow.cmd`, PowerShell-hook, MinGit); fixtures на Mac их не заменяют, для 1.6.x не подтверждены.
 
 ## Открыто
-- Поддержка upgradeFrom шире динамического покрытия: проверены синтетическая 1.4.13, выпущенные 1.5.6/1.6.4 и Review 1.6.3.
+- Поддержка upgradeFrom шире динамического покрытия: проверены синтетическая 1.4.13, выпущенные 1.5.6/1.6.4, Review 1.6.3 и parallel handoff после обновления выпущенной 1.7.0.
 - Hot-swap bridge Web Pilot ↔ Kit — только операции current plan, без session-маршрутизации; не реализован.
 - Не поручено: удалить разовую проверку `workflow-kit-archive` из `.harness/workflow.json`.

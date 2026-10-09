@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1606,
+  "plan_revision": 1608,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1679,8 +1679,8 @@
     {
       "id": "DOCS-3",
       "title": "Актуализация всех документов проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "DOCS-3",
@@ -1706,13 +1706,32 @@
         "packages/workflow-kit/docs/modules/workflow-kit-package.md",
         "packages/workflow-kit/docs/modules/parallel-assignments.md",
         "docs/planning/parallel-autoplan-fix.md",
-        "docs/modules/release.md"
+        "docs/modules/release.md",
+        "README.md",
+        "docs/modules/parallel-execution-acceptance.md",
+        "docs/modules/plan-review.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/workspace-setup.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
       ],
       "verification_ids": [],
-      "expected_commit_message": "docs: актуализировать документацию проекта"
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/parallel-execution-acceptance.md",
+        "docs/modules/parallel-execution.md",
+        "docs/modules/plan-review.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/release.md",
+        "docs/modules/session-runtime.md",
+        "docs/modules/workspace-setup.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "id": "T025",
@@ -1828,7 +1847,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1606
+Revision: 1608
 
 ## Цель
 
@@ -1948,10 +1967,10 @@ Revision: 1606
   - Git Commit: [DONE] feat: Подготовить исправленный выпуск 0.6.106
   - Reference: parallel-chat-execution-20261009 / T024 / implementation
   - Файлы: package.json, package-lock.json, .harness/workflow.json, docs/modules/session-runtime.md
-- [TODO] DOCS-3: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS-3: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS-3 / implementation
-  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sidebar-ui.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/planning/parallel-autoplan-fix.md, docs/modules/release.md
+  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sidebar-ui.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/planning/parallel-autoplan-fix.md, docs/modules/release.md, README.md, docs/modules/parallel-execution-acceptance.md, docs/modules/plan-review.md, docs/modules/project-doctor.md, docs/modules/workspace-setup.md
 - [TODO] T025: Собрать парный выпуск 0.6.106 для macOS и Windows — Ожидает
   - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.106 для macOS и Windows
   - Reference: parallel-chat-execution-20261009 / T025 / implementation

@@ -1,6 +1,6 @@
 # Краткая архитектура проекта
 
-Стек: Workflow Kit 1.7.0, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
+Стек: Workflow Kit 1.7.1, Electron 44.5.1, Node 24.21.0; версия продукта — в `package.json` и [README](../../README.md). Это карта текущего устройства. Ход работы — в current plan и Git; факты сборки и публикации — в release-manifest.json и GitHub Release. Постоянные правила разработки — в [AGENTS.md](../../AGENTS.md), пользовательская инструкция — в README.
 
 ## Назначение и границы
 
@@ -16,7 +16,7 @@ Electron-приложение для macOS и Windows: одно окно, сле
 | Доставка контекста | `context-session`, `context-cache`, `context-inputs`, `session-plans`, `mcp-runtime`, `conversation-recovery` | [context-delivery](../modules/context-delivery.md) |
 | Граница Kit ↔ Web Pilot | вызов `recover`, проверка пакета | [workflow-kit-recovery](../modules/workflow-kit-recovery.md) |
 | Review нового плана | `plan-review`, `review-continuation`, `automation-send-state`, Kit `plan-review`/`claude-review` | [plan-review](../modules/plan-review.md) |
-| AutoPlan | `auto-plan`, `auto-plan-state` | [auto-plan](../modules/auto-plan.md) |
+| AutoPlan | `auto-plan`, `auto-plan-state`, `project-auto-plan`, `project-session-auto-plan` | [auto-plan](../modules/auto-plan.md) |
 | Параллельные задачи | `parallel-settings`, `parallel-execution`, `parallel-kit`, `executor-session`, `execution-projection` | [parallel-execution](../modules/parallel-execution.md) |
 | Живые страницы | `session-runtime`, `conversation-recovery`, `agent-timer` | [session-runtime](../modules/session-runtime.md) |
 | Текущий план в панели | `plan-monitor`, `project-input-watch` | [plan-view](../modules/plan-view.md) |
@@ -46,9 +46,9 @@ Electron-приложение для macOS и Windows: одно окно, сле
 
 Сохранённый чат при обычном открытии контекст заново не получает. Подробности — [context-delivery](../modules/context-delivery.md), [auto-plan](../modules/auto-plan.md), [граница с Kit](../modules/workflow-kit-recovery.md).
 
-Новая основная сессия сохраняет снимок разрешения параллельности. Parallel-план запускает первую группу вручную, последующие — при AutoPlan ON. Происхождение снимка отдельно от получателя Review; legacy остаётся последовательным. У каждого живого чата собственные view, Composer, доставка, наблюдатель и восстановление; окно показывает выбранную страницу, не уничтожая остальные.
+Новая основная сессия сохраняет снимок разрешения параллельности. AutoPlan проекта ON запускает первую и последующие готовые группы parallel-плана. Основной чат не начинает задачи в main; все задачи передаются назначениям. Новый scope получает OFF, подтверждённое завершение плана сохраняет OFF. Происхождение снимка отдельно от получателя Review; legacy остаётся последовательным. У каждого живого чата собственные view, Composer, доставка, наблюдатель и восстановление; окно показывает выбранную страницу, не уничтожая остальные.
 
-Старт восстанавливает настройки до создания окна и первой живой страницы. Публикация состояния в этот момент возвращает пустое восстановление разговора и null для таймера; существование runtime не требуется. Electron smoke проверяет этот путь с заранее сохранённым AutoPlan ON.
+Старт восстанавливает настройки до создания окна и первой живой страницы. Публикация состояния в этот момент возвращает пустое восстановление разговора и null для таймера; существование runtime не требуется. Electron smoke проверяет этот путь со старым глобальным ON, который мигрирует в OFF. Разрешение незавершённого плана хранится по проекту и scope; каждый основной чат имеет собственный контроллер, включая скрытые страницы.
 
 ## Состояние, события, безопасность
 

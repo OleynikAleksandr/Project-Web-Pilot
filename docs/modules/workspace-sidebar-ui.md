@@ -18,7 +18,7 @@
 
 ## Дерево «Ваши проекты»
 
-Parallel-план добавляет под основным проектом группу «Исполнители» с названием сессии происхождения. Строки показывают задачу, worktree, Chat/Work, текстовое состояние и отдельные часы работы/ожидания; клик открывает собственную страницу без остановки остальных. Карточка показывает общий план, даже при выборе исполнителя. Узкие действия «Выполнить доступные задачи», «Передать исправление основному агенту» и «Повторить сверку» — [parallel-execution](parallel-execution.md).
+Parallel-план добавляет под основным проектом группу «Исполнители» с названием сессии происхождения. Строки показывают задачу, worktree, Chat/Work, текстовое состояние и отдельные часы работы/ожидания; клик открывает собственную страницу без остановки остальных. Карточка показывает общий план, даже при выборе исполнителя. AutoPlan проекта управляет выполнением; при конфликте доступно узкое действие «Передать исправление основному агенту» — [parallel-execution](parallel-execution.md).
 
 Settings содержит разрешение параллельности (OFF) и положительный лимит (2). Они применяются к снимку новых основных сессий; сохранённые планы не перенастраиваются. Доступность исправления учитывает готовность основного чата и завершение сверки. Статусы имеют текстовые подписи в обеих темах; время обновляется без функционального опроса.
 
@@ -76,7 +76,7 @@ Settings → «Оформление»: «Светлая»/«Тёмная» (`pil
 ## settings.json
 
 - `<userData>/settings.json`, один писатель: общая последовательная очередь, запись целиком через `settings.json.tmp` (0600) и `rename`, каталог 0700 — без гонок за временный файл.
-- Ключи: `chatgptChannel`, `shellTheme` (`light|dark`), `hideToolCalls`, `sidebarWidth`, `chatColors`, `projectsParent`, `autoPlanEnabled`, `autoPlanCheckpoint`; служебные `legacyMacRuntimeRetired`/`legacyWindowsRuntimeRetired` и до очистки `legacyRuntimeRoots`; на macOS пишется, но не читается `macRuntimeMode: "app-server"` (совместимость при откате).
+- Ключи: `chatgptChannel`, `shellTheme` (`light|dark`), `hideToolCalls`, `sidebarWidth`, `chatColors`, `projectsParent`, `projectAutoPlan` (разрешение workspace/scope и журналы основных сессий), `reviewCheckpoint`, `automationCheckpoint`, `parallelExecution`, `parallelExecutionBook`; служебные `legacyMacRuntimeRetired`/`legacyWindowsRuntimeRetired` и до очистки `legacyRuntimeRoots`; на macOS пишется, но не читается `macRuntimeMode: "app-server"` (совместимость при откате).
 - Читается при старте до окна; некорректные значения заменяются значениями по умолчанию; нечитаемый файл → `SETTINGS_INVALID` в баннере, приложение открывается.
 
 ## Редактор «Цвета чата»
