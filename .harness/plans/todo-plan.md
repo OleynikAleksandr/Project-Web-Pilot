@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1586,
+  "plan_revision": 1588,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1358,13 +1358,14 @@
         "Готовый staging установлен в /Applications через installMacBundle без пересборки; обе постоянные копии, identity, подпись и поставка проверены; профиль и настройки сохранены."
       ],
       "expected_commit_message": "build: установить исправленный выпуск 0.6.105",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T018",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T019",
@@ -1422,7 +1423,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1586
+Revision: 1588
 
 ## Цель
 
@@ -1514,8 +1515,8 @@ Revision: 1586
   - Git Commit: [DONE] build: собрать исправленный выпуск 0.6.105
   - Reference: parallel-chat-execution-20261009 / T017 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
-- [TODO] T018: Установить и проверить выпуск 0.6.105 — Ожидает
-  - Git Commit: [PENDING] build: установить исправленный выпуск 0.6.105
+- [DONE] T018: Установить и проверить выпуск 0.6.105 — Завершено
+  - Git Commit: [DONE] build: установить исправленный выпуск 0.6.105
   - Reference: parallel-chat-execution-20261009 / T018 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 - [TODO] T019: Опубликовать выпуск 0.6.105 и исходники на GitHub — Ожидает
