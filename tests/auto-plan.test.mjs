@@ -76,7 +76,7 @@ test('existing idle replies with and without native IDs are suitable pauses', as
     f.plan.planView.tasks.forEach(t => { t.status = 'done'; });
     await f.flow.planChanged(); await f.drain();
     assert.equal(f.flow.view().phase, 'complete');
-    assert.equal(f.flow.view().enabled, true);
+    assert.equal(f.flow.view().enabled, false);
     assert.equal(f.sends.length, 2);
   }
 });

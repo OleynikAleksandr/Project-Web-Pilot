@@ -16,6 +16,8 @@ app.whenReady().then(async () => {
   const { connectPageState } = await import(pathToFileURL(path.join(root, 'src/page-state-bridge.mjs')));
   const { ChatGPTComposer } = await import(pathToFileURL(path.join(root, 'src/chatgpt-composer.mjs')));
   const settings = JSON.parse(await fs.readFile(settingsFile, 'utf8'));
+  const identity=JSON.parse(selectedKey),project=settings.projectAutoPlan?.[identity[0]];
+  settings.autoPlanEnabled=project?.enabled===true;settings.autoPlanCheckpoint=project?.sessions?.[identity[1]]?.autoPlanCheckpoint;
   assert.equal(settings.autoPlanEnabled, expectedChoice === 'on');
   const entries = [2, 3].includes(settings.autoPlanCheckpoint?.version) ? settings.autoPlanCheckpoint.entries : [settings.autoPlanCheckpoint];
   const checkpoint = selectedKey ? entries.findLast(entry => entry.key === selectedKey) : entries.at(-1);

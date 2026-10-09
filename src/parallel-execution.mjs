@@ -37,8 +37,8 @@ export function availableTasks(plan,assignments,workers) {
 // delivery ledger, never a replacement for Kit's plan, assignments or Git proofs.
 export class ParallelExecution {
   constructor({kit,origin,openWorker,workerState,mainState,save,book={},onChange=()=>{},watch=()=>()=>{},
-    sendCorrection,restoreWorker=async()=>null,restoreOrigin=async()=>{},now=Date.now,uuid=randomUUID}) {
-    Object.assign(this,{kit,origin,openWorker,workerState,mainState,save,book,onChange,watch,sendCorrection,restoreWorker,restoreOrigin,now,uuid});
+    isEnabled=null,onComplete=()=>{},sendCorrection,restoreWorker=async()=>null,restoreOrigin=async()=>{},now=Date.now,uuid=randomUUID}) {
+    Object.assign(this,{isEnabled,onComplete,kit,origin,openWorker,workerState,mainState,save,book,onChange,watch,sendCorrection,restoreWorker,restoreOrigin,now,uuid});
     this.queues=new Map();this.states=new Map();this.unwatch=new Map();this.correcting=new Set();this.enabled=false;this.closed=false;
   }
   view(workspace){return this.states.get(workspace)??{phase:'idle',assignments:[],error:null};}
@@ -80,6 +80,7 @@ export class ParallelExecution {
   async reconcile(workspace,manual,recovery=false) {
     const state=await this.kit.read(workspace),{plan}=state;
     if(plan.execution_strategy!=='parallel') {this.publish(workspace,{phase:'sequential',assignments:[],error:null});return;}
+    const enabled=this.isEnabled?this.isEnabled(workspace,plan.scope_id):this.enabled;
     const origin=executionOrigin(plan,id=>this.origin(workspace,id));
     const ledger=this.ledger(workspace,plan.scope_id);
     const assignments=state.assignments.map(a=>({...a,...(ledger.assignments[a.id]?.readyAt?{readyAt:ledger.assignments[a.id].readyAt}:{})}));
@@ -132,7 +133,7 @@ export class ParallelExecution {
     }
     if(!state.confirmed||plan.execution_scope_status!=='ACTIVE'||state.commandActive)
       throw fail('PLAN_NOT_READY','Ждём опубликованный план и завершение текущей команды Kit.');
-    if(plan.tasks.length&&plan.tasks.every(t=>t.commit_status==='DONE')) {this.publish(workspace,{phase:'complete'});return;}
+    if(plan.tasks.length&&plan.tasks.every(t=>t.commit_status==='DONE')) {this.onComplete(workspace,plan.scope_id);this.publish(workspace,{phase:'complete'});return;}
     if(manual){ledger.started=true;ledger.manualRequested=true;await this.persist();}
     if(!ledger.started)return;
     const stopped=a=>{const page=this.workerState(a,ledger.assignments[a.id]);return {...page,stopped:page.stopped&&!a.error&&!a.commandActive&&!a.transaction_pending&&!a.dirty};};
@@ -153,7 +154,7 @@ export class ParallelExecution {
       this.queues.get(workspace).again=true;return;
     }
     const requested=manual||ledger.manualRequested===true;
-    if(!requested&&!this.enabled)return;
+    if(!requested&&!enabled)return;
     if(!state.mainClean||!this.mainState(origin).stopped)return;
     if(ledger.manualRequested){ledger.manualRequested=false;await this.persist();}
     // A known, never-opened assignment may finish setup under the same identity.
@@ -171,7 +172,7 @@ export class ParallelExecution {
       }catch(error){entry.error=issue(error);await this.persist();recoveryError??=entry.error;}
     }
     for(const task of availableTasks(plan,assignments,stopped)) {
-      if(this.closed||!requested&&!this.enabled)break;
+      if(this.closed||!requested&&!enabled)break;
       // Persist identity before creating a worktree. An ambiguous result never gets a new ID.
       let entry=Object.values(ledger.assignments).find(a=>a.taskId===task.id);
       if(entry)continue;
@@ -183,7 +184,7 @@ export class ParallelExecution {
         if(assignment.status==='NEEDS_SETUP')assignment=await this.kit.setupAssignment(workspace,id);
         entry.phase=assignment.status;await this.persist();
         if(assignment.status!=='READY')throw fail('NEEDS_SETUP','Окружение задания не готово. Повторите подготовку задания.');
-        if(this.closed||!requested&&!this.enabled){entry.phase='ready';await this.persist();break;}
+        if(this.closed||!requested&&!enabled){entry.phase='ready';await this.persist();break;}
         entry.phase='opening';await this.persist();
         const session=await this.openWorker({...assignment,id,parent_root:workspace,parent_scope_id:plan.scope_id,
           parent_task_id:task.id,title:task.title},origin);

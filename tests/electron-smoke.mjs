@@ -211,6 +211,9 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   });
   const browser=currentObject('browser'),controller=currentObject('controller'),pageState=currentObject('pageState'),chromiumDiagnostics=currentObject('chromiumDiagnostics');
   smokeDataDir = dataDir;
+  const savedAutoState=async()=>{const settings=JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8'));
+    const p=store.selected(),state=settings.projectAutoPlan?.[p?.parentWorkspace??p?.workspace];
+    return {autoPlanEnabled:state?.enabled===true,autoPlanCheckpoint:state?.sessions?.[p?.sessionId]?.autoPlanCheckpoint??null};};
   // Keep frame-based fixture checks running when another desktop window covers this one.
   sidebar.setBackgroundThrottling(false);
   await verifyUninterruptedRequest(dataDir);
@@ -229,16 +232,16 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   assert.equal(permissionAllowed('media', 'https://example.com', { mediaTypes: ['audio'] }), false);
   const workspace = path.join(await fs.realpath(dataDir + '-projects'), 'Тестовый проект с пробелами');
   await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object"'), 'local IPC ready', snapshot);
-  assert.equal(autoPlan.view().enabled, true, 'saved AutoPlan ON survives the complete main startup');
-  assert.equal(snapshot().autoPlan.enabled, true);
+  assert.equal(autoPlan.view().enabled, false, 'legacy global ON grants no project permission');
+  assert.equal(snapshot().autoPlan.enabled, false);
   assert.deepEqual(snapshot().conversationRecovery, { phase: 'idle', message: '', canRetry: false });
-  assert.equal(await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').getAttribute('aria-pressed')"), 'true');
-  assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).autoPlanEnabled, true);
+  assert.equal(await sidebar.executeJavaScript("document.getElementById('auto-plan-toggle').getAttribute('aria-pressed')"), 'false');
+  assert.equal((await savedAutoState()).autoPlanEnabled, false);
   // Continue the existing suite from its original OFF baseline through the real IPC.
   const off = await sidebar.executeJavaScript('window.webPilot.setAutoPlan(false)');
   assert.equal(off.ok, true);
   assert.equal(snapshot().autoPlan.enabled, false);
-  console.log(JSON.stringify({ mainStartup: true, savedAutoPlan: 'on', sidebarReady: true, isolated: true }));
+  console.log(JSON.stringify({ mainStartup: true, savedAutoPlan: 'legacy-on-migrated-off', sidebarReady: true, isolated: true }));
 
 
   await chromiumDiagnostics.flush();
@@ -596,6 +599,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   const autoBeforeReview=snapshot().autoPlan.enabled;
   await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').click()");
   await waitFor(()=>snapshot().planReview.enabled,'review enabled',snapshot);
+  await waitFor(()=>snapshot().context.phase==='stale','review policy invalidates delivered recovery',snapshot);
   assert.equal(await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').getAttribute('aria-pressed')"),'true');
   assert.equal(await sidebar.executeJavaScript("getComputedStyle(document.getElementById('plan-review-toggle')).backgroundColor"),'rgb(8, 124, 69)');
   assert.equal(JSON.parse(await fs.readFile(path.join(workspace,'.harness/runtime/plan-review/state.json'),'utf8')).enabled,true);
@@ -604,7 +608,9 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').click()");
   await waitFor(()=>!snapshot().planReview.enabled,'review disabled',snapshot);
 
-  for(const [review,auto] of [[false,true],[true,true],[true,false],[false,false]]) {
+  await sidebar.executeJavaScript('window.webPilot.setAutoPlan(true)');
+  assert.equal(snapshot().autoPlan.enabled,false,'NONE cannot retain an ON grant');
+  for(const [review,auto] of [[false,false],[true,false],[false,false]]) {
     for(const [id,current,wanted] of [
       ['auto-plan-toggle',()=>snapshot().autoPlan.enabled,auto],
       ['plan-review-toggle',()=>snapshot().planReview.enabled,review]]) {
@@ -616,7 +622,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
     }
     assert.equal(snapshot().planReview.enabled,review);assert.equal(snapshot().autoPlan.enabled,auto);
     assert.equal(await sidebar.executeJavaScript("document.getElementById('plan-review-toggle').getAttribute('aria-pressed')"),String(review));
-    assert.equal(JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8')).autoPlanEnabled,auto);
+    assert.equal((await savedAutoState()).autoPlanEnabled,auto);
     const restoredReview=new PlanReviewClient({selected:()=>({workspace})});
     restoredReview.observeSelection();assert.equal(restoredReview.view().enabled,review);restoredReview.dispose();
     for(const theme of ['light','dark']){
@@ -651,7 +657,6 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
     sidebar.send('pilot:state-changed',snapshot());
   }
 
-  await waitFor(()=>snapshot().context.phase==='stale','review policy invalidates delivered recovery',snapshot);
   // Restore the fixture input so unrelated context scenarios still start from the original packet.
   if(originalReviewState)await fs.writeFile(reviewStateFile,originalReviewState);else await fs.rm(reviewStateFile);
 
@@ -1354,14 +1359,14 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   const prePlanChat = store.snapshot().projects.find(p => p.workspace === workspace).sessions
     .find(session => !session.archivedAt && session.chatUrl);
   await sidebar.executeJavaScript('window.webPilot.setAutoPlan(true)');
-  assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).autoPlanEnabled, true);
+  assert.equal((await savedAutoState()).autoPlanEnabled, false);
   await sidebar.executeJavaScript(`window.webPilot.newSession(${JSON.stringify(workspace)}, "chat")`);
   await waitFor(() => store.selected()?.sessionId !== prePlanChat.sessionId
     && snapshot().context.phase === 'delivered' && !snapshot().selected?.scopeId,
     '01TestAuto new Chat starts with NONE and saved ON', snapshot);
   const autoScopeOwner = store.selected();
   assert.equal(await countMessages(), 1, 'only normal recovery; no AutoPlan startup instruction');
-  assert.equal(autoPlan.view().enabled, true);
+  assert.equal(autoPlan.view().enabled, false);
   await beginAnswer(); await noExtraSend(1);
   const legacyChats = [prePlanChat, autoScopeOwner]
     .map(session => ({ sessionId: session.sessionId, chatUrl: session.chatUrl, title: session.title, titleSource: session.titleSource }));
@@ -1388,6 +1393,8 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   const scopeOwnerId = new URL(scopeOwner.chatUrl).pathname.split('/').at(-1);
   await waitFor(() => fixtureConversationTitles.get(scopeOwnerId) === currentScopeTitle,
     'scope owner title is synchronized to native ChatGPT fixture', snapshot);
+  assert.equal(autoPlan.view().enabled, false);
+  await sidebar.executeJavaScript('window.webPilot.setAutoPlan(true)');
   assert.equal(autoPlan.view().enabled, true); assert.equal(await countMessages(), 1);
   await endAnswer('Создан текущий план, обычный отчёт без специальной итоговой строки.');
   await expectContinue(1, '01TestAuto NONE -> ACTIVE -> idle sends exactly one Continue');
@@ -1525,7 +1532,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
     assert.match(restarted.stdout, /"sends":0/);
   }
   const beforeRestore = await countMessages();
-  const savedAuto = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  const savedAuto = await savedAutoState();
   autoPlan.dispose(); autoPlan.restore(savedAuto.autoPlanEnabled, savedAuto.autoPlanCheckpoint);
   await autoPlan.recover();
   await waitFor(() => autoPlan.view().reason === 'USER_MESSAGE_PENDING', 'saved ON restores without a button click', snapshot);
@@ -1620,10 +1627,10 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   const singleActivePlanScreenshot = path.join(dataDir, 'single-active-plan.png');
   await fs.writeFile(singleActivePlanScreenshot, (await sidebar.capturePage()).toPNG());
 
-  assert.equal(autoPlan.view().enabled, true, 'completion and selecting old chats preserve user choice');
-  assert.equal(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).autoPlanEnabled, true);
+  assert.equal(autoPlan.view().enabled, false, 'completion disables project permission across chats');
+  assert.equal((await savedAutoState()).autoPlanEnabled, false);
   await sidebar.executeJavaScript('window.webPilot.setAutoPlan(false)');
-  const savedOff = JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8'));
+  const savedOff = await savedAutoState();
   assert.equal(savedOff.autoPlanEnabled, false);
   const restartedOff = await restartFixture('off');
   assert.match(restartedOff.stdout, /"autoPlanRestart":"off"/);

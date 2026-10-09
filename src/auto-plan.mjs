@@ -47,8 +47,8 @@ export function pruneLedger(entries) {
 export class AutoPlan {
   constructor({ selected, inspectPlan, send, onChange = () => {}, log = () => {},
     schedule = setTimeout, cancel = clearTimeout, settleMs = 500, stallMs = 180000,
-    available = () => true, saveCheckpoint = async () => {} }) {
-    Object.assign(this, { selected, inspectPlan, send, onChange, log, schedule, cancel, settleMs, stallMs, available, saveCheckpoint });
+    available = () => true, saveCheckpoint = async () => {}, onComplete = () => {} }) {
+    Object.assign(this, { onComplete, selected, inspectPlan, send, onChange, log, schedule, cancel, settleMs, stallMs, available, saveCheckpoint });
     this.page = null; this.run = null; this.epoch = 0; this.timer = null; this.watchdog = null;
     this.state = { phase: 'off', message: '', active: false, reason: null };
     this.continuations = 0; this.continuationOwner = null;
@@ -150,9 +150,11 @@ export class AutoPlan {
     this.set('paused', message, false, reason);
   }
   complete() {
+    this.enabled = false;
     this.clearTimer(); this.clearWatchdog();
     if (this.run) this.run.stallWarning = false;
     this.set('complete', 'Все пункты плана выполнены. Продолжение не отправляется.', false, 'PLAN_COMPLETED');
+    this.onComplete();
   }
   selectionChanged() {
     const selectedKey = key(this.selected());

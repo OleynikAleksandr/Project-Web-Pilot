@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1596,
+  "plan_revision": 1599,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -96,7 +96,9 @@
       "packages/workflow-kit/scripts/check-task-handoff-fixture.mjs",
       "src/project-auto-plan.mjs",
       "tests/project-auto-plan.test.mjs",
-      "packages/workflow-kit/src/lib/task-files.mjs"
+      "packages/workflow-kit/src/lib/task-files.mjs",
+      "src/project-session-auto-plan.mjs",
+      "tests/auto-plan-restart-fixture.cjs"
     ],
     "documentation_paths": [
       "docs/planning/parallel-execution-spec.md",
@@ -1476,7 +1478,10 @@
         "tests/project-auto-plan.test.mjs",
         "tests/auto-plan.test.mjs",
         "tests/electron-smoke.mjs",
-        "tests/parallel-execution.test.mjs"
+        "tests/parallel-execution.test.mjs",
+        "package-lock.json",
+        "src/project-session-auto-plan.mjs",
+        "tests/auto-plan-restart-fixture.cjs"
       ],
       "documentation_paths": [
         "docs/modules/session-runtime.md"
@@ -1494,13 +1499,25 @@
         "Проверены два проекта одновременно, завершение sequential и parallel, следующий scope, OFF при неизвестном плане и сохранение настроек"
       ],
       "expected_commit_message": "feat: Привязать AutoPlan к проекту и выключать после завершения плана",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T023",
         "role": "implementation"
-      }
+      },
+      "actual_files": [
+        "package-lock.json",
+        "src/auto-plan.mjs",
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "src/project-auto-plan.mjs",
+        "src/project-session-auto-plan.mjs",
+        "tests/auto-plan-restart-fixture.cjs",
+        "tests/auto-plan.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/project-auto-plan.test.mjs"
+      ]
     },
     {
       "id": "T021",
@@ -1590,6 +1607,165 @@
         "task_id": "T022",
         "role": "implementation"
       }
+    },
+    {
+      "id": "T024",
+      "title": "Подготовить исправленный выпуск 0.6.106",
+      "why": "Подготовить исправленный выпуск 0.6.106",
+      "dependencies": [
+        "T022"
+      ],
+      "functional_paths": [
+        "package.json",
+        "package-lock.json",
+        ".harness/workflow.json"
+      ],
+      "documentation_paths": [
+        "docs/modules/session-runtime.md"
+      ],
+      "verification_ids": [
+        "unit-all",
+        "electron-smoke",
+        "codex-tools-live",
+        "kit-check"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Версия 0.6.106 и evidence согласованы; исходники проверены, сборка ещё не выполнялась"
+      ],
+      "expected_commit_message": "feat: Подготовить исправленный выпуск 0.6.106",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T024",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "DOCS-3",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "DOCS-3",
+        "role": "implementation",
+        "iteration": 3
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T020",
+        "T023",
+        "T021",
+        "T022",
+        "T024"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/session-runtime.md",
+        "docs/modules/parallel-execution.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "packages/workflow-kit/README.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md",
+        "packages/workflow-kit/docs/modules/parallel-assignments.md",
+        "docs/planning/parallel-autoplan-fix.md",
+        "docs/modules/release.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта"
+    },
+    {
+      "id": "T025",
+      "title": "Собрать парный выпуск 0.6.106 для macOS и Windows",
+      "why": "Собрать парный выпуск 0.6.106 для macOS и Windows",
+      "dependencies": [
+        "T024",
+        "DOCS-3"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/session-runtime.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "paired-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "После DOCS одна парная сборка создаёт обе платформы, шесть assets и manifest; сохраняется identity корневого app"
+      ],
+      "expected_commit_message": "feat: Собрать парный выпуск 0.6.106 для macOS и Windows",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T025",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T026",
+      "title": "Установить и проверить готовый выпуск 0.6.106",
+      "why": "Установить и проверить готовый выпуск 0.6.106",
+      "dependencies": [
+        "T025",
+        "DOCS-3"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/session-runtime.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "release-installed"
+      ],
+      "verification_kind": "installed",
+      "acceptance_criteria": [
+        "Готовая сборка установлена в /Applications без пересборки; подпись, identity, обе платформы и поставка сверены"
+      ],
+      "expected_commit_message": "feat: Установить и проверить готовый выпуск 0.6.106",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T026",
+        "role": "implementation"
+      }
+    },
+    {
+      "id": "T027",
+      "title": "Опубликовать выпуск 0.6.106 и синхронизировать GitHub",
+      "why": "Опубликовать выпуск 0.6.106 и синхронизировать GitHub",
+      "dependencies": [
+        "T026",
+        "DOCS-3"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/modules/session-runtime.md",
+        "docs/modules/release.md"
+      ],
+      "verification_ids": [
+        "github-release"
+      ],
+      "verification_kind": "package",
+      "acceptance_criteria": [
+        "main и тег v0.6.106 отправлены штатно; GitHub Release содержит шесть сверенных assets; окончательный main синхронизирован"
+      ],
+      "expected_commit_message": "feat: Опубликовать выпуск 0.6.106 и синхронизировать GitHub",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-chat-execution-20261009",
+        "task_id": "T027",
+        "role": "implementation"
+      }
     }
   ],
   "blocked_reason": null,
@@ -1618,7 +1794,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1596
+Revision: 1599
 
 ## Цель
 
@@ -1722,10 +1898,10 @@ Revision: 1596
   - Git Commit: [DONE] feat: Защитить основной parallel-план и восстановить ошибочно начатую задачу
   - Reference: parallel-chat-execution-20261009 / T020 / implementation
   - Файлы: packages/workflow-kit/src/lib/actions.mjs, packages/workflow-kit/src/lib/task-assignment.mjs, packages/workflow-kit/src/lib/task-handoff.mjs, packages/workflow-kit/src/lib/recovery.mjs, packages/workflow-kit/src/cli.mjs, packages/workflow-kit/src/lib/command-help.mjs, packages/workflow-kit/scripts/check-parallel-plan-fixture.mjs, packages/workflow-kit/scripts/check-task-handoff-fixture.mjs, packages/workflow-kit/package.json, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/task-files.mjs, docs/modules/session-runtime.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/STAGES.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/docs/modules/parallel-assignments.md
-- [TODO] T023: Привязать AutoPlan к проекту и выключать после завершения плана — Ожидает
-  - Git Commit: [PENDING] feat: Привязать AutoPlan к проекту и выключать после завершения плана
+- [DONE] T023: Привязать AutoPlan к проекту и выключать после завершения плана — Завершено
+  - Git Commit: [DONE] feat: Привязать AutoPlan к проекту и выключать после завершения плана
   - Reference: parallel-chat-execution-20261009 / T023 / implementation
-  - Файлы: src/project-auto-plan.mjs, src/main.mjs, src/parallel-execution.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, tests/project-auto-plan.test.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, docs/modules/session-runtime.md
+  - Файлы: src/project-auto-plan.mjs, src/main.mjs, src/parallel-execution.mjs, src/auto-plan.mjs, src/auto-plan-state.mjs, tests/project-auto-plan.test.mjs, tests/auto-plan.test.mjs, tests/electron-smoke.mjs, tests/parallel-execution.test.mjs, package-lock.json, src/project-session-auto-plan.mjs, tests/auto-plan-restart-fixture.cjs, docs/modules/session-runtime.md
 - [TODO] T021: Единый AutoPlan для запуска parallel без дополнительных кнопок — Ожидает
   - Git Commit: [PENDING] feat: Единый AutoPlan для запуска parallel без дополнительных кнопок
   - Reference: parallel-chat-execution-20261009 / T021 / implementation
@@ -1734,6 +1910,26 @@ Revision: 1596
   - Git Commit: [PENDING] feat: Обновить локальный Kit и согласовать инструкции и контракты
   - Reference: parallel-chat-execution-20261009 / T022 / implementation
   - Файлы: package-lock.json, tests/workflow-kit-upgrade.test.mjs, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sidebar-ui.md, docs/architecture/OVERVIEW.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/planning/parallel-autoplan-fix.md
+- [TODO] T024: Подготовить исправленный выпуск 0.6.106 — Ожидает
+  - Git Commit: [PENDING] feat: Подготовить исправленный выпуск 0.6.106
+  - Reference: parallel-chat-execution-20261009 / T024 / implementation
+  - Файлы: package.json, package-lock.json, .harness/workflow.json, docs/modules/session-runtime.md
+- [TODO] DOCS-3: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: parallel-chat-execution-20261009 / DOCS-3 / implementation
+  - Файлы: docs/architecture/OVERVIEW.md, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sidebar-ui.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/planning/parallel-autoplan-fix.md, docs/modules/release.md
+- [TODO] T025: Собрать парный выпуск 0.6.106 для macOS и Windows — Ожидает
+  - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.106 для macOS и Windows
+  - Reference: parallel-chat-execution-20261009 / T025 / implementation
+  - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
+- [TODO] T026: Установить и проверить готовый выпуск 0.6.106 — Ожидает
+  - Git Commit: [PENDING] feat: Установить и проверить готовый выпуск 0.6.106
+  - Reference: parallel-chat-execution-20261009 / T026 / implementation
+  - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
+- [TODO] T027: Опубликовать выпуск 0.6.106 и синхронизировать GitHub — Ожидает
+  - Git Commit: [PENDING] feat: Опубликовать выпуск 0.6.106 и синхронизировать GitHub
+  - Reference: parallel-chat-execution-20261009 / T027 / implementation
+  - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
 
 ## Context Pack For This Cycle
 

@@ -1,3 +1,5 @@
+import { ProjectAutoPlan } from './project-auto-plan.mjs';
+import { configureProjectAutoPlan } from './project-session-auto-plan.mjs';
 import { AutoPlan } from './auto-plan.mjs';
 import { PlanReviewClient } from './plan-review.mjs';
 import { ReviewContinuation } from './review-continuation.mjs';
@@ -82,7 +84,15 @@ let chatgptChannel = CHATGPT_CHANNEL_SECURE;
 let appServerRuntime = null, runtimeSwitcher = null, runtimeActivation = null, vpsTunnel = null;
 let shellTheme = 'light';
 let hideToolCalls = true;
-let autoPlanEnabled = false, autoPlanCheckpoint = null;
+const projectAutoPlan=new ProjectAutoPlan({onChange:workspace=>{
+  for(const record of liveSessions.records.values()) {
+    const project=record.project();
+    if((project?.parentWorkspace??project?.workspace)!==workspace)continue;
+    record.primaryAutomation?.update();
+    if(record.executor)record.executor.setEnabled(projectAutoPlan.enabled(workspace,project.parentScopeId));
+  }
+  void saveSettings().catch(report);void execution.signal(workspace);publish();
+}});
 let reviewCheckpoint = null, automationCheckpoint = null;
 let chatColors = normalizeChatColors();
 let chatColorStyles, colorEditor;
@@ -160,25 +170,20 @@ const automationSend = new AutomationSendState({save:async checkpoint=>{
   automationCheckpoint=checkpoint;await saveSettings({automationCheckpoint});
 }});
 function sendAutomation(text,canContinue,onBeforeSend,flow) {
-  return automationSend.send({selected:flow.selected(),page:flow.page,ready:canContinue,kind:flow===autoPlan?'plan':'review',
+  const sender=liveSessions.visible?.primaryAutomation?.automation??automationSend;
+  return sender.send({selected:flow.selected(),page:flow.page,ready:canContinue,kind:flow===autoPlan?'plan':'review',
     perform:()=>controller.composer.sendUserMessage({text,canContinue,onBeforeSend,waitForAcknowledgement:false,cleanupOnCancel:true})});
 }
-const autoPlan = new AutoPlan({
-  selected: () => { const p = store.selected(), info = planMonitor.view(p); return p && { ...p, scopeId: info ? info.scopeId : p.scopeId }; },
-  inspectPlan: async selected => readAutoPlanState(selected, process.platform === 'win32'
-    ? await windowsBootstrap.workflowEnvironment() : process.env),
-  send: (text, canContinue, onBeforeSend) => sendAutomation(text,canContinue,onBeforeSend,autoPlan),
-  onChange: () => publish(),
-  available: () => !!controller && !controller.composer.inFlight && !pageLoading && !setupState && !settingsState
-    && !store.selected()?.assignmentId && planMonitor.view(store.selected())?.planExecution?.execution_strategy!=='parallel'
-    && workspaceHealth?.ready && workspaceHealth.workspace === store.selected()?.workspace
-    && !reviewBlocksExecution(planReview.state,planMonitor.view(store.selected())?.scopeId),
-  saveCheckpoint: async checkpoint => {
-    autoPlanCheckpoint = checkpoint;
-    await saveSettings({ autoPlanCheckpoint: checkpoint });
-  },
-  log: (event, fields) => chromiumDiagnostics?.log.record('auto-plan', event, fields),
+const emptyAutoPlan=new AutoPlan({selected:()=>null,inspectPlan:async()=>({}),send:async()=>({})});
+const autoPlan=new Proxy({}, {
+  get:(_target,key)=>{const flow=liveSessions.visible?.primaryAutomation?.flow??emptyAutoPlan,value=flow[key];return typeof value==='function'?value.bind(flow):value;},
+  set:(_target,key,value)=>{(liveSessions.visible?.primaryAutomation?.flow??emptyAutoPlan)[key]=value;return true;}
 });
+function configurePrimary(record) {
+  return configureProjectAutoPlan(record,{store,authorization:projectAutoPlan,
+    inspectPlan:selected=>readAutoPlanState(selected,workspaceSetup.environment),onChange:()=>publish(),
+    log:(event,fields)=>record.diagnostics?.log.record('auto-plan',event,fields)});
+}
 const planReview = new PlanReviewClient({selected:()=>store.selected(),onChange:()=>publish()});
 const reviewContinuation=new ReviewContinuation({selected:()=>store.selected(),client:planReview,
   send:sendAutomation,onChange:()=>publish(),
@@ -191,12 +196,13 @@ function applyObservedPage(event, record = liveSessions.visible) {
   if(visible) {
     automationSend.observe(record.project(),event);
     if(!event.reset)observeStartupAccount(event.state);
-    if(!record.identity?.assignmentId) {autoPlan.observe(event);reviewContinuation.observe(event);}
+    if(!record.identity?.assignmentId) reviewContinuation.observe(event);
   }
   if(!event.reset) {
     record.diagnostics?.observePage(event.state);
     if(!record.loading)observeManualConversation(event.state,record);
   }
+  record.primaryAutomation?.observe(event);
   record.executor?.observe(event);
   const safety=JSON.stringify([event.documentId,event.state?.url,event.state?.busy,event.state?.lastMessageRole,event.state?.connectionError]);
   if(record.identity&&!record.identity.assignmentId&&execution.unwatch.has(record.identity.workspace)&&record.executionSafety!==safety) {
@@ -213,7 +219,7 @@ const liveSessions = new SessionRuntimes({store,runtime:()=>runtime,contextCache
     preload:app.isPackaged?path.join(process.resourcesPath,'resources/chatgpt-page-observer-preload.cjs')
       :path.join(sourceDir,'../resources/chatgpt-page-observer-preload.cjs')}}),
   onChange:record=>{
-    if(record===liveSessions.visible)pageLoading=record.loading;record.executor?.changed();
+    if(record===liveSessions.visible)pageLoading=record.loading;record.primaryAutomation?.update();record.executor?.changed();
     if(record.identity&&!record.identity.assignmentId&&execution.unwatch.has(record.identity.workspace)) {
       const stopped=executorPageState(record).stopped;
       if(record.executionStopped!==stopped){record.executionStopped=stopped;void execution.signal(record.identity.workspace);}
@@ -229,7 +235,7 @@ async function restoreExecutionPage(project,assignment=null) {
   if(!project?.chatUrl||(!project.manualStart&&!project.attempt?.sendStartedAtMs&&!['sent','acknowledged'].includes(project.attempt?.state)))
     throw Object.assign(new Error('Сохранённый адрес и отправка не подтверждены. Откройте соответствующий чат и проверьте его; автоматического Send нет.'),{code:'EXECUTOR_CHAT_UNKNOWN'});
   const record=liveSessions.ensure(project);
-  if(assignment)configureExecutor(record,{store,enabled:autoPlanEnabled,
+  if(assignment)configureExecutor(record,{store,enabled:projectAutoPlan.enabled(project.parentWorkspace??project.workspace,project.parentScopeId??project.scopeId),
     inspectPlan:selected=>readAutoPlanState(selected,workspaceSetup.environment),onChange:()=>publish(),
     signal:()=>{void execution.signal(project.parentWorkspace);},
     log:(event,fields)=>record.diagnostics?.log.record('auto-plan',event,fields)});
@@ -237,6 +243,8 @@ async function restoreExecutionPage(project,assignment=null) {
   return project;
 }
 const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBook,
+  isEnabled:(workspace,scope)=>projectAutoPlan.enabled(workspace,scope),
+  onComplete:(workspace,scope)=>projectAutoPlan.sync(workspace,scope,{complete:true,confirmed:true}),
   origin:(workspace,id)=>store.project(workspace,id),
   save:async book=>{parallelExecutionBook=book;await saveSettings({parallelExecutionBook:book});},
   onChange:()=>{
@@ -268,7 +276,7 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
   },
   openWorker:async(assignment,origin)=>{
     const project=await store.ensureExecutor(assignment,origin),record=liveSessions.ensure(project);
-    configureExecutor(record,{store,enabled:autoPlanEnabled,
+    configureExecutor(record,{store,enabled:projectAutoPlan.enabled(project.parentWorkspace??project.workspace,project.parentScopeId??project.scopeId),
       inspectPlan:selected=>readAutoPlanState(selected,workspaceSetup.environment),onChange:()=>publish(),
       signal:()=>{void execution.signal(origin.workspace);},
       log:(event,fields)=>record.diagnostics?.log.record('auto-plan',event,fields)});
@@ -307,7 +315,7 @@ function saveSettings(overrides = {}) {
     ...(process.platform === 'darwin' ? { macRuntimeMode: 'app-server' } : {}),
     [legacyRetiredSetting]: legacyRuntimeRetired, ...(legacyRuntimeRetired ? {} : { legacyRuntimeRoots }),
   };
-  const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, autoPlanEnabled, autoPlanCheckpoint, reviewCheckpoint, automationCheckpoint, parallelExecution, parallelExecutionBook, ...overrides };
+  const settings = { ...platformSettings, chatgptChannel, shellTheme, hideToolCalls, sidebarWidth, chatColors, projectsParent, projectAutoPlan:projectAutoPlan.snapshot(), reviewCheckpoint, automationCheckpoint, parallelExecution, parallelExecutionBook, ...overrides };
   const operation = settingsSaveTail.catch(() => {}).then(async () => {
     await fsp.mkdir(dataDir, { recursive: true, mode: 0o700 });
     await fsp.writeFile(settingsFile + '.tmp', JSON.stringify(settings, null, 2) + '\n', { mode: 0o600 });
@@ -374,7 +382,8 @@ function snapshot() {
     archives: projectedArchives(), settings: settingsState, doctor: doctorState, parallelExecution: { ...parallelExecution },
     execution: execution.view(saved?.parentWorkspace??saved?.workspace),
     conversationRecovery: conversationRecovery?.view() ?? { phase: 'idle', message: '', canRetry: false },
-    autoPlan: liveSessions.visible?.executor?.flow.view()??autoPlan.view(),
+    autoPlan: {...(liveSessions.visible?.executor?.flow.view()??autoPlan.view()),
+      enabled:projectAutoPlan.enabled(saved?.parentWorkspace??saved?.workspace,saved?.parentScopeId??info?.scopeId??saved?.scopeId)},
     planReview: {...planReview.view(),...(reviewContinuation.persistenceError?{message:reviewContinuation.flow.state.message,indicator:'attention'}: {})},
     selected, context: controller?.state ?? { phase: 'selected', servicesReady: false, messageSent: false },
     contextPreparation: { busy: selected ? contextCache.isBuilding(selected.workspace) : false },
@@ -1005,6 +1014,7 @@ function selectLiveSession(project=null) {
   return record;
 }
 function decorateSessionRuntime(record) {
+  configurePrimary(record);
   const contents=record.view.webContents, handlers=[];
   const on=(event,fn)=>{contents.on(event,fn);handlers.push([event,fn]);};
   if(eventBaseline) {
@@ -1054,13 +1064,15 @@ function registerIpc() {
   registerAction('pilot:reconcile-execution',input=>{void execution.recheck(executionWorkspace(input));return {queued:true};});
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:auto-plan', async enabled => {
-    const choice = enabled === true;
-    await saveSettings({ autoPlanEnabled: choice });
-    autoPlanEnabled = choice;
-    execution.setEnabled(choice);
-    for(const record of liveSessions.records.values())record.executor?.setEnabled(choice);
-    if (choice) await autoPlan.start();
-    else autoPlan.disable();
+    const selected=store.selected(),workspace=selected?.parentWorkspace??selected?.workspace;
+    const project=selected?.parentWorkspace?store.project(workspace):selected;
+    const info=project&&await readAutoPlanState(project,workspaceSetup.environment);
+    const scope=info?.scopeId;
+    projectAutoPlan.sync(workspace,scope,{complete:info?.planView?.tasks?.length>0&&info.planView.tasks.every(t=>t.status==='done'),confirmed:info?.confirmed});
+    const done=info?.confirmed&&info?.planView?.tasks?.length>0&&info.planView.tasks.every(t=>t.status==='done');
+    projectAutoPlan.set(workspace,scope,enabled===true&&!done,project?.sessionId);
+    if(workspace)execution.observe(workspace);
+    await saveSettings();
   });
   registerAction('pilot:plan-review', input => planReview.setEnabled(input));
   registerAction('pilot:set-parallel-execution', async input => {
@@ -1459,16 +1471,15 @@ else {
       parallelExecution = validateParallelSettings(settings.parallelExecution);
       if(settings.parallelExecutionBook&&typeof settings.parallelExecutionBook==='object'&&!Array.isArray(settings.parallelExecutionBook))
         parallelExecutionBook=settings.parallelExecutionBook;
-      autoPlanEnabled = settings.autoPlanEnabled === true;
-      autoPlanCheckpoint = settings.autoPlanCheckpoint ?? null;
+      const restored=new ProjectAutoPlan({saved:settings.projectAutoPlan});projectAutoPlan.book=restored.snapshot();
       reviewCheckpoint = settings.reviewCheckpoint ?? null;
       automationCheckpoint = settings.automationCheckpoint ?? null;
       chatColors = normalizeChatColors(settings.chatColors);
       if (Number.isFinite(settings.sidebarWidth)) sidebarWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.round(settings.sidebarWidth));
       if (typeof settings.projectsParent === 'string' && path.isAbsolute(settings.projectsParent)) projectsParent = settings.projectsParent;
     } catch (error) { if (error.code !== 'ENOENT') startupError = { code: 'SETTINGS_INVALID', message: 'Не удалось прочитать локальные настройки Web Pilot. Проверьте настройки подключения.' }; }
-    autoPlan.restore(autoPlanEnabled, autoPlanCheckpoint);
-    execution.book=parallelExecutionBook;execution.enabled=autoPlanEnabled;
+    emptyAutoPlan.restore(false);
+    execution.book=parallelExecutionBook;
     automationSend.restore(automationCheckpoint);
     reviewContinuation.restore(reviewCheckpoint);
     applyShellTheme(shellTheme);
@@ -1497,6 +1508,10 @@ else {
     });
     installMenu();
     await createWindow();
+    if(!storageError&&!smoke)for(const [workspace,state] of Object.entries(projectAutoPlan.book))if(state.enabled) {
+      const project=store.project(workspace,state.sessionId);
+      if(project?.chatUrl&&!project.archivedAt&&!project.sessionArchivedAt)void restoreExecutionPage(project).catch(report);
+    }
     if(!storageError&&!smoke)for(const project of store.snapshot().projects)if(!project.parentWorkspace&&!project.archivedAt
       &&(project.sessions.some(s=>s.executionSnapshot?.parallel_allowed)||Object.values(parallelExecutionBook).some(b=>b?.workspace===project.workspace))) {
       execution.observe(project.workspace);void execution.signal(project.workspace);
