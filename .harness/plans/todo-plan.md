@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1659,
+  "plan_revision": 1660,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -35,7 +35,10 @@
       "tests/parallel-execution-smoke-fixture.cjs",
       "package.json",
       "package-lock.json",
-      "src/parallel-kit.mjs"
+      "src/parallel-kit.mjs",
+      "src/common.mjs",
+      "src/chromium-diagnostics.mjs",
+      "tests/chromium-diagnostics.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/project-state-deletion.md",
@@ -264,6 +267,43 @@
       ]
     },
     {
+      "id": "T008",
+      "title": "Очистить полные группы диагностики без гонки записи",
+      "why": "Очистить полные группы диагностики без гонки записи",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [
+        "src/common.mjs",
+        "src/chromium-diagnostics.mjs",
+        "src/project-state-cleanup.mjs",
+        "src/workspace-deletion.mjs",
+        "src/main.mjs",
+        "tests/project-state-cleanup.test.mjs",
+        "tests/chromium-diagnostics.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/project-state-deletion.md"
+      ],
+      "verification_ids": [
+        "project-lifecycle",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Все строки diagnosticSession удаляемой страницы очищены; соседняя диагностика сохраняется при одновременной записи",
+        "Освобождение страницы дожидается записи session-stop до очистки"
+      ],
+      "expected_commit_message": "feat: Очистить полные группы диагностики без гонки записи",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "project-state-deletion-20261009",
+        "task_id": "T008",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -275,7 +315,8 @@
         "T001",
         "T002",
         "T003",
-        "T007"
+        "T007",
+        "T008"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -405,7 +446,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1659
+Revision: 1660
 
 ## Цель
 
@@ -433,6 +474,10 @@ Revision: 1659
   - Git Commit: [DONE] feat: Сериализовать очистку с фоновой записью настроек
   - Reference: project-state-deletion-20261009 / T007 / implementation
   - Файлы: src/main.mjs, src/workspace-deletion.mjs, src/project-state-cleanup.mjs, tests/project-state-cleanup.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/project-state-deletion.md
+- [TODO] T008: Очистить полные группы диагностики без гонки записи — Ожидает
+  - Git Commit: [PENDING] feat: Очистить полные группы диагностики без гонки записи
+  - Reference: project-state-deletion-20261009 / T008 / implementation
+  - Файлы: src/common.mjs, src/chromium-diagnostics.mjs, src/project-state-cleanup.mjs, src/workspace-deletion.mjs, src/main.mjs, tests/project-state-cleanup.test.mjs, tests/chromium-diagnostics.test.mjs, docs/planning/project-state-deletion.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: project-state-deletion-20261009 / DOCS / implementation
