@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1588,
+  "plan_revision": 1590,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Реализовать опциональное параллельное выполнение плана через чат-сессии Web Pilot и отдельные worktree с проверенной последовательной интеграцией в main.",
   "acceptance_criteria": [
     "Снимок разрешения и лимита фиксируется при новой основной сессии; существующее выполнение не меняется от Settings.",
@@ -1388,13 +1388,14 @@
         "По прямому поручению пользователя опубликованы main и тег v0.6.105 на manifest.sourceCommit; GitHub Release содержит шесть готовых assets; после финального push коммита задачи remote main, тег и assets проверены; живая приёмка и закрытие плана остаются за пользователем."
       ],
       "expected_commit_message": "release: опубликовать исправленный выпуск 0.6.105",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T019",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -1420,10 +1421,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1588
+Revision: 1590
 
 ## Цель
 
@@ -1519,8 +1520,8 @@ Revision: 1588
   - Git Commit: [DONE] build: установить исправленный выпуск 0.6.105
   - Reference: parallel-chat-execution-20261009 / T018 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
-- [TODO] T019: Опубликовать выпуск 0.6.105 и исходники на GitHub — Ожидает
-  - Git Commit: [PENDING] release: опубликовать исправленный выпуск 0.6.105
+- [DONE] T019: Опубликовать выпуск 0.6.105 и исходники на GitHub — Завершено
+  - Git Commit: [DONE] release: опубликовать исправленный выпуск 0.6.105
   - Reference: parallel-chat-execution-20261009 / T019 / implementation
   - Файлы: docs/modules/auto-plan.md, docs/modules/release.md
 
