@@ -72,6 +72,11 @@ export function inspectIntegrationSource(root,source,task,parentScope) {
 
 export function verifyIntegrationCommit(root,commit,task,plan) {
   const ref=task.commit_ref;
+  // Later documentation commits may pin old context references. Validate the
+  // source contract against the plan at admission, not today's mutable metadata.
+  const before=planAt(root,commit.parents[0]);
+  task=before.tasks.find(item=>item.id===task.id);
+  check(task,'INTEGRATION_TASK','Нет задачи в родительском коммите интеграции.');
   check(commit.parents.length===2 && commit.parents[1]===ref.source_commit,'INTEGRATION_PARENTS','Интеграция требует двух точных родителей.');
   check(one(commit,'Workflow-Transaction')===ref.operation_id && one(commit,'Workflow-Source')===ref.source_commit,
     'INTEGRATION_TRAILERS','Интеграция не совпадает с источником/операцией.');
@@ -79,7 +84,7 @@ export function verifyIntegrationCommit(root,commit,task,plan) {
   check(isAncestor(root,source.assignment.base_commit,commit.parents[0]),'INTEGRATION_BASE','База не предшествует main.');
   const changed=git(root,['diff','--name-only','--no-renames','-z',commit.parents[0],commit.sha,'--']).stdout.split('\0').filter(Boolean);
   check(changed.includes(PLAN) && changed.every(p=>allowedFiles(task).includes(p)),'INTEGRATION_SCOPE','Merge содержит чужие файлы.');
-  const before=planAt(root,commit.parents[0]), after=planAt(root,commit.sha);
+  const after=planAt(root,commit.sha);
   const expected=integrationPlan(before,task.id,ref.operation_id,ref.source_commit,changed.filter(p=>p!==PLAN));
   check(renderPlan(after)===renderPlan(expected),'INTEGRATION_PLAN','Merge изменил общий план вне своей задачи.');
   return {sha:commit.sha,parent:commit.parents[0],paths:changed,source_commit:ref.source_commit,integration_commit:commit.sha};

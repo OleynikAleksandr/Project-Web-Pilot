@@ -47,6 +47,8 @@ export class SessionRuntimes {
       void this.store.recordAgentTime(target.workspace,target.sessionId,durationMs).then(()=>this.onChange(record),error=>this.onError(record,error));
     }});
     record.recovery=new ConversationRecovery({selected:record.project,
+      checkpoint:project?.conversationRecovery,
+      save:checkpoint=>identity?this.store.updateSession(identity.workspace,identity.sessionId,{conversationRecovery:checkpoint},{background:true}):Promise.resolve(),
       available:()=>!record.disposed&&!record.loading&&record.ready&&!record.composer.inFlight,
       inspect:()=>record.composer.inspect(),
       reopen:async(project,current)=>{

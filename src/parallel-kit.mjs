@@ -23,13 +23,20 @@ export class ParallelKit {
     const text=await fs.readFile(path.join(workspace,planFile),'utf8'),plan=parsePlan(text);
     const gitDir=await this.git(workspace,['rev-parse','--absolute-git-dir']);
     const integration=await this.plans.call(workspace,'integration:status');
+    const proof=await this.plans.call(workspace,'validate');
     const assignments=[];
     const directory=path.join(gitDir,'workflow-kit','assignments');
     for(const file of await fs.readdir(directory).catch(e=>{if(e.code==='ENOENT')return [];throw e;})) {
       if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}\.json$/.test(file))continue;
       const record=JSON.parse(await fs.readFile(path.join(directory,file),'utf8'));
       if(record.parent_scope_id!==plan.scope_id)continue;
-      if(record.phase==='INTEGRATED') {assignments.push({...record,status:'INTEGRATED'});continue;}
+      const done=proof.resolved?.[record.parent_task_id];
+      if(done?.integration_commit&&done.source_commit===record.source_commit&&done.sha===record.integration_commit) {
+        assignments.push({...record,status:'INTEGRATED'});continue;
+      }
+      if(record.phase==='INTEGRATED') {
+        assignments.push({...record,status:'UNKNOWN',error:{code:'INTEGRATION_PROOF_MISSING',message:'Интеграция не подтверждена историей main.'}});continue;
+      }
       try {
         const status=await this.plans.call(workspace,'assignment:status',['--id',record.id]);
         const childGit=await this.git(record.worktree,['rev-parse','--absolute-git-dir']);
@@ -40,7 +47,10 @@ export class ParallelKit {
     const pending=await exists(path.join(gitDir,'workflow-kit','transaction.json'));
     const committed=await this.git(workspace,['show','HEAD:'+planFile]);
     const unchanged=text===(await fs.readFile(path.join(workspace,planFile),'utf8'));
-    return {workspace,plan,head:await this.git(workspace,['rev-parse','HEAD']),assignments,integration,
+    const head=await this.git(workspace,['rev-parse','HEAD']);
+    const integrated=proof.resolved?.[integration.task_id];
+    integration.committed=!!integrated?.integration_commit&&integrated.sha===head&&integrated.source_commit===integration.source_commit;
+    return {workspace,plan,head,assignments,integration,
       mainClean:!await this.git(workspace,['status','--porcelain']),
       commandActive:await commandActivity(workspace)||await exists(path.join(gitDir,'workflow-kit','operation.lock')),
       confirmed:unchanged&&!pending&&committed===text.trim()&&!reviewBlocksExecution(readReview(workspace),plan.scope_id)};
@@ -52,6 +62,7 @@ export class ParallelKit {
       {id,task_id:task.id,base_commit:base,worktree:path.join(directory,id)});
   }
   setupAssignment(workspace,id) {return this.plans.call(workspace,'assignment:setup',['--id',id,'--npm-ci'],null,{timeout:600000});}
+  continueIntegration(workspace,id) {return this.plans.call(workspace,'integration:continue',['--id',id],null,{timeout:600000});}
   integrate(workspace,assignment) {return this.plans.call(workspace,'integration:start',[],
     {id:assignment.id,source_commit:assignment.source_commit},{timeout:600000});}
 }

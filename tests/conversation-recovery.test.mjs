@@ -2,6 +2,23 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ConversationRecovery } from '../src/conversation-recovery.mjs';
 
+test('restart preserves one-shot reload, manual Stop and rate pause for the same conversation only',async()=>{
+  const project={workspace:'/one',sessionId:'one',chatUrl:'https://chatgpt.com/c/conversation-one',attempt:{state:'sent'}};
+  const page={url:project.chatUrl,editorAvailable:true,draftLength:0,connectionError:'broken',userMessageCount:3};
+  let checkpoint,calls=0;
+  const options={selected:()=>project,inspect:async()=>page,reopen:async()=>{calls++;return true;},save:async c=>{checkpoint=c;},now:()=>100};
+  const first=new ConversationRecovery(options);await first.requestRetry();assert.equal(calls,1);
+  const restarted=new ConversationRecovery({...options,checkpoint});restarted.observe(page);
+  assert.equal(restarted.view().phase,'failed');assert.equal(restarted.timer,null);
+  restarted.manualStop(page);await Promise.resolve();
+  const stopped=new ConversationRecovery({...options,checkpoint});stopped.observe(page);assert.equal(stopped.timer,null);
+  stopped.rateLimited('conversation-one',120);await Promise.resolve();
+  const paused=new ConversationRecovery({...options,checkpoint});assert.equal(await paused.requestRetry(),false);
+  assert.equal(paused.view().phase,'cooldown');assert.equal(calls,1);paused.reset();
+  const other=new ConversationRecovery({...options,selected:()=>({...project,sessionId:'other'}),checkpoint});
+  assert.equal(other.used.size,0);assert.equal(other.stopped.size,0);assert.equal(other.cooldowns.size,0);
+});
+
 function fixture() {
   const project = { workspace: '/project', sessionId: 'one', chatUrl: 'https://chatgpt.com/c/conversation-one', attempt: { state: 'sent' } };
   const page = { url: project.chatUrl, editorAvailable: true, draftLength: 0, connectionError: 'stream-interrupted' };

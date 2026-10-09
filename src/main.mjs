@@ -217,6 +217,18 @@ const liveSessions = new SessionRuntimes({store,runtime:()=>runtime,contextCache
   onPage:(record,event)=>applyObservedPage(event,record),onError:sessionRuntimeError,decorate:decorateSessionRuntime});
 const executionKit=new ParallelKit({plans:sessionPlans,setup:workspaceSetup});
 const liveRecord=project=>project&&liveSessions.records.get(sessionRuntimeKey(project));
+async function restoreExecutionPage(project,assignment=null) {
+  if(liveRecord(project)?.ready)return project;
+  if(!project?.chatUrl||(!project.manualStart&&!project.attempt?.sendStartedAtMs&&!['sent','acknowledged'].includes(project.attempt?.state)))
+    throw Object.assign(new Error('Сохранённый адрес и отправка не подтверждены. Откройте соответствующий чат и проверьте его; автоматического Send нет.'),{code:'EXECUTOR_CHAT_UNKNOWN'});
+  const record=liveSessions.ensure(project);
+  if(assignment)configureExecutor(record,{store,enabled:autoPlanEnabled,
+    inspectPlan:selected=>readAutoPlanState(selected,workspaceSetup.environment),onChange:()=>publish(),
+    signal:()=>{void execution.signal(project.parentWorkspace);},
+    log:(event,fields)=>record.diagnostics?.log.record('auto-plan',event,fields)});
+  if(!record.ready){record.ready=true;await liveSessions.navigate(record,project.chatUrl);}
+  return project;
+}
 const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBook,
   origin:(workspace,id)=>store.project(workspace,id),
   save:async book=>{parallelExecutionBook=book;await saveSettings({parallelExecutionBook:book});},
@@ -231,6 +243,20 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
     onError:error=>{if(error)execution.publish(workspace,{phase:'attention',error});}});watcher.update(['.harness/runtime/command-activity/']);return()=>watcher.close();},
   mainState:origin=>executorPageState(liveRecord(origin)),
   workerState:(assignment,entry)=>executorPageState(liveRecord(store.project(assignment.worktree,entry?.sessionId))),
+  restoreOrigin:origin=>restoreExecutionPage(origin),
+  restoreWorker:async(assignment,origin,entry)=>{
+    if(!assignment.worktree)return null;
+    const project=store.project(assignment.worktree,entry?.sessionId);
+    if(!project) {
+      if(entry?.sessionId||entry?.phase==='opening'||['RUNNING','READY_FOR_INTEGRATION'].includes(assignment.status))
+        throw Object.assign(new Error('Не найдена сохранённая сессия назначения. Проверьте worktree и чат; новая сессия автоматически не создаётся.'),{code:'EXECUTOR_SESSION_MISSING'});
+      return null;
+    }
+    if(project.assignmentId!==assignment.id||project.taskId!==assignment.parent_task_id||project.parentScopeId!==assignment.parent_scope_id
+      ||project.executionOriginSessionId!==origin.sessionId||project.parentWorkspace!==origin.workspace||project.archivedAt||project.sessionArchivedAt)
+      throw Object.assign(new Error('Сессия не соответствует назначению Kit. Откройте её для проверки.'),{code:'EXECUTOR_SESSION_MISMATCH'});
+    return restoreExecutionPage(project,assignment);
+  },
   openWorker:async(assignment,origin)=>{
     const project=await store.ensureExecutor(assignment,origin),record=liveSessions.ensure(project);
     configureExecutor(record,{store,enabled:autoPlanEnabled,
@@ -1016,6 +1042,7 @@ function registerIpc() {
   };
   registerAction('pilot:execute-tasks',input=>{void execution.launch(executionWorkspace(input));return {queued:true};});
   registerAction('pilot:correct-integration',input=>execution.correct(executionWorkspace(input)));
+  registerAction('pilot:reconcile-execution',input=>{void execution.recheck(executionWorkspace(input));return {queued:true};});
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:auto-plan', async enabled => {
     const choice = enabled === true;
@@ -1458,6 +1485,10 @@ else {
     });
     installMenu();
     await createWindow();
+    if(!storageError&&!smoke)for(const project of store.snapshot().projects)if(!project.parentWorkspace&&!project.archivedAt
+      &&(project.sessions.some(s=>s.executionSnapshot?.parallel_allowed)||Object.values(parallelExecutionBook).some(b=>b?.workspace===project.workspace))) {
+      execution.observe(project.workspace);void execution.signal(project.workspace);
+    }
   }).catch(error => {
     console.error('Project Web Pilot:', smoke ? (error.stack || error) : error.message);
     if (!smoke) dialog.showErrorBox('Project Web Pilot', error.message);

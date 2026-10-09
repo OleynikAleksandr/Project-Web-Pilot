@@ -5,11 +5,22 @@ const known = p => p?.chatUrl && normalizeChatUrl(p.chatUrl) === p.chatUrl
   && (p.manualStart || ['sent', 'acknowledged'].includes(p.attempt?.state));
 export class ConversationRecovery {
   constructor({ selected, inspect, reopen, available = () => true, onChange = () => {},
-    schedule = setTimeout, cancel = clearTimeout, delayMs = 3000, now = Date.now }) {
-    Object.assign(this, { selected, inspect, reopen, available, onChange, schedule, cancel, delayMs, now });
+    schedule = setTimeout, cancel = clearTimeout, delayMs = 3000, now = Date.now, checkpoint=null, save=async()=>{} }) {
+    Object.assign(this, { selected, inspect, reopen, available, onChange, schedule, cancel, delayMs, now, save });
     this.used = new Set(); this.cooldowns = new Map(); this.stopped = new Map(); this.epoch = 0; this.timer = null;
     this.state = { phase: 'idle', message: '', canRetry: false };
+    const key=keyOf(selected());
+    if(checkpoint?.key===key) {
+      if(checkpoint.used)this.used.add(key);
+      if(Number.isFinite(checkpoint.cooldownUntil))this.cooldowns.set(key,checkpoint.cooldownUntil);
+      if(Number.isFinite(checkpoint.stoppedAt))this.stopped.set(key,checkpoint.stoppedAt);
+    }
   }
+  persist() {
+    const key=keyOf(this.selected());
+    return this.save({key,used:this.used.has(key),cooldownUntil:this.cooldowns.get(key)??null,stoppedAt:this.stopped.get(key)??null});
+  }
+  remember() {void this.persist().catch(()=>this.set('blocked','Не удалось сохранить состояние восстановления. Проверьте хранилище сессии.',true));}
   view() { return { ...this.state }; }
   set(phase, message, canRetry = false) {
     this.state = { phase, message, canRetry }; this.onChange(this.view());
@@ -21,12 +32,14 @@ export class ConversationRecovery {
   manualStop(page) {
     const key = keyOf(this.selected());
     this.stopped.set(key, page?.userMessageCount ?? 0);
+    this.remember();
     while (this.stopped.size > 32) this.stopped.delete(this.stopped.keys().next().value);
     this.reset();
   }
   async requestRetry() {
     this.key = keyOf(this.selected());
     this.stopped.delete(this.key);
+    await this.persist();
     return this.retry();
   }
   observe(page) {
@@ -34,6 +47,7 @@ export class ConversationRecovery {
     if (this.stopped.has(stopKey)) {
       if ((page?.userMessageCount ?? 0) <= this.stopped.get(stopKey)) return;
       this.stopped.delete(stopKey);
+      this.remember();
     }
     if (!page || this.state.phase === 'reopening') return;
     if (!page.connectionError) {
@@ -60,6 +74,7 @@ export class ConversationRecovery {
     if (!p?.chatUrl || new URL(p.chatUrl).pathname.split('/').at(-1) !== conversationId) return;
     const key = keyOf(p);
     this.cooldowns.set(key, this.now() + Math.max(60000, Math.min(300000, retryAfter * 1000)));
+    this.remember();
     if (this.key === key) this.cooldown();
   }
   cooldown() {
@@ -95,6 +110,8 @@ export class ConversationRecovery {
         return false;
       }
       this.used.add(key);
+      await this.persist();
+      if(!current())return false;
       const restored = await this.reopen(project, current);
       if (!current()) return false;
       this.set(restored ? 'restored' : 'failed', restored

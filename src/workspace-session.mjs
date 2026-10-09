@@ -658,7 +658,11 @@ export class WorkspaceSessions {
   updateSession(workspace, sessionId, patch, { background = false } = {}) {
     return this.mutate(data => {
       const { project, session } = this.activeRecord(workspace, sessionId, data, { background });
-      if (Object.keys(patch).some(k => !['attempt', 'receipt', 'manualStart'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
+      if (Object.keys(patch).some(k => !['attempt', 'receipt', 'manualStart','conversationRecovery'].includes(k))) throw new Error('INVALID_SESSION_PATCH');
+      if(patch.conversationRecovery!==undefined) {
+        const c=patch.conversationRecovery;
+        if(!c||typeof c.key!=='string'||typeof c.used!=='boolean'||[c.cooldownUntil,c.stoppedAt].some(n=>n!==null&&(!Number.isFinite(n)||n<0)))throw new Error('INVALID_SESSION_PATCH');
+      }
       if (patch.manualStart !== undefined && typeof patch.manualStart !== 'boolean') throw new Error('INVALID_SESSION_PATCH');
       Object.assign(session, copy(patch)); return currentView(project, sessionId);
     });
