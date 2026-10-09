@@ -118,7 +118,8 @@
         "tests/workspace-deletion.test.mjs",
         "tests/project-auto-plan.test.mjs",
         "tests/parallel-execution.test.mjs",
-        "tests/parallel-execution-recovery.test.mjs"
+        "tests/parallel-execution-recovery.test.mjs",
+        "tests/chromium-diagnostics.test.mjs"
       ],
       "kind": "test",
       "required": false,
