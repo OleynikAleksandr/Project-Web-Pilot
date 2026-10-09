@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "DEVELOPMENT",
-  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.6.4 / Codex 0.161.0",
+  "stack": "Electron 44.5.1 / Node 24.21.0 / Workflow Kit 1.7.0 / Codex 0.161.0",
   "checks": [
     {
       "required": false,
@@ -24,7 +24,7 @@
       "args": [
         "test"
       ],
-      "evidence": "Полный npm test: получатель Review через startup/Kit/продолжение, restart/чужой чат/UNKNOWN; переход с выпущенного Kit 1.6.3 и позиции автора; не живая приёмка ChatGPT"
+      "evidence": "Полный npm test: назначения, очередь main, живые runtime и адресация, UNKNOWN/restart, Review/AutoPlan/Sidebar; обновление выпущенных Kit 1.5.6 и 1.6.4 до 1.7.0. Не живая приёмка"
     },
     {
       "required": false,
@@ -36,7 +36,7 @@
         "run",
         "smoke"
       ],
-      "evidence": "Electron TEST FIXTURE: реальные обработчики двух toggle во всех четырёх сочетаниях, состояния Review/reduced motion, STALL без recovery и reload при обнаруженной ошибке с защитой draft/UNKNOWN/rate limit; части контекста и однократный Send. Живой ChatGPT и Windows проверяет пользователь"
+      "evidence": "Electron TEST FIXTURE: Settings → основной чат → два настоящих worktree → конфликт и однократное исправление → проверенные интеграции → зависимая задача; живые страницы, темы, часы, Review/AutoPlan и безопасная доставка. Живой ChatGPT и native Windows принимает пользователь"
     },
     {
       "required": false,
@@ -60,7 +60,7 @@
         "run",
         "build"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.103: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.6.4 verified. Сборку выполняет сама эта проверка при коммите задачи, один раз"
+      "evidence": "~/Downloads/WebPilot-0.6.104: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.7.0 verified. Сборку выполняет эта проверка при коммите задачи, один раз"
     },
     {
       "required": false,
@@ -71,7 +71,7 @@
       "args": [
         "scripts/check-installed-release.mjs"
       ],
-      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.103 из уже собранного staging; identity/signature/runtime и release artifacts verified без пересборки"
+      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.104 с Workflow Kit 1.7.0 из готового staging; identity/signature/runtime и release artifacts verified без пересборки"
     },
     {
       "required": false,
@@ -82,7 +82,7 @@
       "args": [
         "scripts/check-github-release.mjs"
       ],
-      "evidence": "GitHub Release v0.6.103: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
+      "evidence": "GitHub Release v0.6.104 с Workflow Kit 1.7.0: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
     },
     {
       "required": false,
@@ -96,7 +96,7 @@
         "--prefix",
         "packages/workflow-kit"
       ],
-      "evidence": "Пакет Workflow Kit: runtime и consumer contract, prepare/run с имитацией CLI/позиция автора/publish/task:start, SHA, явное разрешение спора, OFF и безопасная очистка; не живой Claude"
+      "evidence": "Workflow Kit 1.7.0: runtime/consumer/install/recovery/review fixtures и настоящие Git worktree с npm-зависимостью, NEEDS_SETUP, конфликтом, объединёнными проверками, зависимой базой и историческими доказательствами; без модельных запросов"
     },
     {
       "required": false,

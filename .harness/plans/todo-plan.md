@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1564,
+  "plan_revision": 1566,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -133,7 +133,7 @@
     ]
   },
   "baseline_commit": "39507e5655e81395bbcbeab0bd7b00572e4a746b",
-  "current_task_id": null,
+  "current_task_id": "T012",
   "context_pack": {
     "documents": [
       {
@@ -980,7 +980,7 @@
         "Все обязательные проверки исходников пройдены до DOCS; сборка не запускается в этой задаче."
       ],
       "expected_commit_message": "chore: подготовить версию приложения к выпуску",
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
@@ -1181,8 +1181,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
-Current Task: нет
-Revision: 1564
+Current Task: T012
+Revision: 1566
 
 ## Цель
 
@@ -1242,7 +1242,7 @@ Revision: 1564
   - Git Commit: [DONE] docs: подготовить приёмку нового выпуска
   - Reference: parallel-chat-execution-20261009 / T011 / implementation
   - Файлы: docs/planning/parallel-execution-spec.md, docs/planning/parallel-acceptance.md
-- [TODO] T012: Подготовить новую версию приложения к выпуску — Ожидает
+- [IN_PROGRESS] T012: Подготовить новую версию приложения к выпуску — В работе
   - Git Commit: [PENDING] chore: подготовить версию приложения к выпуску
   - Reference: parallel-chat-execution-20261009 / T012 / implementation
   - Файлы: package.json, package-lock.json, .harness/workflow.json, docs/planning/parallel-execution-spec.md
