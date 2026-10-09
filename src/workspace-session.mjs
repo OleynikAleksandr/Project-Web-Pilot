@@ -210,6 +210,7 @@ function validate(data) {
         try { validateParallelSettings(s.executionSnapshot); } catch { throw invalid(); }
       }
       if (s.agentTime !== undefined && s.agentTime !== null && !validAgentTime(s.agentTime)) throw invalid();
+      if(s.executionTime!==undefined&&(!validDuration(s.executionTime?.activeMs)||!validDuration(s.executionTime?.waitingMs)))throw invalid();
       for (const key of ['planId','originSessionId','legacyPlanId','lastNamedScopeId']) {
         if (s[key] !== undefined && s[key] !== null && (typeof s[key] !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/.test(s[key]))) throw invalid();
       }
@@ -565,6 +566,15 @@ export class WorkspaceSessions {
       if(!session.assignmentId||Object.keys(patch).some(k=>!['autoPlanCheckpoint','automationCheckpoint'].includes(k)))
         throw new WorkspaceError('ASSIGNMENT_OWNER','Нет такого исполнителя.');
       session.executionAutomation={...session.executionAutomation,...copy(patch)};
+    });
+  }
+
+  saveExecutorTime(workspace,sessionId,time) {
+    return this.mutate(data=>{
+      const {session}=this.activeRecord(workspace,sessionId,data,{background:true});
+      if(!session.assignmentId||!validDuration(time?.activeMs)||!validDuration(time?.waitingMs))
+        throw new WorkspaceError('INVALID_EXECUTOR_TIME','Неверное время исполнителя.');
+      session.executionTime={activeMs:time.activeMs,waitingMs:time.waitingMs};
     });
   }
 

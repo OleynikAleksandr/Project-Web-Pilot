@@ -85,6 +85,7 @@
   :root[data-theme=dark] #plan-review-indicator[data-state=success]{color:#77d6a5}
   @keyframes review-spin{to{transform:rotate(360deg)}}
   @media(prefers-reduced-motion:reduce){#plan-review-indicator[data-state=working]{animation:none}}
+    .executor-group{margin:8px 10px 12px 28px;border-left:1px solid var(--tree-guide);padding-left:12px}.executor-group>summary{font-size:12px;color:var(--muted);cursor:pointer;overflow-wrap:anywhere}.executor-list{list-style:none;padding:0;margin:7px 0;display:grid;gap:6px}.executor-row{display:grid;gap:4px;width:100%;padding:10px;text-align:left;border:1px solid var(--tree-guide);border-radius:8px;background:var(--tree-panel);color:var(--tree-text);overflow-wrap:anywhere}.executor-row strong{font-size:13px}.executor-row span{font-size:11px;line-height:1.5}.executor-row[aria-current=page]{background:var(--tree-selected);border-color:var(--tree-accent)}.executor-status{font-weight:600}.executor-row [data-executor-time]{font-variant-numeric:tabular-nums;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -350,6 +351,11 @@ SOFTWARE.
           <p id="plan-note" class="plan-note" hidden></p>
           <p id="plan-reason" class="plan-reason" hidden></p>
           <ul id="plan-tasks" class="plan-tasks" aria-label="Микрозадачи плана"></ul>
+          <div id="execution-actions" class="actions" hidden>
+            <button id="execute-tasks" class="secondary" type="button">Выполнить доступные задачи</button>
+            <button id="correct-integration" class="secondary" type="button" hidden>Передать исправление основному агенту</button>
+            <p id="execution-message" class="description" role="status"></p>
+          </div>
           <div class="actions">
             <div class="plan-toggles">
               <button id="auto-plan-toggle" class="secondary" type="button" aria-pressed="false">Включить автовыполнение</button>

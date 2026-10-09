@@ -184,6 +184,7 @@ async function action(method, ...args) {
 
 // Agent time: current (or last) request and the session total, in minutes and seconds.
 let agentTicker = null;
+let executorTicker = null;
 const agentClock = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0'); };
 const agentSpoken = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return Math.floor(seconds / 60) + ' мин ' + seconds % 60 + ' с'; };
 function renderAgentTime(selected) {
@@ -208,6 +209,18 @@ function kitUpgradeNeeded(health) {
   return health?.phase === 'error' && health.action === 'upgrade' && !health.error && !health.issues?.length;
 }
 
+function renderExecutorTimes() {
+  clearInterval(executorTicker);executorTicker=null;
+  const nodes=[...document.querySelectorAll('[data-executor-time]')];
+  const paint=()=>{for(const node of nodes) {
+    const time=node.executorTime??{},delta=Math.max(0,Date.now()-(time.asOf??Date.now()));
+    const active=(time.activeMs??0)+(time.phase==='working'?delta:0),waiting=(time.waitingMs??0)+(time.phase==='waiting'?delta:0);
+    node.textContent='Работа '+agentClock(active)+' · ожидание '+agentClock(waiting);
+    node.setAttribute('aria-label','Наблюдаемая работа '+agentSpoken(active)+', ожидание '+agentSpoken(waiting));
+  }};
+  paint();if(nodes.some(node=>['working','waiting'].includes(node.executorTime?.phase)))executorTicker=setInterval(paint,1000);
+}
+
 function render(state) {
   progress.show(operationLabel(state ?? {}, pendingAction));
   if (!state) return;
@@ -225,6 +238,7 @@ function render(state) {
   if (signature !== lastProjects) {
     lastProjects = signature;
     const outerScroll = $('projects').scrollTop;
+    const executorDisclosure=new Map([...$('projects').querySelectorAll('[data-executor-group]')].map(node=>[node.dataset.executorGroup,node.open]));
     const oldProject = previousProjects.find(project => project.workspace === selected?.workspace);
     if (selected && !oldProject?.sessions.some(session => session.sessionId === selected.sessionId)) sessionScroll.set(selected.workspace, 0);
     closeTreeMenus();
@@ -232,7 +246,7 @@ function render(state) {
     const dateFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     for (const project of state.projects) {
       const item = document.createElement('li'); item.className = 'workspace-tree';
-      const activeProject = project.workspace === selected?.workspace;
+      const activeProject = project.workspace === (selected?.parentWorkspace??selected?.workspace);
       const row = document.createElement('div'); row.className = 'workspace-row' + (activeProject ? ' active' : '');
       const toggle = () => action('setExpanded', project.workspace, !project.expanded);
       const arrow = document.createElement('button'); arrow.className = 'expand-project';
@@ -310,7 +324,31 @@ function render(state) {
         menu.append(rename, archive);
         row.append(choice, menuButton); entry.append(row, menu); sessions.append(entry);
       }
-      item.append(sessions); fragment.append(item);
+      item.append(sessions);
+      const origins=[...new Set((project.executors??[]).map(executor=>executor.originSessionId))];
+      for(const origin of origins) {
+        const group=document.createElement('details');group.className='executor-group';group.hidden=!project.expanded;
+        group.dataset.executorGroup=project.workspace+'\n'+origin;
+        group.open=executorDisclosure.get(group.dataset.executorGroup)??true;
+        const heading=document.createElement('summary');
+        const source=project.sessions.find(session=>session.sessionId===origin);
+        heading.textContent='Исполнители · '+(source?.title||'основная сессия');group.append(heading);
+        const list=document.createElement('ul');list.className='executor-list';list.setAttribute('aria-label','Исполнители основной сессии');
+        for(const executor of project.executors.filter(entry=>entry.originSessionId===origin)) {
+          const row=document.createElement('li'),choice=document.createElement('button');choice.className='executor-row';
+          choice.dataset.sessionId=executor.sessionId;choice.dataset.phase=executor.phase;
+          if(executor.sessionId===selected?.sessionId)choice.setAttribute('aria-current','page');
+          const name=document.createElement('strong');name.textContent=executor.title||executor.taskId;
+          const caption=document.createElement('span');caption.textContent=executor.taskId+' · worktree · '+(executor.experience==='work'?'Work':'Chat');
+          const status=document.createElement('span');status.className='executor-status';status.textContent=executor.label;
+          const time=document.createElement('span');time.dataset.executorTime=executor.sessionId;time.executorTime=executor.time;
+          choice.title=executor.workspace;choice.append(name,caption,status,time);
+          choice.addEventListener('click',()=>action('selectSession',executor.workspace,executor.sessionId));
+          row.append(choice);list.append(row);
+        }
+        group.append(list);item.append(group);
+      }
+      fragment.append(item);
     }
     if (!state.projects.length) {
       const empty = document.createElement('li'); empty.className = 'empty';
@@ -324,6 +362,17 @@ function render(state) {
   $('toggle-projects').title = collapseAll ? 'Свернуть все проекты' : 'Раскрыть все проекты';
   $('toggle-projects').setAttribute('aria-label', $('toggle-projects').title);
   $('plan-card').hidden = !selected;
+  renderExecutorTimes();
+  const execution=state.execution??{};
+  const parallel=selected?.planExecution?.execution_strategy==='parallel'||!!selected?.assignmentId;
+  $('execution-actions').hidden=!parallel;
+  const correcting=['CONFLICT','CHECKS_FAILED','RESOLVING'].includes(execution.integration?.status);
+  $('correct-integration').hidden=!correcting;
+  $('correct-integration').disabled=actionPending||execution.phase==='merging'||!!execution.correctionStatus;
+  $('execute-tasks').disabled=actionPending||['preparing','merging','integration','complete'].includes(execution.phase)||correcting;
+  $('execution-message').textContent=execution.error?.message??({sending:'Поручение исправления отправляется…',sent:'Поручение исправления отправлено. Ждём основной чат.',unknown:'Исход отправки исправления неизвестен. Повтор не отправляется.'}[execution.correctionStatus])??({preparing:'Подготавливаем исполнителей…',merging:'Проверяем слияние в main…',
+    complete:'Все результаты интегрированы. Ожидается приёмка.',integration:'Интеграция удерживает main. Другие слияния ждут.',
+    waiting:'Состояния исполнителей показаны в дереве. Пауза не означает вопрос пользователя.'}[execution.phase]??'Запуск выдаст доступную группу задач.');
   const auto = state.autoPlan ?? { phase: 'off', active: false, message: '' };
   $('auto-plan-toggle').textContent = auto.enabled ? 'Выключить автовыполнение' : 'Включить автовыполнение';
   $('auto-plan-toggle').disabled = actionPending;
@@ -345,7 +394,8 @@ function render(state) {
 
   renderAgentTime(selected);
   $('session-actions').hidden = !selected;
-  const plan = selected?.planView ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
+  const plan = (selected?.assignmentId ? execution.planView??{state:'blocked',completed:0,total:0,tasks:[],blockedReason:'Общий план ещё не подтверждён.'}
+    : selected?.planView) ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
   if (selected) {
     const plural = count => count % 10 === 1 && count % 100 !== 11 ? 'задача'
       : count % 10 >= 2 && count % 10 <= 4 && !(count % 100 >= 12 && count % 100 <= 14) ? 'задачи' : 'задач';
@@ -357,7 +407,7 @@ function render(state) {
           : plan.state === 'not-created' ? 'План ещё не создан'
             : `В работе · ${plan.completed} из ${plan.total} выполнено`;
     $('plan-title').hidden = !selected.scopeId;
-    $('plan-title').textContent = selected.scopeId ? selected.objective : '';
+    $('plan-title').textContent = selected.assignmentId ? execution.objective??'Общий план проекта' : selected.scopeId ? selected.objective : '';
     $('plan-status').textContent = statusText; $('plan-status').dataset.state = plan.state;
     $('plan-note').hidden = plan.state !== 'closed';
     $('plan-note').textContent = plan.state === 'closed' ? 'Проект готов к следующему новому плану.' : '';
@@ -413,7 +463,7 @@ function render(state) {
   $('error-banner').hidden = !error;
   $('error-banner').textContent = error ? `${error.message} (${error.code})` : '';
   for (const button of document.querySelectorAll('button')) {
-    if (button.closest('#startup-panel') || button.id === 'open-startup') continue;
+    if (button.closest('#startup-panel') || ['open-startup','execute-tasks','correct-integration'].includes(button.id)) continue;
     button.disabled = actionPending || (state.storageError && ['create-workspace', 'add-workspace', 'retry-context'].includes(button.id));
   }
   const recovery = state.conversationRecovery;
@@ -444,6 +494,8 @@ $('reload-chat').addEventListener('click', () => action('reload'));
 $('workspace-health-retry').addEventListener('click', () => action(kitUpgradeNeeded(currentState?.workspaceHealth) ? 'retry' : 'reload'));
 $('workspace-health-doctor').addEventListener('click', () => action('openDoctor'));
 $('auto-plan-toggle').addEventListener('click', () => action('setAutoPlan', !currentState?.autoPlan?.enabled));
+$('execute-tasks').addEventListener('click',()=>action('executeTasks',currentState?.selected?.parentWorkspace??currentState?.selected?.workspace));
+$('correct-integration').addEventListener('click',()=>action('correctIntegration',currentState?.selected?.parentWorkspace??currentState?.selected?.workspace));
 $('plan-review-toggle').addEventListener('click', () => action('setPlanReview', {workspace:currentState?.selected?.workspace,enabled:!currentState?.planReview?.enabled}));
 $('reconnect-chat').addEventListener('click', () => action('reconnect'));
 $('retry-context').addEventListener('click', () => action('retry'));

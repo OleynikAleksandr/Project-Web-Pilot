@@ -1,6 +1,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AgentTimer, AGENT_IDLE_GRACE_MS } from '../src/agent-timer.mjs';
+import { AgentTimer, ExecutorTimer, AGENT_IDLE_GRACE_MS } from '../src/agent-timer.mjs';
+
+test('executor clock separates observed work and waiting, checkpoints live intervals and excludes closed-app time',()=>{
+  let now=1000,callback;const saved=[],cancelled=[];
+  const timer=new ExecutorTimer({now:()=>now,onCheckpoint:value=>saved.push(value),schedule:fn=>{callback=fn;return 1;},cancel:id=>cancelled.push(id)});
+  timer.observe('working');now=3500;callback();assert.equal(saved.at(-1).activeMs,2500);
+  now=4000;timer.observe('waiting');assert.equal(saved.at(-1).activeMs,3000);
+  now=10000;timer.observe('unknown');assert.equal(saved.at(-1).waitingMs,6000);
+  const checkpoint=saved.at(-1);timer.dispose();now=900000;
+  const restarted=new ExecutorTimer({saved:checkpoint,now:()=>now,onCheckpoint:value=>saved.push(value),schedule:()=>2,cancel:id=>cancelled.push(id)});
+  assert.equal(restarted.snapshot().phase,'unknown');assert.equal(restarted.snapshot().activeMs,3000);
+  restarted.observe('waiting');now+=2000;restarted.observe('done');
+  assert.equal(saved.at(-1).waitingMs,8000);assert.equal(saved.at(-1).activeMs,3000);
+  assert.ok(cancelled.length>=3);restarted.dispose();
+});
 
 const a = { workspace: '/a', sessionId: 's1' }, b = { workspace: '/a', sessionId: 's2' };
 

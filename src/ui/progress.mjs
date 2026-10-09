@@ -1,4 +1,5 @@
 const actionLabels = {
+  executeTasks:'Подготавливаем исполнителей',correctIntegration:'Передаём исправление основному агенту',
   runDoctor: 'Проверяем и восстанавливаем проект', continueDoctor: 'Возвращаемся к работе', reviewDoctorProject: 'Проверяем папку',
   newSession: 'Создаём сессию', selectSession: 'Открываем сессию', selectWorkspace: 'Открываем проект',
   reload: 'Обновляем ChatGPT', retry: 'Обновляем контекст', returnToChat: 'Возвращаемся к чату',
@@ -21,6 +22,8 @@ const phaseLabels = {
 };
 const phaseLabel = context => phaseLabels[context?.phase];
 export function operationLabel(state = {}, action = null) {
+  if(state.execution?.phase==='preparing')return 'Подготавливаем worktree и чат исполнителя';
+  if(state.execution?.phase==='merging')return 'Проверяем и сливаем результат в main';
   if (['repairing','verifying','services'].includes(state.doctor?.phase)) return 'Доктор проекта: проверка и восстановление';
   if (state.setup?.phase === 'checking') return 'Проверяем папку проекта';
   if (state.setup?.phase === 'applying') return 'Подготавливаем проект';

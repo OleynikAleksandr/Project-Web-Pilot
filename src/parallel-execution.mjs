@@ -78,7 +78,11 @@ export class ParallelExecution {
     const ledger=this.ledger(workspace,plan.scope_id);
     const assignments=state.assignments.map(a=>({...a,...(ledger.assignments[a.id]?.readyAt?{readyAt:ledger.assignments[a.id].readyAt}:{})}));
     this.publish(workspace,{phase:'waiting',scopeId:plan.scope_id,originSessionId:origin.sessionId,
-      assignments,integration:state.integration,error:null,maxWorkers:plan.max_workers});
+      objective:plan.objective,planView:{state:plan.tasks.every(t=>t.commit_status==='DONE')?'awaiting-acceptance':'working',
+        completed:plan.tasks.filter(t=>t.commit_status==='DONE').length,total:plan.tasks.length,
+        tasks:plan.tasks.map(t=>({id:t.id,title:t.title,status:t.commit_status==='DONE'?'done':assignments.some(a=>a.parent_task_id===t.id)?'current':'pending'}))},
+      assignments,integration:state.integration,correctionStatus:ledger.corrections[state.integration.operation_id]??null,
+      error:null,maxWorkers:plan.max_workers});
     // A pending integration owns main. Only its explicit correction action may send to the main agent.
     if(state.integration.status!=='IDLE') {this.publish(workspace,{phase:'integration',error:state.integration.error?{code:'INTEGRATION_PENDING',message:state.integration.error}:null});return;}
     if(!state.confirmed||plan.execution_scope_status!=='ACTIVE'||state.commandActive)
@@ -139,6 +143,7 @@ export class ParallelExecution {
     const ready=()=>!this.closed&&this.mainState(origin).stopped&&this.mainState(origin).canSend;
     if(!ready())throw fail('MAIN_NOT_READY','Откройте основной чат и дождитесь готовности без черновика.');
     ledger.corrections[operation.operation_id]='sending';await this.persist();
+    this.publish(workspace,{correctionStatus:'sending'});
     const text=['Исправь незавершённую интеграцию Workflow Kit.',
       'Workspace: '+JSON.stringify(workspace),'Интеграция: '+operation.operation_id,
       'Задача: '+operation.task_id,'Конфликты: '+(operation.conflicts??[]).join(', '),
@@ -150,8 +155,9 @@ export class ParallelExecution {
         const latest=await this.kit.read(workspace);return ready()&&!latest.commandActive&&latest.integration.operation_id===operation.operation_id;
       });
       if(result.state==='sent')ledger.corrections[operation.operation_id]='sent';
+      else if(result.state==='unknown')ledger.corrections[operation.operation_id]='unknown';
       else if(result.state!=='unknown')delete ledger.corrections[operation.operation_id];
-      await this.persist();return result;
+      await this.persist();this.publish(workspace,{correctionStatus:ledger.corrections[operation.operation_id]??null});return result;
     }catch(error){ledger.corrections[operation.operation_id]='unknown';await this.persist();throw error;}
     }finally{this.correcting.delete(workspace);}
   }

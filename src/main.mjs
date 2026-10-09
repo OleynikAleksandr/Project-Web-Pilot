@@ -31,6 +31,7 @@ import { ParallelExecution } from './parallel-execution.mjs';
 import { ParallelKit } from './parallel-kit.mjs';
 import { ProjectInputWatch } from './project-input-watch.mjs';
 import { configureExecutor,executorPageState } from './executor-session.mjs';
+import { projectExecutors } from './execution-projection.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
 import { WorkspaceDeletion } from './workspace-deletion.mjs';
 import { appendDiagnostic } from './common.mjs';
@@ -219,7 +220,13 @@ const liveRecord=project=>project&&liveSessions.records.get(sessionRuntimeKey(pr
 const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBook,
   origin:(workspace,id)=>store.project(workspace,id),
   save:async book=>{parallelExecutionBook=book;await saveSettings({parallelExecutionBook:book});},
-  onChange:()=>publish(),
+  onChange:()=>{
+    for(const state of execution.states.values())for(const assignment of state.assignments??[])if(assignment.status==='INTEGRATED') {
+      const record=liveRecord(store.project(assignment.worktree));
+      if(record){record.integrated=true;record.executor?.clock.observe('done');}
+    }
+    publish();
+  },
   watch:(workspace,signal)=>{const watcher=new ProjectInputWatch({workspace,onSignal:signal,
     onError:error=>{if(error)execution.publish(workspace,{phase:'attention',error});}});watcher.update(['.harness/runtime/command-activity/']);return()=>watcher.close();},
   mainState:origin=>executorPageState(liveRecord(origin)),
@@ -317,13 +324,16 @@ function publishArchive() {
 }
 function snapshot() {
   const saved = store.selected();
+  const projects=store.snapshot().projects;
   const info = planMonitor.view(saved, controller?.state.projectInfo);
   const selected = saved && { ...saved, attempt: saved.attempt && { protocol: saved.attempt.protocol,
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace && info.inspectedSessionId === saved.sessionId ? info : {}),
     planReadError: planMonitor.error ?? planMonitor.watchError, agentRun: agentTimer.view(saved) };
-  return { projects: store.snapshot().projects.filter(p => !p.archivedAt).map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
+  return { projects: projects.filter(p => !p.archivedAt&&(!p.parentWorkspace||!projects.some(parent=>parent.workspace===p.parentWorkspace&&!parent.archivedAt)))
+    .map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
+    executors:projectExecutors(projects,workspace,execution.view(workspace),liveRecord),
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState, doctor: doctorState, parallelExecution: { ...parallelExecution },
@@ -1004,7 +1014,7 @@ function registerIpc() {
       throw Object.assign(new Error('Выберите проект текущего плана.'),{code:'EXECUTION_SELECTION_CHANGED'});
     return workspace;
   };
-  registerAction('pilot:execute-tasks',input=>execution.launch(executionWorkspace(input)));
+  registerAction('pilot:execute-tasks',input=>{void execution.launch(executionWorkspace(input));return {queued:true};});
   registerAction('pilot:correct-integration',input=>execution.correct(executionWorkspace(input)));
   ipcMain.handle('pilot:get-state', event => { assertLocalSender(event); return snapshot(); });
   registerAction('pilot:auto-plan', async enabled => {

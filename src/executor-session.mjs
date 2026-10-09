@@ -2,6 +2,7 @@ import { AutoPlan } from './auto-plan.mjs';
 import { AutomationSendState } from './automation-send-state.mjs';
 import { PlanMonitor } from './plan-monitor.mjs';
 import { ProjectInputWatch } from './project-input-watch.mjs';
+import { ExecutorTimer } from './agent-timer.mjs';
 
 export function executorPageState(record) {
   const project=record?.project(),page=record?.pageState.current?.state;
@@ -16,6 +17,9 @@ export function executorPageState(record) {
 export function configureExecutor(record,{store,inspectPlan,enabled,onChange,signal,log=()=>{}}) {
   if(record.executor)return record.executor;
   const saved=record.project(),checkpoint=saved.executionAutomation??{};
+  const clock=new ExecutorTimer({saved:saved.executionTime,
+    onCheckpoint:async time=>{await store.saveExecutorTime(saved.workspace,saved.sessionId,time);onChange();},
+    onError:error=>{record.error={code:error.code??'EXECUTOR_TIME_SAVE',message:error.message};onChange();}});
   let monitor,lastSafety,lastStopped;
   const selected=()=>{const project=record.project();return project&&{...project,...monitor?.view(project)};};
   const automation=new AutomationSendState({save:automationCheckpoint=>store.saveExecutorAutomation(
@@ -40,7 +44,8 @@ export function configureExecutor(record,{store,inspectPlan,enabled,onChange,sig
   const activityWatch=new ProjectInputWatch({workspace:saved.workspace,onSignal:signal,
     onError:error=>{if(error){record.error=error;onChange();}}});
   activityWatch.update(['.harness/runtime/command-activity/']);
-  record.executor={flow,monitor,observe:event=>{
+  record.executor={flow,monitor,clock,observe:event=>{
+    clock.observe(record.integrated?'done':event.reset||event.state?.connectionError?'unknown':event.state?.busy?'working':'waiting');
     automation.observe(selected(),event);flow.observe(event);
     const safety=JSON.stringify([event.documentId,event.state?.url,event.state?.busy,event.state?.lastMessageRole,event.state?.connectionError]);
     if(safety!==lastSafety){lastSafety=safety;signal();}
@@ -52,6 +57,6 @@ export function configureExecutor(record,{store,inspectPlan,enabled,onChange,sig
     }};
   record.controller.onIdle=()=>record.executor.changed();
   flow.restore(enabled,checkpoint.autoPlanCheckpoint);monitor.observeSelection();
-  record.cleanups.push(()=>{record.controller.onIdle=null;flow.dispose();monitor.close();activityWatch.close();});
+  record.cleanups.push(()=>{record.controller.onIdle=null;flow.dispose();monitor.close();activityWatch.close();clock.dispose();});
   return record.executor;
 }
