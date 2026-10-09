@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1656,
+  "plan_revision": 1657,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "project-state-deletion-20261009",
@@ -55,12 +55,12 @@
   "context_pack": {
     "documents": [
       {
-        "path": "docs/planning/project-state-deletion.md",
+        "path": "docs/architecture/OVERVIEW.md",
         "required": true,
         "revision": "WORKTREE"
       },
       {
-        "path": "docs/architecture/OVERVIEW.md",
+        "path": "docs/planning/project-state-deletion.md",
         "required": true,
         "revision": "WORKTREE"
       }
@@ -222,6 +222,41 @@
       ]
     },
     {
+      "id": "T007",
+      "title": "Сериализовать очистку с фоновой записью настроек",
+      "why": "Сериализовать очистку с фоновой записью настроек",
+      "dependencies": [
+        "T003"
+      ],
+      "functional_paths": [
+        "src/main.mjs",
+        "src/workspace-deletion.mjs",
+        "src/project-state-cleanup.mjs",
+        "tests/project-state-cleanup.test.mjs",
+        "tests/workspace-deletion.test.mjs"
+      ],
+      "documentation_paths": [
+        "docs/planning/project-state-deletion.md"
+      ],
+      "verification_ids": [
+        "project-lifecycle",
+        "electron-smoke"
+      ],
+      "verification_kind": "code",
+      "acceptance_criteria": [
+        "Удаление не пересекается с атомарной записью settings другого проекта; recovery сохраняется",
+        "Подтверждённые worktree очищены вместе с пустой группой, произвольные пути журнала запрещены"
+      ],
+      "expected_commit_message": "feat: Сериализовать очистку с фоновой записью настроек",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "project-state-deletion-20261009",
+        "task_id": "T007",
+        "role": "implementation"
+      }
+    },
+    {
       "implementation_status": "TODO",
       "commit_status": "PENDING",
       "commit_ref": {
@@ -232,7 +267,8 @@
       "dependencies": [
         "T001",
         "T002",
-        "T003"
+        "T003",
+        "T007"
       ],
       "functional_paths": [],
       "documentation_paths": [
@@ -362,7 +398,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: project-state-deletion-20261009
 Current Task: нет
-Revision: 1656
+Revision: 1657
 
 ## Цель
 
@@ -386,6 +422,10 @@ Revision: 1656
   - Git Commit: [DONE] feat: Сквозная регрессия удаления и подготовка 0.6.109
   - Reference: project-state-deletion-20261009 / T003 / implementation
   - Файлы: tests/electron-smoke.mjs, tests/parallel-execution-smoke-fixture.cjs, package.json, package-lock.json, src/main.mjs, src/project-state-cleanup.mjs, tests/project-state-cleanup.test.mjs, docs/planning/project-state-deletion.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/project-archive.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sessions.md, docs/modules/session-runtime.md, docs/modules/release.md, docs/modules/parallel-execution-acceptance.md
+- [TODO] T007: Сериализовать очистку с фоновой записью настроек — Ожидает
+  - Git Commit: [PENDING] feat: Сериализовать очистку с фоновой записью настроек
+  - Reference: project-state-deletion-20261009 / T007 / implementation
+  - Файлы: src/main.mjs, src/workspace-deletion.mjs, src/project-state-cleanup.mjs, tests/project-state-cleanup.test.mjs, tests/workspace-deletion.test.mjs, docs/planning/project-state-deletion.md
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: актуализировать контекст проекта
   - Reference: project-state-deletion-20261009 / DOCS / implementation
@@ -405,7 +445,7 @@ Revision: 1656
 
 ## Context Pack For This Cycle
 
-- docs/planning/project-state-deletion.md
 - docs/architecture/OVERVIEW.md
+- docs/planning/project-state-deletion.md
 
 Служебные состояния меняются только командами workflow. Приёмка не архивирует scope.
