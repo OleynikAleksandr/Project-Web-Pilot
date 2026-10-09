@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1608,
+  "plan_revision": 1610,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1754,13 +1754,14 @@
         "После DOCS одна парная сборка создаёт обе платформы, шесть assets и manifest; сохраняется identity корневого app"
       ],
       "expected_commit_message": "feat: Собрать парный выпуск 0.6.106 для macOS и Windows",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T025",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T026",
@@ -1847,7 +1848,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1608
+Revision: 1610
 
 ## Цель
 
@@ -1971,8 +1972,8 @@ Revision: 1608
   - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS-3 / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/modules/session-runtime.md, docs/modules/parallel-execution.md, docs/modules/auto-plan.md, docs/modules/workspace-sidebar-ui.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/planning/parallel-autoplan-fix.md, docs/modules/release.md, README.md, docs/modules/parallel-execution-acceptance.md, docs/modules/plan-review.md, docs/modules/project-doctor.md, docs/modules/workspace-setup.md
-- [TODO] T025: Собрать парный выпуск 0.6.106 для macOS и Windows — Ожидает
-  - Git Commit: [PENDING] feat: Собрать парный выпуск 0.6.106 для macOS и Windows
+- [DONE] T025: Собрать парный выпуск 0.6.106 для macOS и Windows — Завершено
+  - Git Commit: [DONE] feat: Собрать парный выпуск 0.6.106 для macOS и Windows
   - Reference: parallel-chat-execution-20261009 / T025 / implementation
   - Файлы: docs/modules/session-runtime.md, docs/modules/release.md
 - [TODO] T026: Установить и проверить готовый выпуск 0.6.106 — Ожидает
