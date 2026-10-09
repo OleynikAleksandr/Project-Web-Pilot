@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1570,
+  "plan_revision": 1572,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-chat-execution-20261009",
@@ -1149,13 +1149,14 @@
         "Корневое приложение обновлено с сохранением identity и действующей подписи."
       ],
       "expected_commit_message": "build: собрать новый парный выпуск",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-chat-execution-20261009",
         "task_id": "T013",
         "role": "implementation"
-      }
+      },
+      "actual_files": []
     },
     {
       "id": "T014",
@@ -1246,7 +1247,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-chat-execution-20261009
 Current Task: нет
-Revision: 1570
+Revision: 1572
 
 ## Цель
 
@@ -1314,8 +1315,8 @@ Revision: 1570
   - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-chat-execution-20261009 / DOCS / implementation
   - Файлы: docs/architecture/OVERVIEW.md, docs/planning/parallel-execution-spec.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/SPEC.md, docs/modules/release.md, README.md, docs/modules/auto-plan.md, docs/modules/chatgpt-dom-compatibility.md, docs/modules/chromium-diagnostics.md, docs/modules/codex-app-server-executor.md, docs/modules/context-delivery.md, docs/modules/first-run-onboarding.md, docs/modules/plan-review.md, docs/modules/plan-view.md, docs/modules/project-archive.md, docs/modules/project-doctor.md, docs/modules/runtime-lifecycle.md, docs/modules/session-opening-performance.md, docs/modules/workflow-kit-recovery.md, docs/modules/workspace-sessions.md, docs/modules/workspace-setup.md, docs/modules/workspace-sidebar-ui.md, docs/planning/parallel-execution-plan-draft.md, docs/planning/technical-audit-20261008.md, docs/planning/technical-audit-findings-lifecycle.md, docs/planning/technical-audit-findings-summary.md, docs/planning/technical-audit-findings-unused.md, docs/planning/technical-audit-findings.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/parallel-integration.md, docs/planning/live-session-runtime.md, docs/planning/parallel-dispatch.md, docs/planning/parallel-ui.md, docs/planning/parallel-recovery.md, docs/planning/parallel-kit-upgrade.md, docs/planning/parallel-regression.md, docs/planning/parallel-acceptance.md, docs/planning/parallel-release-preparation.md, docs/modules/parallel-execution-acceptance.md, docs/modules/parallel-execution.md, docs/modules/session-runtime.md, docs/modules/technical-audit-followups.md, packages/workflow-kit/README.md, packages/workflow-kit/docs/modules/parallel-assignments.md
-- [TODO] T013: Собрать парный выпуск macOS и Windows — Ожидает
-  - Git Commit: [PENDING] build: собрать новый парный выпуск
+- [DONE] T013: Собрать парный выпуск macOS и Windows — Завершено
+  - Git Commit: [DONE] build: собрать новый парный выпуск
   - Reference: parallel-chat-execution-20261009 / T013 / implementation
   - Файлы: docs/planning/parallel-execution-spec.md, docs/modules/release.md
 - [TODO] T014: Установить и проверить готовый выпуск — Ожидает
