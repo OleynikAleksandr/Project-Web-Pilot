@@ -639,3 +639,17 @@ test('the ledger of answered pauses keeps the newest entries of each conversatio
   assert.ok(pruned.has(JSON.stringify(['b', 'only'])));
   assert.deepEqual([...pruned.keys()].slice(-1), [JSON.stringify(['b', 'only'])], 'order is preserved');
 });
+
+test('A03/A06: executor-style and Review disables are programmatic, not MANUAL_OFF',async()=>{
+ const f=fixture({busy:true});await f.flow.start();
+ f.flow.disable();assert.equal(f.flow.view().reason,'AUTHORIZATION_OFF');
+ await f.flow.start();f.flow.disable({manual:true});assert.equal(f.flow.view().reason,'MANUAL_OFF');
+ const {ReviewContinuation}=await import('../src/review-continuation.mjs');
+ const selected={workspace:'/review',sessionId:'chat',chatUrl:'https://chatgpt.com/c/chat'};
+ const client={workspace:'/review',state:{enabled:true,stage:'PREPARED',run_id:'run',recipient_session_id:'chat',generation:1},refresh(){}};
+ const review=new ReviewContinuation({selected:()=>selected,client,available:()=>false,saveCheckpoint:async()=>{}});
+ review.update();await settle();
+ client.state={...client.state,enabled:false,generation:2};review.update();
+ assert.equal(review.flow.view().reason,'AUTHORIZATION_OFF');
+ assert.equal(f.sends.length,0);
+});

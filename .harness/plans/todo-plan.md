@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1713,
+  "plan_revision": 1715,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -269,8 +269,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T005",
@@ -301,7 +301,15 @@
         "MANUAL_OFF фиксируется только при явном действии пользователя; completion и следующий scope, origin, два проекта и Review не смешиваются; штатные пути executor/review disable проверены."
       ],
       "expected_commit_message": "fix: сохранить предварительный AutoPlan ON",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/auto-plan.mjs",
+        "src/main.mjs",
+        "src/project-auto-plan.mjs",
+        "src/project-session-auto-plan.mjs",
+        "tests/auto-plan.test.mjs",
+        "tests/project-auto-plan.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -497,7 +505,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1713
+Revision: 1715
 
 ## Цель
 
@@ -540,8 +548,8 @@ Revision: 1713
   - Файлы: src/parallel-execution.mjs, src/automation-send-state.mjs, src/main.mjs, tests/parallel-finalization.test.mjs, tests/automation-send-state.test.mjs, tests/parallel-execution-smoke-fixture.cjs
   - Параллельность: исключительное выполнение
   - Зависимости: T003
-- [TODO] T005: Предварительный ON при двух основных чатах — Ожидает
-  - Git Commit: [PENDING] fix: сохранить предварительный AutoPlan ON
+- [DONE] T005: Предварительный ON при двух основных чатах — Завершено
+  - Git Commit: [DONE] fix: сохранить предварительный AutoPlan ON
   - Reference: parallel-final-stage-recovery-20261010 / T005 / implementation
   - Файлы: src/project-auto-plan.mjs, src/project-session-auto-plan.mjs, src/auto-plan.mjs, src/main.mjs, tests/project-auto-plan.test.mjs, tests/auto-plan.test.mjs
   - Параллельность: исключительное выполнение

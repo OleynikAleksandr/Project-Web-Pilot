@@ -235,6 +235,16 @@ const liveSessions = new SessionRuntimes({store,runtime:()=>runtime,contextCache
   onChatBound:record=>{if(record===liveSessions.visible)void syncSelectedSessionTitle({force:true,reason:'chat-bound'});},
   onPage:(record,event)=>applyObservedPage(event,record),onError:sessionRuntimeError,decorate:decorateSessionRuntime});
 const executionKit=new ParallelKit({plans:sessionPlans,setup:workspaceSetup});
+// The parallel queue has the authoritative Kit confirmation; per-chat plan
+// projections must not bind a pre-plan ON while review/transaction is pending.
+const authorizedExecutionKit=Object.create(executionKit);
+authorizedExecutionKit.read=async workspace=>{
+  const facts=await executionKit.read(workspace),plan=facts.plan;
+  if(plan.execution_strategy==='parallel'&&facts.confirmed&&plan.execution_scope_status==='ACTIVE')
+    projectAutoPlan.sync(workspace,plan.scope_id,{confirmed:true,planRevision:plan.plan_revision,
+      originSessionId:plan.execution_origin_session_id});
+  return facts;
+};
 store.git=(workspace,args)=>executionKit.git(workspace,['--no-optional-locks',...args]);
 const liveRecord=project=>project&&liveSessions.records.get(sessionRuntimeKey(project));
 async function restoreExecutionPage(project,assignment=null) {
@@ -249,7 +259,7 @@ async function restoreExecutionPage(project,assignment=null) {
   if(!record.ready){record.ready=true;await liveSessions.navigate(record,project.chatUrl);}
   return project;
 }
-const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBook,
+const execution=new ParallelExecution({kit:authorizedExecutionKit,book:parallelExecutionBook,
   isEnabled:(workspace,scope)=>projectAutoPlan.enabled(workspace,scope),
   canFinalize:(workspace,scope)=>projectAutoPlan.finalizationAllowed(workspace,scope),
   onComplete:(workspace,scope)=>projectAutoPlan.sync(workspace,scope,{complete:true,confirmed:true}),
@@ -1141,10 +1151,22 @@ function registerIpc() {
     const selected=store.selected(),workspace=selected?.parentWorkspace??selected?.workspace;
     const project=selected?.parentWorkspace?store.project(workspace):selected;
     const info=project&&await readAutoPlanState(project,workspaceSetup.environment);
-    const scope=info?.scopeId;
-    projectAutoPlan.sync(workspace,scope,{complete:info?.planView?.tasks?.length>0&&info.planView.tasks.every(t=>t.status==='done'),confirmed:info?.confirmed});
-    const done=info?.confirmed&&info?.planView?.tasks?.length>0&&info.planView.tasks.every(t=>t.status==='done');
-    projectAutoPlan.set(workspace,scope,enabled===true&&!done,project?.sessionId);
+    let verified=info?.confirmed===true;
+    if(info?.scopeId&&info.planExecution?.execution_strategy==='parallel'){
+      const kit=await executionKit.read(workspace);
+      verified=kit.confirmed&&kit.plan.project_id===info.projectId
+        &&kit.plan.scope_id===info.scopeId&&kit.plan.plan_revision===info.planRevision;
+    }
+    const scope=verified?info.scopeId:null;
+    const done=verified&&info.planView?.tasks?.length>0&&info.planView.tasks.every(t=>t.status==='done');
+    projectAutoPlan.sync(workspace,scope,{confirmed:verified,complete:done,
+      planRevision:info?.planRevision,originSessionId:info?.planExecution?.execution_origin_session_id});
+    const current=projectAutoPlan.state(workspace);
+    if(scope&&current?.scopeId!==scope&&enabled===true)
+      throw new Error('План изменился во время переключения AutoPlan. Обновите состояние проекта.');
+    // Completion is an automatic OFF, never misrecord it as a manual OFF.
+    if(!(done&&enabled===true))projectAutoPlan.set(workspace,
+      scope&&current?.scopeId!==scope?current.scopeId:scope,enabled===true,project?.sessionId);
     if(workspace)execution.observe(workspace);
     await saveSettings();
   });

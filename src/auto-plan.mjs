@@ -107,9 +107,10 @@ export class AutoPlan {
     this.set(this.enabled ? 'waiting' : 'off', this.enabled ? 'Автовыполнение включено. Ждём разговор и план.' : '');
   }
   start() { this.closed = false; this.enabled = true; return this.reconcile(); }
-  disable() {
+  disable({manual=false}={}) {
     this.enabled = false; this.epoch++; this.clearTimer(); this.clearWatchdog(); this.run = null;
-    this.set('off', 'Автовыполнение выключено пользователем.', false, 'MANUAL_OFF');
+    this.set('off', manual?'Автовыполнение выключено пользователем.':'Разрешение автовыполнения отсутствует.',
+      false,manual?'MANUAL_OFF':'AUTHORIZATION_OFF');
   }
   // Compatibility for explicit recovery; publish uses availabilityChanged instead.
   recover() { return this.reconcile(); }
