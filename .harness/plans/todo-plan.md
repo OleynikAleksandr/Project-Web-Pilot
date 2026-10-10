@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1690,
+  "plan_revision": 1691,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -122,7 +122,12 @@
       "docs/modules/runtime-lifecycle.md",
       "packages/workflow-kit/src/templates/PLAN.md",
       "packages/workflow-kit/src/templates/PROTOTYPE.md",
-      "packages/workflow-kit/src/WORKFLOW.md"
+      "packages/workflow-kit/src/WORKFLOW.md",
+      "docs/modules/command-activity.md",
+      "docs/modules/project-doctor.md",
+      "docs/modules/workspace-setup.md",
+      "docs/modules/chromium-diagnostics.md",
+      "docs/modules/session-opening-performance.md"
     ]
   },
   "baseline_commit": "c3da7b29a5e29945637f1f54f70071269605f6a6",
@@ -489,7 +494,12 @@
         "docs/modules/runtime-lifecycle.md",
         "packages/workflow-kit/src/templates/PLAN.md",
         "packages/workflow-kit/src/templates/PROTOTYPE.md",
-        "packages/workflow-kit/src/WORKFLOW.md"
+        "packages/workflow-kit/src/WORKFLOW.md",
+        "docs/modules/command-activity.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/workspace-setup.md",
+        "docs/modules/chromium-diagnostics.md",
+        "docs/modules/session-opening-performance.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -614,7 +624,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1690
+Revision: 1691
 
 ## Цель
 
@@ -688,7 +698,7 @@ Revision: 1690
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: Актуализация всех документов проекта
   - Reference: reliable-completion-sidebar-20261010 / DOCS / implementation
-  - Файлы: AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/plan-view.md, docs/modules/workspace-sidebar-ui.md, docs/modules/workspace-sessions.md, docs/modules/context-delivery.md, docs/modules/project-archive.md, docs/modules/codex-app-server-executor.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/reliable-completion-sidebar.md, docs/planning/reliable-completion-validation.md, docs/modules/first-run-onboarding.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/modules/runtime-lifecycle.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
+  - Файлы: AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/plan-view.md, docs/modules/workspace-sidebar-ui.md, docs/modules/workspace-sessions.md, docs/modules/context-delivery.md, docs/modules/project-archive.md, docs/modules/codex-app-server-executor.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/reliable-completion-sidebar.md, docs/planning/reliable-completion-validation.md, docs/modules/first-run-onboarding.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/modules/runtime-lifecycle.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md, docs/modules/command-activity.md, docs/modules/project-doctor.md, docs/modules/workspace-setup.md, docs/modules/chromium-diagnostics.md, docs/modules/session-opening-performance.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004, T005
 - [TODO] T006: Собрать парный выпуск 0.6.110 — Ожидает
