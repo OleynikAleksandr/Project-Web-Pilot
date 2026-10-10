@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1674,
+  "plan_revision": 1675,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -84,7 +84,9 @@
       "scripts/check-codex-tools.mjs",
       "scripts/check-installed-release.mjs",
       "tests/workflow-kit-source.test.mjs",
-      "release-manifest.json"
+      "release-manifest.json",
+      "packages/workflow-kit/src/lib/common.mjs",
+      "packages/workflow-kit/src/lib/installer.mjs"
     ],
     "documentation_paths": [
       "docs/planning/reliable-completion-sidebar.md",
@@ -106,7 +108,10 @@
       "docs/planning/reliable-completion-validation.md",
       "docs/modules/first-run-onboarding.md",
       "packages/workflow-kit/docs/modules/parallel-assignments.md",
-      "docs/modules/runtime-lifecycle.md"
+      "docs/modules/runtime-lifecycle.md",
+      "packages/workflow-kit/src/templates/PLAN.md",
+      "packages/workflow-kit/src/templates/PROTOTYPE.md",
+      "packages/workflow-kit/src/WORKFLOW.md"
     ]
   },
   "baseline_commit": "c3da7b29a5e29945637f1f54f70071269605f6a6",
@@ -315,9 +320,15 @@
         "package-lock.json",
         "scripts/check-codex-tools.mjs",
         "scripts/check-installed-release.mjs",
-        "tests/workflow-kit-source.test.mjs"
+        "tests/workflow-kit-source.test.mjs",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs"
       ],
-      "documentation_paths": [],
+      "documentation_paths": [
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md",
+        "packages/workflow-kit/src/WORKFLOW.md"
+      ],
       "verification_ids": [
         "unit-all",
         "electron-smoke",
@@ -372,7 +383,10 @@
         "docs/planning/reliable-completion-validation.md",
         "docs/modules/first-run-onboarding.md",
         "packages/workflow-kit/docs/modules/parallel-assignments.md",
-        "docs/modules/runtime-lifecycle.md"
+        "docs/modules/runtime-lifecycle.md",
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md",
+        "packages/workflow-kit/src/WORKFLOW.md"
       ],
       "verification_ids": [],
       "id": "DOCS",
@@ -497,7 +511,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1674
+Revision: 1675
 
 ## Цель
 
@@ -565,13 +579,13 @@ Revision: 1674
 - [TODO] T005: Сквозная регрессия и подготовка выпуска 0.6.110 — Ожидает
   - Git Commit: [PENDING] fix: Сквозная регрессия и подготовка выпуска 0.6.110
   - Reference: reliable-completion-sidebar-20261010 / T005 / implementation
-  - Файлы: tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/src, packages/workflow-kit/package.json, package.json, package-lock.json, scripts/check-codex-tools.mjs, scripts/check-installed-release.mjs, tests/workflow-kit-source.test.mjs
+  - Файлы: tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/src, packages/workflow-kit/package.json, package.json, package-lock.json, scripts/check-codex-tools.mjs, scripts/check-installed-release.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает
   - Git Commit: [PENDING] docs: Актуализация всех документов проекта
   - Reference: reliable-completion-sidebar-20261010 / DOCS / implementation
-  - Файлы: AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/plan-view.md, docs/modules/workspace-sidebar-ui.md, docs/modules/workspace-sessions.md, docs/modules/context-delivery.md, docs/modules/project-archive.md, docs/modules/codex-app-server-executor.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/reliable-completion-sidebar.md, docs/planning/reliable-completion-validation.md, docs/modules/first-run-onboarding.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/modules/runtime-lifecycle.md
+  - Файлы: AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/plan-view.md, docs/modules/workspace-sidebar-ui.md, docs/modules/workspace-sessions.md, docs/modules/context-delivery.md, docs/modules/project-archive.md, docs/modules/codex-app-server-executor.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/reliable-completion-sidebar.md, docs/planning/reliable-completion-validation.md, docs/modules/first-run-onboarding.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/modules/runtime-lifecycle.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004, T005
 - [TODO] T006: Собрать парный выпуск 0.6.110 — Ожидает
