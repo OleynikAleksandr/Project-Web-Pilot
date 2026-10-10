@@ -125,6 +125,18 @@
       "required": false,
       "timeout_ms": 180000,
       "evidence": "Удаление и identity: запись настроек сериализована, защищённые worktree, сохранение соседей, restart и UNKNOWN"
+    },
+    {
+      "id": "release-source",
+      "kind": "package",
+      "required": false,
+      "timeout_ms": 30000,
+      "executable": "node",
+      "args": [
+        "-e",
+        "const fs=require(\"node:fs\");const p=JSON.parse(fs.readFileSync(\"package.json\"));const l=JSON.parse(fs.readFileSync(\"package-lock.json\"));const k=JSON.parse(fs.readFileSync(\"packages/workflow-kit/package.json\"));if(p.version!==\"0.6.111\"||l.version!==p.version||l.packages[\"\"].version!==p.version||k.version!==\"1.7.2\")process.exit(1);console.log(\"Release source 0.6.111 and Workflow Kit 1.7.2 coherent\");"
+      ],
+      "evidence": "Version source preflight: package.json / package-lock.json = 0.6.111; Workflow Kit 1.7.2, no assembly; paired-release runs separately only after this version is committed"
     }
   ],
   "budget": {
