@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1709,
+  "plan_revision": 1711,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -183,8 +183,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T003",
@@ -201,7 +201,8 @@
         "src/automation-send-state.mjs",
         "tests/parallel-finalization.test.mjs",
         "tests/parallel-execution-recovery.test.mjs",
-        "tests/parallel-execution.test.mjs"
+        "tests/parallel-execution.test.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -217,7 +218,14 @@
         "Тест diagnostic→read-only ответ main→terminal event→один merge→один final; до отдельного final Send основной агент не пишет main; F07-F10/F16 без двойной записи и ложного DONE."
       ],
       "expected_commit_message": "fix: передавать диагностический blocker основному агенту",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "tests/parallel-execution-recovery.test.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/parallel-finalization.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -482,7 +490,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1709
+Revision: 1711
 
 ## Цель
 
@@ -513,10 +521,10 @@ Revision: 1709
   - Файлы: src/command-activity.mjs, src/parallel-kit.mjs, src/main.mjs, src/project-input-watch.mjs, tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, tests/command-activity.test.mjs, tests/codex-app-server-mcp.test.mjs, tests/parallel-execution-recovery.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T001
-- [TODO] T003: Диагностировать блокированный source без unsafe merge — Ожидает
-  - Git Commit: [PENDING] fix: передавать диагностический blocker основному агенту
+- [DONE] T003: Диагностировать блокированный source без unsafe merge — Завершено
+  - Git Commit: [DONE] fix: передавать диагностический blocker основному агенту
   - Reference: parallel-final-stage-recovery-20261010 / T003 / implementation
-  - Файлы: src/parallel-execution.mjs, src/parallel-kit.mjs, src/execution-projection.mjs, src/main.mjs, src/automation-send-state.mjs, tests/parallel-finalization.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution.test.mjs
+  - Файлы: src/parallel-execution.mjs, src/parallel-kit.mjs, src/execution-projection.mjs, src/main.mjs, src/automation-send-state.mjs, tests/parallel-finalization.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-smoke-fixture.cjs
   - Параллельность: исключительное выполнение
   - Зависимости: T002
 - [TODO] T004: Долговечный финал, Send и доказанный reply — Ожидает

@@ -312,6 +312,7 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
     publish();return project;
   },
   sendCorrection:(origin,text,canContinue,onBeforeSend)=>sendExecutionMessage(origin,text,canContinue,onBeforeSend,'correction'),
+  sendDiagnostic:(origin,text,canContinue,onBeforeSend)=>sendExecutionMessage(origin,text,canContinue,onBeforeSend,'diagnostic'),
   sendFinalization:(origin,text,canContinue,onBeforeSend)=>sendExecutionMessage(origin,text,canContinue,onBeforeSend,'finalization')});
 function sendExecutionMessage(origin,text,canContinue,onBeforeSend,kind) {
   const record=liveRecord(origin),sender=record?.primaryAutomation?.automation;

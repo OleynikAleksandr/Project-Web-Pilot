@@ -275,37 +275,39 @@ const httpPreview=await require('./protected-preview-fixture.cjs').start(root,pa
       await finish(record(last.worktree));
       await wait(()=>snapshot().execution.assignments.some(a=>a.id===last.id
         &&a.status==='READY_FOR_INTEGRATION'&&a.commandActive),'last source held by real writer');
-      assert.equal(snapshot().execution.finalizationStatus==='sent',false,'old F03 suppresses final handoff');
-      assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal,
-        'no final Send while writable command is active');
+      await wait(()=>snapshot().execution.diagnosticStatus==='sent','blocked F03 delivers a read-only diagnostic');
+      assert.equal(snapshot().execution.finalizationStatus==='sent',false,'diagnostic does not transfer final ownership');
+      assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+1,
+        'one diagnostic Send while writable command is active');
+      const diagnosticText=await newMain.view.webContents.executeJavaScript('window.fixtureMessages.at(-1).text');
+      assert.match(diagnosticText,/ЗАПРЕЩЕНО выполнять integration:start\/continue/);
       assert.equal(snapshot().execution.planView.completed,4,'last task not integrated');
       assert.equal(await git(root,'rev-parse','HEAD'),headBeforeLast,'main unchanged while writer lives');
       assert.equal((await plans.call(root,'assignment:status',['--id',last.id])).source_commit,lastSource.source_commit);
+      await hold(newMain);await wait(()=>newMain.pageState.current?.state.busy,'diagnostic response is read-only');
       await f03Writer.stop();f03Writer=null;
-      // Explicitly simulate the later child-change signal. Automatic event
-      // delivery is T002's acceptance, not a claim made by this T001 test.
-      await record(last.worktree).executor.monitor.refresh();
+      assert.equal(await git(root,'rev-parse','HEAD'),headBeforeLast,'main still owned by the queue before diagnostic reply');
+      await finish(newMain);
+      await wait(()=>snapshot().execution.diagnosticStatus==='reply-observed','diagnostic reply observed');
     }finally{if(f03Writer)await f03Writer.stop();}
-    await wait(()=>snapshot().execution.finalizationStatus==='sent','ready final source reaches primary before DONE');
-    assert.equal(snapshot().execution.planView.completed,4);
+    await wait(()=>snapshot().execution.planView.completed===5,'queue alone integrates source after diagnostic');
+    await wait(()=>snapshot().execution.finalizationStatus==='sent','one final Send after main integration');
     if(httpPreview) {
-      assert.match(await (await fetch(httpPreview.url+'/RESULT.md')).text(),/Original/,'worktree result is not yet main');
+      assert.match(await (await fetch(httpPreview.url+'/RESULT.md')).text(),/worker-e/,'protected main preview reflects verified integration');
       const {readCommandActivity}=await import('../src/command-activity.mjs');
       const activity=await readCommandActivity(root);
       assert.equal(activity.commandActive,false);assert.equal(activity.deletionBlocked,true);
       assert.ok(activity.commands.some(c=>c.readOnly));
     }
-    const ready=await plans.call(root,'assignment:status',['--id',last.id]);
     await hold(newMain);await wait(()=>newMain.pageState.current?.state.busy,'primary final verification running');
-    await plans.call(root,'integration:start',[],{id:last.id,source_commit:ready.source_commit});
     const validation=await plans.call(root,'validate');assert.equal(Object.keys(validation.resolved).length,5);
     if(httpPreview)assert.match(await (await fetch(httpPreview.url+'/RESULT.md')).text(),/worker-e/);
     const report='Пять задач проверены в общем main. '+root+(httpPreview?' · '+httpPreview.url:'')+'. TEST FIXTURE; приёмку выполняет пользователь.';
     await newMain.view.webContents.executeJavaScript('document.getElementById("parallel-held")?.remove();window.fixtureAssistant('+JSON.stringify(report)+')');
     await wait(()=>snapshot().execution.finalizationStatus==='reply-observed'&&!snapshot().autoPlan.enabled,'one final report and completion OFF');
-    assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+1);
+    assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+2);
     await ipc('selectSession',otherRoot,store.project(otherRoot).sessionId);await ipc('selectSession',root,newOrigin.sessionId);
-    assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+1,'project switching cannot repeat final handoff');
+    assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+2,'project switching cannot repeat diagnostic or final handoff');
     // A live read-only httpPreview blocks deletion. Stopping its exact session permits a new confirmation.
     await ipc('archiveProject',root);await ipc('openArchive',root);
     await wait(()=>getArchiveWindow()&&!getArchiveWindow().isDestroyed(),'five-task archive ready');

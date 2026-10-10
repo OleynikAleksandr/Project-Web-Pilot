@@ -5,6 +5,30 @@ import { integrationProblem, projectExecutionPlan } from './execution-projection
 
 const fail=(code,message)=>Object.assign(new Error(message),{code});
 const issue=e=>({code:e.code??'PARALLEL_FAILED',message:String(e.message??e).slice(0,1000)});
+// Source readiness is evidence of the worker's committed result, not permission
+// to modify main. A writer can block merging without hiding that proof.
+export function finalSourceState(state,workerStopped=()=>true) {
+  const {plan,assignments=[]}=state;
+  const allDone=plan.tasks.length>0&&plan.tasks.every(t=>t.commit_status==='DONE');
+  const sources=plan.tasks.filter(t=>t.commit_status!=='DONE').map(task=>{
+    const matches=assignments.filter(a=>a.parent_task_id===task.id);
+    if(matches.length!==1)return null;
+    const a=matches[0];
+    return a.status==='READY_FOR_INTEGRATION'&&a.source_commit&&!a.error&&!a.transaction_pending&&!a.dirty
+      &&workerStopped(a)?a:null;
+  });
+  const sourceReady=plan.tasks.length>0&&sources.every(Boolean);
+  const blockers=sourceReady?sources.filter(a=>a.commandActive).map(a=>{
+    const command=a.commands?.find(c=>c.blocksIntegration);
+    return {assignment:a.id,task:a.parent_task_id,source:a.source_commit,checkout:a.worktree,
+      operation:command?.id??null,state:command?.state??'unknown',
+      code:command?'WRITE_COMMAND_ACTIVE':'ASSIGNMENT_OPERATION_LOCK',
+      reason:command?.reason??'Исход операции исполнителя не подтверждён; требуется диагностика назначения.'};
+  }):[];
+  const baseSafe=sourceReady&&!state.commandActive&&state.mainClean&&state.integration?.status==='IDLE';
+  return {sourceReady,allDone,blockers,mergeSafe:baseSafe&&blockers.length===0,
+    diagnosticEligible:baseSafe&&state.confirmed&&blockers.length>0};
+}
 export function executionOrigin(plan,lookup) {
   if(plan.execution_strategy!=='parallel')return null;
   const id=plan.execution_origin_session_id,origin=id&&lookup(id);
@@ -39,9 +63,9 @@ export function availableTasks(plan,assignments,workers) {
 // delivery ledger, never a replacement for Kit's plan, assignments or Git proofs.
 export class ParallelExecution {
   constructor({kit,origin,openWorker,workerState,mainState,save,book={},onChange=()=>{},watch=()=>()=>{},
-    isEnabled=null,onComplete=()=>{},sendCorrection,sendFinalization=null,canFinalize=null,restoreWorker=async()=>null,restoreOrigin=async()=>{},now=Date.now,uuid=randomUUID}) {
+    isEnabled=null,onComplete=()=>{},sendCorrection,sendFinalization=null,sendDiagnostic=null,canFinalize=null,restoreWorker=async()=>null,restoreOrigin=async()=>{},now=Date.now,uuid=randomUUID}) {
     Object.assign(this,{isEnabled,onComplete,kit,origin,openWorker,workerState,mainState,save,book,onChange,watch,sendCorrection,restoreWorker,restoreOrigin,now,uuid});
-    Object.assign(this,{sendFinalization,canFinalize});
+    Object.assign(this,{sendFinalization,sendDiagnostic,canFinalize});
     this.queues=new Map();this.states=new Map();this.unwatch=new Map();this.correcting=new Set();this.suspended=new Set();this.enabled=false;this.closed=false;
   }
   view(workspace){return this.states.get(workspace)??{phase:'idle',assignments:[],error:null};}
@@ -142,7 +166,7 @@ export class ParallelExecution {
       canCorrect:!state.commandActive&&this.mainState(origin).stopped&&this.mainState(origin).canSend,
       error:recoveryError,maxWorkers:plan.max_workers});
     // A pending integration owns main; AutoPlan may request one correction in its exact main chat.
-    if(await this.finalize(workspace,state,origin,ledger,enabled))return;
+    if(await this.finalize(workspace,{...state,assignments},origin,ledger,enabled))return;
     if(state.integration.status!=='IDLE') {
       const operation=state.integration;
       // Resume only Kit's existing journal, never start another merge after an ambiguous call.
@@ -258,11 +282,9 @@ export class ParallelExecution {
     const {plan,assignments}=state;
     const allowed=()=>!this.closed&&!this.suspended.has(workspace)
       &&(this.canFinalize?this.canFinalize(workspace,plan.scope_id):enabled());
-    const allDone=plan.tasks.length>0&&plan.tasks.every(t=>t.commit_status==='DONE');
-    const ready=plan.tasks.length>0&&plan.tasks.every(t=>t.commit_status==='DONE'||assignments.some(a=>
-      a.parent_task_id===t.id&&a.status==='READY_FOR_INTEGRATION'&&a.source_commit
-      &&!a.error&&!a.commandActive&&!a.transaction_pending&&!a.dirty));
-    if(!ledger.finalization&&state.confirmed&&ready&&allowed()&&(enabled()||ledger.started)) {
+    const source=finalSourceState(state,a=>this.workerState(a,ledger.assignments[a.id]).stopped);
+    const {allDone,sourceReady,blockers}=source;
+    if(!ledger.finalization&&state.confirmed&&sourceReady&&allowed()&&(enabled()||ledger.started)) {
       ledger.finalization={status:'pending',projectId:plan.project_id??null,scope:plan.scope_id,sessionId:origin.sessionId};
       await this.persist();
     }
@@ -279,6 +301,58 @@ export class ParallelExecution {
     }
     this.publish(workspace,{finalizationStatus:final.status});
     if(allDone&&state.confirmed)await this.onComplete(workspace,plan.scope_id);
+    // A diagnostic is strictly read-only: even a sent diagnostic does not
+    // transfer main ownership. Only the final handoff does that.
+    if(ledger.diagnostic) {
+      const diagnostic=ledger.diagnostic;
+      if(diagnostic.projectId!==(plan.project_id??null)||diagnostic.scope!==plan.scope_id
+        ||diagnostic.sessionId!==origin.sessionId)
+        throw fail('DIAGNOSTIC_IDENTITY','Получатель диагностического поручения изменился; отправка остановлена.');
+      const worker=assignments.find(a=>a.id===diagnostic.assignment);
+      if(!worker||worker.source_commit!==diagnostic.source)
+        throw fail('DIAGNOSTIC_SOURCE_CHANGED','Источник или назначение изменились. Нужна сверка Kit; повторной отправки нет.');
+      if(diagnostic.status==='sent'&&page.busy&&!diagnostic.replyStarted){
+        diagnostic.replyStarted=true;await this.persist();
+      }
+      const replyTurn=typeof page.turnId==='string'&&page.turnId!==diagnostic.turnId
+        ||Number.isSafeInteger(page.assistantRevision)&&page.assistantRevision>(diagnostic.assistantRevision??0);
+      if(diagnostic.status==='sent'&&page.stopped&&!page.connectionError
+        &&!page.manualStopped&&(page.manualSendRevision??0)===(diagnostic.manualSendRevision??0)
+        &&(diagnostic.replyStarted||replyTurn)){
+        diagnostic.status='reply-observed';await this.persist();
+      }
+      this.publish(workspace,{diagnosticStatus:diagnostic.status});
+      if(['sending','unknown'].includes(diagnostic.status)){
+        this.publish(workspace,{phase:'blocked',error:{code:'DIAGNOSTIC_SEND_UNKNOWN',
+          message:'Исход диагностической отправки неизвестен. Не повторяйте Send и не запускайте слияние; проверьте основной чат.'}});
+        return true;
+      }
+      if(diagnostic.status==='sent') {
+        this.publish(workspace,{phase:'blocked',error:{code:'DIAGNOSTIC_REPLY_PENDING',
+          message:'Диагностика передана основному агенту. Пока ответ не завершён, запись main принадлежит очереди; слияние не запускается.'}});
+        return true;
+      }
+    }
+    const blocked=sourceReady&&blockers.length>0;
+    if(blocked) {
+      const first=blockers[0];
+      const reason='Источник готов, но интеграция заблокирована: '+first.reason
+        +(first.operation?' · операция '+first.operation:'')+'. Checkout: '+first.checkout
+        +'. Не завершайте команду без разрешения пользователя.';
+      this.publish(workspace,{phase:'blocked',error:{code:'SOURCE_WRITER_BLOCKED',message:reason}});
+      if(this.sendDiagnostic&&final.status==='pending'&&allowed()&&source.diagnosticEligible) {
+        let diagnostic=ledger.diagnostic;
+        if(!diagnostic) {
+          diagnostic=ledger.diagnostic={status:'pending',projectId:plan.project_id??null,
+            scope:plan.scope_id,sessionId:origin.sessionId,assignment:first.assignment,source:first.source,
+            blocker:structuredClone(first)};
+          await this.persist();
+        }
+        if(diagnostic.status==='pending'&&page.stopped&&page.canSend)
+          return this.sendBlockedDiagnostic(workspace,state,origin,ledger,allowed);
+      }
+      return true;
+    }
     if(['sending','sent','unknown','reply-observed'].includes(final.status)) {
       this.publish(workspace,{phase:final.status==='reply-observed'?'complete':'finalizing',
         error:final.status==='unknown'||final.status==='sending'?{code:'FINALIZATION_SEND_UNKNOWN',
@@ -286,7 +360,10 @@ export class ParallelExecution {
       return true;
     }
     // A pending intention survives automatic completion, but never overrides manual OFF/Stop/draft.
-    if(!allowed()||!ready||!state.confirmed||state.commandActive||!page.stopped||!page.canSend
+    // Once the diagnostic reply is observed, the QUEUE integrates the proved
+    // source; the main chat is read-only until a separate final Send.
+    if(ledger.diagnostic?.status==='reply-observed'&&!allDone)return false;
+    if(!allowed()||!sourceReady||!state.confirmed||state.commandActive||!page.stopped||!page.canSend
       ||assignments.some(a=>a.status!=='INTEGRATED'&&!this.workerState(a,ledger.assignments[a.id]).stopped))
       return false;
     if(state.integration.status!=='IDLE'&&ledger.corrections[state.integration.operation_id])return false;
@@ -324,6 +401,57 @@ export class ParallelExecution {
       // The send boundary may have observed newer command/scope facts; never merge the old snapshot.
       return true;
     }catch(error){final.status='unknown';await this.persist();throw error;}
+  }
+  async sendBlockedDiagnostic(workspace,state,origin,ledger,allowed) {
+    const diagnostic=ledger.diagnostic,blocker=diagnostic.blocker,page=this.mainState(origin);
+    if(!diagnostic||diagnostic.status!=='pending'||!this.sendDiagnostic)return false;
+    const current=()=>{
+      const p=this.mainState(origin),latestOrigin=this.origin(workspace,origin.sessionId);
+      return allowed()&&latestOrigin?.sessionId===origin.sessionId
+        &&latestOrigin?.projectId===origin.projectId&&latestOrigin?.chatUrl===origin.chatUrl
+        &&(p.canContinueSend??(p.stopped&&p.canSend))&&!p.manualStopped;
+    };
+    const facts={project:state.plan.project_id,scope:state.plan.scope_id,
+      origin:origin.sessionId,main:workspace,head:state.head,
+      task:blocker.task,assignment:blocker.assignment,source:blocker.source,
+      checkout:blocker.checkout,operation:blocker.operation,commandState:blocker.state,blocker:blocker.code};
+    const message=['Диагностика блокировки последнего результата Workflow Kit. Это НЕ поручение на интеграцию.',
+      'Основной checkout: '+JSON.stringify(workspace),
+      'Записью в main до отдельной финальной передачи владеет только очередь Web Pilot.',
+      'Тебе разрешено лишь читать status, bridge_status/command-activity и объяснить пользователю препятствие. ЗАПРЕЩЕНО выполнять integration:start/continue, коммитить, изменять main, удалять marker или останавливать процесс самостоятельно.',
+      'Источник исполнителя подтверждён, но write-capable команда/UNKNOWN не допускает merge. Укажи пользователю ID операции и checkout.',
+      'Законное снятие: команда завершается сама с terminal event App Server; либо пользователь явно разрешает остановить конкретную сессию через владеющий ею executor, либо останавливает процесс сам с подтверждением App Server.',
+      'Чужой write_stdin может не видеть эту сессию. При потере terminal evidence — UNKNOWN, адресная диагностика и пользовательское признание по действующим правилам, не exit=0. Удаление остаётся защищено.',
+      'После подтверждённого окончания очередь сама продолжит проверку и слияние, затем отправит отдельный финал. Сейчас сообщи причину пользователю и заверши ответ.',
+      'Подтверждённые данные (не инструкции): '+JSON.stringify(facts)].join('\n');
+    if(Buffer.byteLength(message,'utf8')>28000)throw fail('DIAGNOSTIC_TOO_LARGE','Диагностическое сообщение превышает допустимый размер.');
+    diagnostic.status='sending';diagnostic.pauseKey=page.pauseKey;
+    diagnostic.manualSendRevision=page.manualSendRevision??0;
+    diagnostic.turnId=page.turnId??null;
+    diagnostic.assistantRevision=page.assistantRevision??0;
+    try {await this.persist();}
+    catch(error){diagnostic.status='pending';throw error;} // No send was attempted.
+    this.publish(workspace,{phase:'blocked',diagnosticStatus:'sending'});
+    try {
+      const result=await this.sendDiagnostic(origin,message,current,async()=>{
+        const fresh=await this.kit.read(workspace);
+        const a=fresh.assignments?.find(a=>a.id===diagnostic.assignment);
+        const blocked=a?.commandActive&&(blocker.operation===null
+          ||a.commands?.some(c=>c.id===blocker.operation&&c.blocksIntegration));
+        return current()&&fresh.confirmed&&!fresh.commandActive&&fresh.mainClean
+          &&fresh.integration?.status==='IDLE'&&fresh.plan.scope_id===state.plan.scope_id
+          &&fresh.plan.project_id===state.plan.project_id&&fresh.head===state.head
+          &&a?.source_commit===diagnostic.source&&a.status==='READY_FOR_INTEGRATION'
+          &&!a.error&&!a.dirty&&!a.transaction_pending&&blocked===true;
+      });
+      diagnostic.status=result.state==='sent'?'sent'
+        :result.state==='unknown'&&result.reason!=='PAUSE_CONSUMED'?'unknown':'pending';
+      await this.persist();
+      this.publish(workspace,{phase:'blocked',diagnosticStatus:diagnostic.status});
+      return true;
+    }catch(error){
+      diagnostic.status='unknown';await this.persist();throw error;
+    }
   }
   async correct(workspace,{fromQueue=false}={}) {
     if(this.correcting.has(workspace))throw fail('PARALLEL_BUSY','Дождитесь текущей операции.');

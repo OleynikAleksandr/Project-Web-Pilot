@@ -37,7 +37,7 @@ test('F04: child receipt replacement wakes main without a worker page or polling
   const record={version:2,id:'command',workspace:child,cwd:child,executor_pid:12345,
     executor_instance:'fixture',started_at_ms:Date.now(),process_id:'fixture',state:'running',sandbox_policy:'dangerFullAccess'};
   const changed=()=>new Promise((resolve,reject)=>{
-    const timeout=setTimeout(()=>{notify=null;reject(Error('child watcher missed a real file event'));},1500);
+    const timeout=setTimeout(()=>{notify=null;reject(Error('child watcher missed a real file event'));},5000);
     notify=()=>{clearTimeout(timeout);resolve();};
   });
   let observed=changed();

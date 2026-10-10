@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ParallelExecution} from '../src/parallel-execution.mjs';
+import {ParallelExecution,finalSourceState} from '../src/parallel-execution.mjs';
 import {ProjectAutoPlan} from '../src/project-auto-plan.mjs';
 import {AutomationSendState} from '../src/automation-send-state.mjs';
 import fs from 'node:fs/promises';
@@ -96,7 +96,117 @@ test('authorization keeps completion OFF distinct from manual OFF after restart 
  restored.sync('/a','new');assert.equal(restored.finalizationAllowed('/a','new'),false);
 });
 
-test('F03 characterization: real last Git/Kit source followed by a live writable server blocks merge and final Send',async t=>{
+test('F07/F08: missing source, dirty child/main and unverified assignment prevent both diagnostic Send and merge',async t=>{
+ const f=fixture(t);
+ const a=f.state.assignments[0];
+ let diagnostics=0;
+ f.runtime.sendDiagnostic=async()=>{diagnostics++;return {state:'sent'};};
+ const writer={id:'writer',state:'running',blocksIntegration:true,reason:'Команда выполняется'};
+ a.commands=[writer];a.commandActive=true;
+ for(const change of [
+  ()=>{a.source_commit=null;},()=>{a.source_commit='source';a.dirty=true;},
+  ()=>{a.dirty=false;a.transaction_pending=true;},()=>{a.transaction_pending=false;a.error={code:'BAD_BINDING'};}
+ ]){
+  change();await f.runtime.signal('/main');
+  assert.equal(diagnostics,0);assert.equal(f.calls.merged,0);
+ }
+ a.error=null;f.state.mainClean=false;await f.runtime.signal('/main');
+ assert.equal(diagnostics,0);assert.equal(f.calls.merged,0,'dirty main cannot send diagnostic or merge');
+ f.state.mainClean=true;await f.runtime.signal('/main');
+ assert.equal(diagnostics,1);assert.equal(f.calls.merged,0);
+});
+
+test('source, merge and diagnostic gates remain independent across writer, read-only and dirty main',async t=>{
+ const f=fixture(t),a=f.state.assignments[0];
+ let projected=finalSourceState(f.state);
+ assert.equal(projected.sourceReady,true);assert.equal(projected.mergeSafe,true);
+ assert.equal(projected.diagnosticEligible,false);
+ a.commandActive=true;a.commands=[{id:'writer-1',state:'unknown',reason:'Нужна проверка',blocksIntegration:true}];
+ projected=finalSourceState(f.state);
+ assert.equal(projected.sourceReady,true,'write-capable command does not erase source proof');
+ assert.equal(projected.mergeSafe,false);assert.equal(projected.diagnosticEligible,true);
+ assert.equal(projected.blockers[0].operation,'writer-1');
+ f.state.mainClean=false;
+ projected=finalSourceState(f.state);
+ assert.equal(projected.diagnosticEligible,false,'diagnostic does not outrun a dirty main');
+ f.state.mainClean=true;a.commandActive=false;a.commands=[{id:'server',readOnly:true,blocksIntegration:false}];
+ projected=finalSourceState(f.state);
+ assert.equal(projected.mergeSafe,true,'proved read-only service is not an integration blocker');
+ a.transaction_pending=true;
+ projected=finalSourceState(f.state);
+ assert.equal(projected.sourceReady,false);assert.equal(projected.mergeSafe,false);
+});
+
+test('persisted diagnostic UNKNOWN and manual OFF never replay or authorize an unsafe merge',async t=>{
+ const f=fixture(t),a=f.state.assignments[0];
+ a.commandActive=true;a.commands=[{id:'writer',state:'unknown',blocksIntegration:true,reason:'UNKNOWN'}];
+ let deliveries=0;
+ f.runtime.sendDiagnostic=async()=>{deliveries++;return {state:'unknown'};};
+ await f.runtime.signal('/main');
+ assert.equal(deliveries,1);assert.equal(f.ledger.diagnostic.status,'unknown');
+ a.commandActive=false;a.commands=[];
+ await f.runtime.signal('/main');
+ assert.equal(deliveries,1);assert.equal(f.calls.merged,0);
+ assert.equal(f.ledger.diagnostic.status,'unknown','cleared blocker does not acknowledge ambiguous Send');
+ f.auth.set('/main','scope',false);
+ await f.runtime.signal('/main');
+ assert.equal(deliveries,1);assert.equal(f.calls.sent,0);assert.equal(f.calls.merged,0);
+});
+
+test('F16: diagnostic pause is durable, deduplicated and remains read-only after restart even if writer exits',async t=>{
+ const f=fixture(t),a=f.state.assignments[0];
+ a.commandActive=true;a.commands=[{id:'writer',state:'running',blocksIntegration:true,reason:'Writer'}];
+ let diagnostics=0;
+ f.runtime.sendDiagnostic=async(_origin,text,ready,before)=>{
+  assert.match(text,/ЗАПРЕЩЕНО выполнять integration:start\/continue/);
+  assert.ok(ready());assert.equal(await before(),true);diagnostics++;return {state:'sent'};
+ };
+ await Promise.all([f.runtime.signal('/main'),f.runtime.signal('/main')]);
+ assert.equal(diagnostics,1);assert.equal(f.ledger.finalization.status,'pending');
+ assert.equal(f.ledger.diagnostic.status,'sent');assert.equal(f.calls.merged,0);
+ a.commandActive=false;a.commands=[];
+ await f.runtime.signal('/main');
+ assert.equal(f.calls.merged,0,'no merge before the diagnostic response');
+ const original=f.runtime;
+ const restored=new ParallelExecution({kit:f.kit,origin:()=>f.origin,book:original.book,
+  workerState:()=>({stopped:true}),mainState:()=>f.page,save:async()=>{},
+  isEnabled:(w,s)=>f.auth.enabled(w,s),canFinalize:(w,s)=>f.auth.finalizationAllowed(w,s),
+  restoreWorker:async()=>({sessionId:'worker'}),
+  sendDiagnostic:async()=>{diagnostics++;return {state:'sent'};},
+  sendFinalization:async()=>{f.calls.sent++;return {state:'sent'};}});
+ t.after(()=>restored.dispose());original.dispose();
+ await restored.signal('/main');assert.equal(diagnostics,1);assert.equal(f.calls.merged,0);
+ f.page.turnId='new-assistant';f.page.stopped=true;f.page.assistantRevision=1;
+ await restored.signal('/main');
+ assert.equal(f.ledger.diagnostic.status,'reply-observed');
+ // The existing serialized queue may merge only once after the read-only reply.
+ assert.equal(f.calls.merged,1);assert.equal(f.calls.sent,1);
+ await restored.signal('/main');assert.equal(f.calls.merged,1);assert.equal(diagnostics,1);
+});
+
+test('F14: a changed command or scope at the last Send guard safely cancels diagnostic without writing main',async t=>{
+ const f=fixture(t),a=f.state.assignments[0];
+ a.commandActive=true;a.commands=[{id:'specific',blocksIntegration:true,state:'running',reason:'active'}];
+ let performed=0;
+ f.runtime.sendDiagnostic=async(_origin,_text,_ready,before)=>{
+  a.commands[0].id='changed';
+  assert.equal(await before(),false,'fresh operation ID invalidates stale diagnostic');
+  return {state:'cancelled'};
+ };
+ await f.runtime.signal('/main');
+ assert.equal(performed,0);assert.equal(f.calls.merged,0);
+ assert.equal(f.ledger.diagnostic.status,'pending');
+ assert.equal(f.ledger.finalization.status,'pending');
+ f.runtime.sendDiagnostic=async(_origin,_text,_ready,before)=>{
+  f.state.plan.scope_id='other';
+  assert.equal(await before(),false,'fresh scope rejects old main recipient');
+  return {state:'cancelled'};
+ };
+ await f.runtime.signal('/main');
+ assert.equal(performed,0);assert.equal(f.calls.merged,0);
+});
+
+test('F03: real Git/Kit source, diagnostic read-only reply, terminal event, one verified merge and one final Send',async t=>{
  const directory=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'web-pilot-last-writer-')));
  t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const root=createFixture(directory);
@@ -153,7 +263,7 @@ test('F03 characterization: real last Git/Kit source followed by a live writable
   const origin={workspace:root,sessionId:'origin',projectId:initial.plan.project_id,
    chatUrl:'https://chatgpt.com/c/fixture',executionSnapshot:{parallel_allowed:true,max_workers:2}};
   const page={stopped:true,canSend:true,canContinueSend:true,pauseKey:'before',manualSendRevision:0};
-  let sends=0,merges=0;
+  let sends=0,diagnostics=0,merges=0;
   const book={[JSON.stringify([root,'parallel-fixture'])]:{
    workspace:root,scope:'parallel-fixture',started:true,assignments:{},corrections:{}}};
   const runtime=new ParallelExecution({kit:{...kit,
@@ -164,25 +274,39 @@ test('F03 characterization: real last Git/Kit source followed by a live writable
    isEnabled:(workspace,scope)=>auth.enabled(workspace,scope),
    canFinalize:(workspace,scope)=>auth.finalizationAllowed(workspace,scope),
    onComplete:(workspace,scope)=>auth.sync(workspace,scope,{complete:true,confirmed:true}),
+   sendDiagnostic:async(_origin,text,ready,before)=>{
+    assert.match(text,/ЗАПРЕЩЕНО выполнять integration:start\/continue/);
+    assert.match(text,/владеет только очередь/);
+    assert.match(text,new RegExp(writer.id));
+    assert.ok(ready());assert.equal(await before(),true);
+    diagnostics++;return {state:'sent'};
+   },
    sendFinalization:async()=>{sends++;return {state:'sent'};}});
   t.after(()=>runtime.dispose());
-  // Green characterization of the old BUG: even with last source and a
-  // finished worker reply, the writer produces NO diagnostic/Send/merge.
+  // T001 characterized the OLD BUG (no Send/merge). T003 inverts only the
+  // diagnostic expectation; unsafe integration remains forbidden.
   await runtime.signal(root);await runtime.signal(root);
-  assert.equal(sends,0,'F03 is red against the desired diagnostic handoff');
+  assert.equal(diagnostics,1,'source is ready for a safe diagnostic handoff');
+  assert.equal(sends,0,'a diagnostic is not the final instruction');
   assert.equal(merges,0,'writer correctly forbids unsafe integration');
-  assert.equal(book[JSON.stringify([root,'parallel-fixture'])].finalization,undefined);
+  assert.equal(book[JSON.stringify([root,'parallel-fixture'])].finalization.status,'pending');
+  assert.equal(book[JSON.stringify([root,'parallel-fixture'])].diagnostic.status,'sent');
   assert.equal(runtime.view(root).assignments.find(a=>a.id===last.id)?.commandActive,true);
   assert.equal(git('rev-parse','HEAD'),lastMainHead);
   assert.deepEqual(Object.keys(validate(root).resolved).sort(),['T001','T002']);
+  page.busy=true;page.stopped=false;await runtime.signal(root);
+  page.busy=false;page.stopped=true;page.pauseKey='after-diagnostic';
+  await runtime.signal(root);
+  assert.equal(book[JSON.stringify([root,'parallel-fixture'])].diagnostic.status,'reply-observed');
+  assert.equal(merges,0,'the main chat performed no write in its diagnostic answer');
   // A fixture-owned terminal event clears the marker; explicit reconciliation
-  // tests the OLD happy path. Child-event wakeup itself belongs to T002.
+  // proves the new safe continuation. Child-event delivery belongs to T002.
   await writer.stop();writer=null;
   assert.equal((await readCommandActivity(last.worktree)).commandActive,false);
   await runtime.signal(root);
-  assert.equal(sends,1);assert.equal(merges,0);
+  assert.equal(merges,1,'queue alone writes main after terminal event');
+  assert.equal(sends,1,'a new final turn is sent only after verified integration');
   assert.equal(book[JSON.stringify([root,'parallel-fixture'])].finalization.status,'sent');
-  assert.equal(startIntegration(root,{id:last.id,source_commit:source}).status,'INTEGRATED');
   assert.deepEqual(Object.keys(validate(root).resolved).sort(),['T001','T002','T003']);
   page.busy=true;page.stopped=false;await runtime.signal(root);
   page.busy=false;page.stopped=true;page.pauseKey='after';await runtime.signal(root);
