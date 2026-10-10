@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1732,
+  "plan_revision": 1734,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Устранить тупик последнего READY при активном writer и сброс предварительного AutoPlan ON; завершить безопасный финальный цикл и покрыть его адресной регрессией.",
   "acceptance_criteria": [
     "F03: готовый source и активный writer не ведут к unsafe merge или немой блокировке; диагностика отправлена безопасно, после законного устранения причины цикл завершается один раз.",
@@ -544,8 +544,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T009",
@@ -572,7 +572,8 @@
         "Названы ограничения автоматических проверок и шаги живой приёмки; план не архивирован."
       ],
       "expected_commit_message": "release: опубликовать выпуск финального этапа",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -596,10 +597,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1732
+Revision: 1734
 
 ## Цель
 
@@ -684,8 +685,8 @@ Revision: 1732
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
   - Зависимости: T007, DOCS, DOCS-2, T010
-- [TODO] T009: Опубликовать и сверить GitHub release — Ожидает
-  - Git Commit: [PENDING] release: опубликовать выпуск финального этапа
+- [DONE] T009: Опубликовать и сверить GitHub release — Завершено
+  - Git Commit: [DONE] release: опубликовать выпуск финального этапа
   - Reference: parallel-final-stage-recovery-20261010 / T009 / implementation
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
