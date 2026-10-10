@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1675,
+  "plan_revision": 1679,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -77,7 +77,6 @@
       "tests/electron-smoke.mjs",
       "tests/settings-chatgpt-channel.test.mjs",
       "tests/parallel-execution-smoke-fixture.cjs",
-      "packages/workflow-kit/src",
       "packages/workflow-kit/package.json",
       "package.json",
       "package-lock.json",
@@ -139,8 +138,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "T001",
@@ -161,7 +160,8 @@
         "src/preload.cjs",
         "src/ui/sidebar.mjs",
         "src/ui/index.html",
-        "tests/command-activity.test.mjs"
+        "tests/command-activity.test.mjs",
+        "src/parallel-execution.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -179,7 +179,21 @@
         "Доказанно read_only UNKNOWN не блокирует интеграцию; write UNKNOWN требует явной scoped диагностики и пользовательского признания неизвестности, без ложного exit=0/снятия защиты удаления"
       ],
       "expected_commit_message": "fix: Подтверждённый lifecycle команд и защищённый сервер результата",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/command-activity.mjs",
+        "src/execution-projection.mjs",
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "src/parallel-kit.mjs",
+        "src/preload.cjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/command-activity.test.mjs",
+        "tools/codex-app-server-mcp/app_server_client.py",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -314,7 +328,6 @@
       "functional_paths": [
         "tests/parallel-execution-smoke-fixture.cjs",
         "tests/electron-smoke.mjs",
-        "packages/workflow-kit/src",
         "packages/workflow-kit/package.json",
         "package.json",
         "package-lock.json",
@@ -511,7 +524,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1675
+Revision: 1679
 
 ## Цель
 
@@ -552,10 +565,10 @@ Revision: 1675
 Выполнение: sequential; разрешено: true; лимит: 4
 Причина: Прямое решение пользователя: parallel требует этих исправлений и отдельного живого теста; реализация основным агентом, без назначений. Независимые UI/ownership работы всё равно выполняются последовательно; зависимости указаны по смыслу.
 
-- [TODO] T001: Подтверждённый lifecycle команд и защищённый сервер результата — Ожидает
-  - Git Commit: [PENDING] fix: Подтверждённый lifecycle команд и защищённый сервер результата
+- [DONE] T001: Подтверждённый lifecycle команд и защищённый сервер результата — Завершено
+  - Git Commit: [DONE] fix: Подтверждённый lifecycle команд и защищённый сервер результата
   - Reference: reliable-completion-sidebar-20261010 / T001 / implementation
-  - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, src/parallel-kit.mjs, src/execution-projection.mjs, tests/codex-app-server-mcp.test.mjs, tests/codex-app-server-tools.test.mjs, tests/parallel-kit.test.mjs, src/main.mjs, src/executor-session.mjs, src/command-activity.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, tests/command-activity.test.mjs
+  - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, src/parallel-kit.mjs, src/execution-projection.mjs, tests/codex-app-server-mcp.test.mjs, tests/codex-app-server-tools.test.mjs, tests/parallel-kit.test.mjs, src/main.mjs, src/executor-session.mjs, src/command-activity.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, tests/command-activity.test.mjs, src/parallel-execution.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: нет
 - [TODO] T002: Автоматическая финальная передача основному агенту — Ожидает
@@ -579,7 +592,7 @@ Revision: 1675
 - [TODO] T005: Сквозная регрессия и подготовка выпуска 0.6.110 — Ожидает
   - Git Commit: [PENDING] fix: Сквозная регрессия и подготовка выпуска 0.6.110
   - Reference: reliable-completion-sidebar-20261010 / T005 / implementation
-  - Файлы: tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/src, packages/workflow-kit/package.json, package.json, package-lock.json, scripts/check-codex-tools.mjs, scripts/check-installed-release.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
+  - Файлы: tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/package.json, package.json, package-lock.json, scripts/check-codex-tools.mjs, scripts/check-installed-release.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

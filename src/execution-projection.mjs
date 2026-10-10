@@ -34,7 +34,8 @@ export function executorStatus(assignment,record,integration) {
   if(assignment?.error)return {phase:'attention',label:assignment.error.message};
   if(assignment?.status==='NEEDS_SETUP')return {phase:'setup',label:'Нужна подготовка worktree'};
   if(assignment?.status==='UNKNOWN')return {phase:'unknown',label:'Состояние требует сверки'};
-  if(assignment?.commandActive)return {phase:'command',label:'Команда ещё не подтверждена как завершённая'};
+  if(assignment?.commandActive){const command=assignment.commands?.find(c=>c.blocksIntegration);return {phase:'command',
+    label:command?command.reason+' · '+command.id:'Команда ещё не подтверждена как завершённая'};}
   const page=record?.pageState.current?.state;
   if(!record||record.disposed||!page||record.loading)return {phase:'unknown',label:'Активность сейчас не наблюдается'};
   if(page.connectionError)return {phase:'unknown',label:'Нет подтверждённой связи с чатом'};

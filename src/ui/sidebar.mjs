@@ -369,6 +369,17 @@ function render(state) {
   $('assignment-status').textContent = assigned?.label ?? 'Состояние назначения ещё не подтверждено.';
   renderExecutorTimes();
   const execution=state.execution??{};
+  const commandIssues=$('command-issues');
+  commandIssues.replaceChildren();
+  for(const command of execution.commands??[])if(command.state==='unknown'||command.state==='acknowledged_unknown') {
+    const line=document.createElement('p');line.className='description';
+    line.textContent=command.reason+' · '+command.id;commandIssues.append(line);
+    if(command.canAcknowledge) {
+      const button=document.createElement('button');button.className='secondary';button.textContent='Разобрать неизвестный исход';
+      button.addEventListener('click',()=>action('acknowledgeCommand',{workspace:command.workspace,projectId:command.projectId,id:command.id,digest:command.digest}));
+      commandIssues.append(button);
+    }
+  }
   const parallel=selected?.planExecution?.execution_strategy==='parallel'||!!selected?.assignmentId;
   $('execution-actions').hidden=!parallel;
   $('execution-message').textContent=execution.error?.message??({sending:'Поручение исправления отправляется…',sent:'Поручение исправления отправлено. Ждём основной чат.',unknown:'Исход отправки исправления неизвестен. Повтор не отправляется.'}[execution.correctionStatus])??({preparing:'Подготавливаем исполнителей…',merging:'Проверяем слияние в main…',

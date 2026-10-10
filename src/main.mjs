@@ -31,6 +31,7 @@ import { SessionRuntimes } from './session-runtime.mjs';
 import { sessionRuntimeKey } from './session-runtime.mjs';
 import { ParallelExecution } from './parallel-execution.mjs';
 import { ParallelKit } from './parallel-kit.mjs';
+import {readCommandActivity,acknowledgeUnknownCommand} from './command-activity.mjs';
 import { ProjectInputWatch } from './project-input-watch.mjs';
 import { configureExecutor,executorPageState } from './executor-session.mjs';
 import { projectExecutors } from './execution-projection.mjs';
@@ -334,8 +335,9 @@ async function prepareProjectRemoval(job) {
   for(const record of records)if(record.pageState.current?.state.busy||record.controller.pending||record.composer.inFlight)
     throw Object.assign(new Error('Остановите работу чатов удаляемого проекта перед удалением.'),{code:'DELETE_PROJECT_BUSY'});
   for(const workspace of workspaces) {
-    const commands=await fsp.readdir(path.join(workspace,'.harness/runtime/command-activity')).catch(e=>{if(e.code==='ENOENT')return [];throw e;});
-    if(commands.length)throw Object.assign(new Error('Дождитесь завершения команд удаляемого проекта.'),{code:'DELETE_PROJECT_BUSY'});
+    const activity=await readCommandActivity(workspace),command=activity.commands.find(c=>c.blocksDeletion);
+    if(command)throw Object.assign(new Error('Удаление ожидает завершения операции '+command.id+'. '+command.reason+
+      '. Для сервера попросите агента остановить его по session ID; неизвестный исход требует диагностики.'),{code:'DELETE_PROJECT_BUSY'});
   }
   for(const workspace of workspaces)await execution.suspend(workspace);
   job.sessionIds=[...new Set([...(job.sessionIds??[]),...records.map(r=>r.diagnostics?.log.sessionId).filter(Boolean)])];
@@ -413,7 +415,8 @@ function snapshot() {
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
     archives: projectedArchives(), settings: settingsState, doctor: doctorState, parallelExecution: { ...parallelExecution },
-    execution: execution.view(saved?.parentWorkspace??saved?.workspace),
+    execution: {...execution.view(saved?.parentWorkspace??saved?.workspace),commands:(execution.view(saved?.parentWorkspace??saved?.workspace).commands??[])
+      .map(c=>({...c,projectId:store.project(c.workspace)?.projectId}))},
     conversationRecovery: conversationRecovery?.view() ?? { phase: 'idle', message: '', canRetry: false },
     autoPlan: {...(liveSessions.visible?.executor?.flow.view()??autoPlan.view()),
       enabled:projectAutoPlan.enabled(saved?.parentWorkspace??saved?.workspace,saved?.parentScopeId??info?.scopeId??saved?.scopeId)},
@@ -1101,6 +1104,21 @@ function registerIpc() {
     await saveSettings();
   });
   registerAction('pilot:plan-review', input => planReview.setEnabled(input));
+  registerAction('pilot:acknowledge-command', async input => {
+    const selected=store.selected(),root=selected?.parentWorkspace??selected?.workspace;
+    const target=typeof input?.workspace==='string'&&store.project(input.workspace);
+    if(!target||target.projectId!==input.projectId||(target.parentWorkspace??target.workspace)!==root)
+      throw new Error('Проект операции изменился. Повторите диагностику.');
+    const activity=await readCommandActivity(target.workspace),command=activity.commands.find(c=>c.id===input.id);
+    if(!command?.canAcknowledge||command.digest!==input.digest)throw new Error('Операция изменилась или исполнитель ещё работает.');
+    const answer=await dialog.showMessageBox({type:'warning',buttons:['Отмена','Признать исход неизвестным'],defaultId:0,cancelId:0,
+      message:'Операция '+command.id,detail:'Результат утрачен. Это разрешит интеграцию проверенного коммита, но не подтвердит успех команды и не разрешит удаление живого сервера. Продолжайте только после диагностики этой операции.'});
+    if(answer.response!==1)return;
+    if(store.selected()?.sessionId!==selected.sessionId||store.project(target.workspace)?.projectId!==input.projectId)
+      throw new Error('Выбранная сессия изменилась.');
+    await acknowledgeUnknownCommand(target.workspace,{...input,confirmation:input.id});
+    await execution.signal(root);
+  });
   registerAction('pilot:set-parallel-execution', async input => {
     if (!settingsState) throw new Error('Откройте настройки.');
     const next = validateParallelSettings(input ?? null);

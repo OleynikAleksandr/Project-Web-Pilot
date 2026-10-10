@@ -137,6 +137,7 @@ export class ParallelExecution {
     this.publish(workspace,{phase:'waiting',scopeId:plan.scope_id,originSessionId:origin.sessionId,
       objective:plan.objective,planView:projectExecutionPlan(plan,assignments,state.integration),
       assignments,integration:state.integration,correctionStatus:ledger.corrections[state.integration.operation_id]??null,
+      commands:[...(state.commands??[]),...assignments.flatMap(a=>a.commands??[])],
       canCorrect:!state.commandActive&&this.mainState(origin).stopped&&this.mainState(origin).canSend,
       error:recoveryError,maxWorkers:plan.max_workers});
     // A pending integration owns main; AutoPlan may request one correction in its exact main chat.

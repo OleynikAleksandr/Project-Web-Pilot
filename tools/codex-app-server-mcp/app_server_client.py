@@ -44,6 +44,7 @@ class ProcessState:
     done: threading.Event = field(default_factory=threading.Event)
     result: dict[str, Any] | None = None
     error: str | None = None
+    on_event: Any = None
 
 
 def _binary_version(path: str) -> str:
@@ -367,6 +368,7 @@ class AppServerClient:
         environment: dict[str, str | None] | None = None,
         tty: bool = False,
         stream_stdin: bool = False,
+        on_event: Any = None,
     ) -> dict[str, Any]:
         if not command:
             raise ValueError("command must not be empty")
@@ -395,6 +397,7 @@ class AppServerClient:
             request_id=0,
             command=[str(item) for item in command],
             cwd=params["cwd"],
+            on_event=on_event,
         )
         with self._processes_lock:
             self._processes[process_id] = state
@@ -405,6 +408,12 @@ class AppServerClient:
             with self._processes_lock:
                 self._processes.pop(process_id, None)
             raise
+
+        if on_event:
+            try:
+                on_event({"process_id": process_id, "state": "running", "generation": self.generation})
+            except Exception:
+                pass
 
         waiter = threading.Thread(
             target=self._finish_streaming_command,
@@ -702,6 +711,17 @@ class AppServerClient:
             state.error = str(exc)
         finally:
             state.done.set()
+            if state.on_event:
+                try:
+                    code = (state.result or {}).get("exitCode")
+                    state.on_event({"process_id": state.process_id,
+                        "state": "completed" if not state.error and isinstance(code, int) else "unknown",
+                        "exit_code": code if not state.error else None,
+                        "reason": "transport_lost" if state.error else None,
+                        "generation": self.generation})
+                except Exception:
+                    # Keep the command result readable; an unwritten witness stays conservative.
+                    pass
 
     def _fail_pending(self, reason: str) -> None:
         with self._pending_lock:

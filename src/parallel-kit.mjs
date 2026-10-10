@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { parsePlan } from '@webpilot/workflow-kit/lib/plan';
 import { readReview } from '@webpilot/workflow-kit/lib/plan-review';
 import { reviewBlocksExecution } from './auto-plan-state.mjs';
+import {readCommandActivity} from './command-activity.mjs';
 
 const execute=promisify(execFile),planFile='.harness/plans/todo-plan.md';
 export function projectVerifiedPlan(plan,resolved) {
@@ -16,8 +17,6 @@ export function projectVerifiedPlan(plan,resolved) {
   return projected;
 }
 const exists=async file=>{try{await fs.access(file);return true;}catch(e){if(e.code==='ENOENT')return false;throw e;}};
-const commandActivity=async workspace=>(await fs.readdir(path.join(workspace,'.harness/runtime/command-activity'))
-  .catch(e=>{if(e.code==='ENOENT')return [];throw e;})).length>0;
 // All potentially long Kit/Git work stays outside Electron's main event loop.
 export class ParallelKit {
   constructor({plans,setup}) {Object.assign(this,{plans,setup});}
@@ -52,7 +51,8 @@ export class ParallelKit {
       try {
         const status=await this.plans.call(workspace,'assignment:status',['--id',record.id]);
         const childGit=await this.git(record.worktree,['rev-parse','--absolute-git-dir']);
-        assignments.push({...record,...status,commandActive:await commandActivity(record.worktree)||await exists(path.join(childGit,'workflow-kit','operation.lock')),
+        const activity=await readCommandActivity(record.worktree);
+        assignments.push({...record,...status,...activity,commandActive:activity.commandActive||await exists(path.join(childGit,'workflow-kit','operation.lock')),
           dirty:!!await this.git(record.worktree,['status','--porcelain'])});
       }catch(error){assignments.push({...record,status:'UNKNOWN',error:{code:error.code,message:error.message}});}
     }
@@ -68,11 +68,12 @@ export class ParallelKit {
       :pending?{code:'TRANSACTION_PENDING',message:'Ждём завершения сохранённой транзакции Kit.'}
       :committed!==text.trim()?{code:'PLAN_UNPUBLISHED_OR_CHANGED',message:'Текущие изменения плана ещё не опубликованы в Git.'}
       :reviewPending?{code:'REVIEW_PENDING',message:'Ждём завершения согласования и публикации плана.'}:null;
-    return {workspace,plan:projectVerifiedPlan(plan,proof.resolved),head,assignments,integration,confirmationError,
+    const activity=await readCommandActivity(workspace);
+    return {workspace,plan:projectVerifiedPlan(plan,proof.resolved),head,assignments,integration,confirmationError,...activity,
       handoff:handoff&&handoff.phase!=='DONE'?handoff:null,
       watchInputs:['operation.lock','transaction.json','task-handoff.json','integration.json','assignments/'].map(name=>path.relative(workspace,path.join(gitDir,'workflow-kit',name))+(name.endsWith('/')?'/':'')),
       mainClean:!await this.git(workspace,['status','--porcelain']),
-      commandActive:await commandActivity(workspace)||await exists(path.join(gitDir,'workflow-kit','operation.lock')),
+      commandActive:activity.commandActive||await exists(path.join(gitDir,'workflow-kit','operation.lock')),
       confirmed:!confirmationError};
   }
   async handoff(workspace,plan,task,id,base,previous=null) {

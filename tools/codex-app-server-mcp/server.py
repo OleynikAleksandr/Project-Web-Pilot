@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import tempfile
 import asyncio
 import io
 import json
@@ -149,25 +151,81 @@ class LocalFacade:
         self._command_sessions: dict[str, tuple[int, bool]] = {}
         self._command_activity: dict[str, Path] = {}
         self._command_sessions_lock = threading.Lock()
+        self._activity_lock = threading.RLock()
+        self._activities: dict[str, dict] = {}
+        self._executor_instance = uuid.uuid4().hex
+        self._read_only_generation = None
+        self._patch_activity = threading.local()
 
-    def _begin_activity(self, cwd: Path) -> Path | None:
-        # A completion witness, not a transcript. Missing completion remains
-        # unknown after a crash, so the app cannot merge over an active tool.
+    def _begin_activity(self, cwd: Path, *, kind: str = "exec", command: str = "", read_only: bool = False) -> Path | None:
         for root in (cwd, *cwd.parents):
             if (root / ".harness" / "plans" / "todo-plan.md").is_file():
                 directory = root / ".harness" / "runtime" / "command-activity"
                 directory.mkdir(parents=True, exist_ok=True, mode=0o700)
                 marker = directory / (uuid.uuid4().hex + ".json")
-                with marker.open("x", encoding="utf-8") as stream:
-                    os.chmod(marker, 0o600)
-                    json.dump({"version": 1, "executor_pid": os.getpid(), "started_at_ms": int(time.time() * 1000)}, stream)
+                metadata = {"version": 2, "id": marker.stem, "workspace": str(root),
+                    "cwd": str(cwd), "kind": kind, "command_hash": hashlib.sha256(command.encode()).hexdigest(),
+                    "executor_pid": os.getpid(), "executor_instance": self._executor_instance,
+                    "generation": getattr(self.client, "generation", None), "process_id": None,
+                    "started_at_ms": int(time.time() * 1000), "state": "starting",
+                    "read_only_verified": read_only, "sandbox_policy": "readOnly" if read_only else "dangerFullAccess"}
+                with self._activity_lock:
+                    self._activities[str(marker)] = metadata
+                    self._write_activity(marker, metadata)
                 return marker
         return None
 
     @staticmethod
-    def _finish_activity(marker: Path | None) -> None:
-        if marker is not None:
-            marker.unlink(missing_ok=True)
+    def _write_activity(marker: Path, metadata: dict) -> None:
+        temporary = marker.with_suffix(".tmp")
+        with temporary.open("w", encoding="utf-8") as stream:
+            os.chmod(temporary, 0o600)
+            json.dump(metadata, stream)
+        os.replace(temporary, marker)
+
+    def _activity_event(self, marker: Path | None, event: dict) -> None:
+        if marker is None:
+            return
+        with self._activity_lock:
+            metadata = self._activities.get(str(marker))
+            if metadata is None or metadata["state"] == "completed":
+                return
+            if metadata["state"] == "unknown" and event.get("state") == "running":
+                return
+            metadata.update({k: v for k, v in event.items() if k in
+                {"process_id", "state", "exit_code", "reason", "generation"}})
+            if metadata["state"] == "completed":
+                metadata["finished_at_ms"] = int(time.time() * 1000)
+                receipts = marker.parent.parent / "command-results"
+                receipts.mkdir(parents=True, exist_ok=True, mode=0o700)
+                self._write_activity(receipts / marker.name, metadata)
+                marker.unlink(missing_ok=True)
+                completed = sorted(receipts.glob("*.json"), key=lambda p: p.stat().st_mtime_ns)
+                for stale in completed[:-100]:
+                    stale.unlink(missing_ok=True)
+            else:
+                self._write_activity(marker, metadata)
+
+    def _finish_activity(self, marker: Path | None, exit_code: int = 0) -> None:
+        self._activity_event(marker, {"state": "completed", "exit_code": exit_code})
+
+    def _confirm_read_only(self) -> None:
+        # A real capability probe, not a platform name or a promise from the caller.
+        self.client.start()
+        generation = self.client.generation
+        if self._read_only_generation == generation:
+            return
+        with tempfile.TemporaryDirectory(prefix="web-pilot-readonly-") as root:
+            probe = ("import pathlib,socket,subprocess,sys; "
+                "s=socket.socket(); s.bind(('127.0.0.1',0)); "
+                "r=subprocess.run([sys.executable,'-c',"
+                "\"import pathlib; pathlib.Path('forbidden').write_text('probe')\"],capture_output=True); "
+                "print('READ_ONLY_OK' if r.returncode!=0 and not pathlib.Path('forbidden').exists() else 'UNSAFE')")
+            result = self.client.command_exec([sys.executable, "-I", "-c", probe], cwd=root,
+                sandbox_policy={"type": "readOnly", "networkAccess": True}, timeout_ms=10000)
+            if result.get("exitCode") != 0 or result.get("stdout", "").strip() != "READ_ONLY_OK":
+                raise ValueError("Read-only command isolation could not be verified; command was not started")
+        self._read_only_generation = generation
 
     def resolve(self, path: str, *, must_exist: bool = False, allow_sensitive: bool = False) -> Path:
         candidate = Path(path).expanduser()
@@ -250,6 +308,17 @@ class LocalFacade:
             git = self._command(["git", "status", "--short", "--branch"], cwd=repo)
             data["repository"] = str(repo)
             data["git"] = git
+            operations = []
+            for folder in ("command-activity", "command-results"):
+                for file in sorted((repo / ".harness/runtime" / folder).glob("*.json")):
+                    try:
+                        item = json.loads(file.read_text())
+                        operations.append({k: item[k] for k in ("version", "id", "workspace", "cwd", "kind",
+                            "process_id", "executor_pid", "executor_instance", "generation", "state",
+                            "read_only_verified", "sandbox_policy", "started_at_ms", "finished_at_ms", "exit_code", "reason") if k in item})
+                    except (OSError, ValueError):
+                        operations.append({"id": file.stem, "state": "unknown", "reason": "unreadable_record"})
+            data["command_operations"] = operations
         return data
 
     @staticmethod
@@ -265,10 +334,23 @@ class LocalFacade:
         return ValueError(text)
 
     def apply_patch(self, patch: str, workdir: str) -> str:
-        marker = self._begin_activity(self._command_workdir(workdir))
-        result = self._apply_patch(patch, workdir)
-        self._finish_activity(marker)
-        return result
+        if not isinstance(patch, str) or not patch.strip():
+            raise ValueError("patch is empty")
+        if len(patch.encode("utf-8")) > MAX_PATCH_BYTES:
+            raise ValueError(f"patch is larger than {MAX_PATCH_BYTES} bytes")
+        if not patch.lstrip().startswith("*** Begin Patch"):
+            raise ValueError("patch must start with *** Begin Patch")
+        marker = self._begin_activity(self._command_workdir(workdir), kind="patch")
+        self._patch_activity.marker = marker
+        try:
+            result = self._apply_patch(patch, workdir)
+            self._finish_activity(marker)
+            return result
+        except Exception:
+            self._activity_event(marker, {"state": "unknown", "reason": "patch_result_unconfirmed"})
+            raise
+        finally:
+            self._patch_activity.marker = None
 
     def _apply_patch(self, patch: str, workdir: str) -> str:
         if not isinstance(patch, str) or not patch.strip():
@@ -287,6 +369,7 @@ class LocalFacade:
             output_bytes_cap=1_000_000,
             sandbox_policy={"type": "dangerFullAccess"},
             stream_stdin=True,
+            on_event=lambda event, marker=getattr(self._patch_activity, "marker", None): self._activity_event(marker, event),
         )
         process_id = str(started["process_id"])
         try:
@@ -499,6 +582,7 @@ class LocalFacade:
         tty: bool = False,
         yield_time_ms: int = 10_000,
         max_output_tokens: int = 8_000,
+        read_only: bool = False,
     ) -> str:
         if not isinstance(cmd, str) or not cmd.strip():
             raise ValueError("cmd must not be empty")
@@ -510,18 +594,33 @@ class LocalFacade:
             raise ValueError("login must be true or false")
         if not isinstance(tty, bool):
             raise ValueError("tty must be true or false")
-        marker = self._begin_activity(cwd)
-        started = self.client.start_command(
-            self._shell_argv(executable, cmd, login, self.platform),
-            cwd=str(cwd),
-            output_bytes_cap=4_000_000,
-            sandbox_policy={"type": "dangerFullAccess"},
-            tty=tty,
-            stream_stdin=tty,
-        )
+        if not isinstance(read_only, bool):
+            raise ValueError("read_only must be true or false")
+        if read_only:
+            self._confirm_read_only()
+        marker = self._begin_activity(cwd, command=cmd, read_only=read_only)
+        try:
+            started = self.client.start_command(
+                self._shell_argv(executable, cmd, login, self.platform),
+                cwd=str(cwd),
+                output_bytes_cap=4_000_000,
+                sandbox_policy={"type": "readOnly", "networkAccess": True} if read_only else {"type": "dangerFullAccess"},
+                tty=tty,
+                stream_stdin=tty,
+                on_event=lambda event: self._activity_event(marker, event),
+            )
+        except Exception:
+            self._activity_event(marker, {"state": "unknown", "reason": "launch_unconfirmed"})
+            raise
         process_id = str(started["process_id"])
-        result = self.client.read_command_output(process_id, cursor=0, wait_ms=wait_ms)
+        self._activity_event(marker, {"process_id": process_id, "state": "running"})
+        try:
+            result = self.client.read_command_output(process_id, cursor=0, wait_ms=wait_ms)
+        except Exception:
+            self._activity_event(marker, {"state": "unknown", "reason": "read_result_unconfirmed"})
+            raise
         if result.get("error"):
+            self._activity_event(marker, {"state": "unknown", "reason": "command_result_unconfirmed"})
             raise ValueError(str(result["error"]))
         if result.get("running"):
             with self._command_sessions_lock:
@@ -529,7 +628,10 @@ class LocalFacade:
                 if marker is not None:
                     self._command_activity[process_id] = marker
         else:
-            self._finish_activity(marker)
+            if isinstance(result.get("exit_code"), int):
+                self._finish_activity(marker, result["exit_code"])
+            else:
+                self._activity_event(marker, {"state": "unknown", "reason": "exit_code_missing"})
         return self._format_command_result(result, token_limit)
 
     def write_stdin(
@@ -593,7 +695,11 @@ class LocalFacade:
                 self._command_sessions[session_id] = (int(result["cursor"]), tty)
             else:
                 self._command_sessions.pop(session_id, None)
-                self._finish_activity(self._command_activity.pop(session_id, None))
+                marker = self._command_activity.pop(session_id, None)
+                if isinstance(result.get("exit_code"), int):
+                    self._finish_activity(marker, result["exit_code"])
+                else:
+                    self._activity_event(marker, {"state": "unknown", "reason": "exit_code_missing"})
         return self._format_command_result(result, token_limit)
 
 
@@ -867,6 +973,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
         tty: Annotated[bool, Field(description="True allocates a PTY and keeps stdin open for write_stdin; false or omitted uses plain pipes with stdin closed. A single Ctrl-C write can still terminate a running non-TTY session.", strict=True)] = False,
         yield_time_ms: Annotated[int, Field(description="Wait before yielding output. Defaults to 10000 ms; values are clamped to the effective 250-30000 ms range.", strict=True)] = 10_000,
         max_output_tokens: Annotated[int, Field(description="Output token budget. Defaults to 8000 tokens; values are clamped to the MCP policy range of 1-8000.", strict=True)] = 8_000,
+        read_only: Annotated[bool, Field(description="Run with verified read-only filesystem isolation and network access. Use for a preview server after preparation; never falls back to writable execution.", strict=True)] = False,
     ) -> str:
         """Runs a shell command, returning output or a session ID for ongoing interaction.
 
@@ -874,7 +981,7 @@ def create_server(*, host: str, port: int, state_root: Path, codex_binary: str |
 
         If OpenAI blocked the call before execution, retry the same call once unchanged; change or split it only if the retry is blocked too. Output is capped at 8000 estimated tokens so ChatGPT does not truncate it a second time.
         """
-        return await asyncio.to_thread(facade.exec_command,cmd,workdir,shell,login,tty,yield_time_ms,max_output_tokens)
+        return await asyncio.to_thread(facade.exec_command,cmd,workdir,shell,login,tty,yield_time_ms,max_output_tokens,read_only)
 
     @mcp.tool(annotations=ARBITRARY_COMMAND)
     async def write_stdin(

@@ -1243,7 +1243,8 @@ client.running=True
 facade.exec_command('PRIVATE COMMAND TEXT',str(root),'/bin/sh',False)
 assert len(markers())==1
 metadata=json.loads(markers()[0].read_text())
-assert sorted(metadata)==['executor_pid','started_at_ms','version']
+assert metadata['version']==2 and metadata['state']=='running' and metadata['process_id']=='12345678'
+assert metadata['workspace']==str(root) and metadata['kind']=='exec'
 assert 'PRIVATE' not in markers()[0].read_text()
 client.running=False
 facade.write_stdin('12345678','',5000)
@@ -1256,11 +1257,56 @@ def patch(*args):
     assert len(markers())==2
     return 'Done!'
 facade._apply_patch=patch
-assert facade.apply_patch('fixture',str(root))=='Done!'
+assert facade.apply_patch('*** Begin Patch\\n*** End Patch',str(root))=='Done!'
 assert len(markers())==1
 print(json.dumps({'confirmed':True,'unknown':True,'patch':True}))
 `);
   if(result)assert.deepEqual(result.out,{confirmed:true,unknown:true,patch:true});
+});
+
+
+test('real command completion is witnessed without polling and read-only preview serves without writing', {timeout:60000}, async t=>{
+ if(process.platform!=='darwin'||!existsSync(userCodex)){t.skip('real local Mac sandbox');return;}
+ const result=await runVenvProbe(t,'web-pilot-command-events-',`import json,pathlib,sys,time,shlex,re,urllib.request
+sys.path.insert(0,sys.argv[1])
+import server
+from app_server_client import AppServerClient
+root=pathlib.Path(sys.argv[2]).resolve()
+(root/'.harness/plans').mkdir(parents=True)
+(root/'.harness/plans/todo-plan.md').write_text('fixture')
+client=AppServerClient(cwd=str(root),request_timeout=20)
+client.start()
+facade=server.LocalFacade(client,root/'state')
+directory=root/'.harness/runtime/command-activity'
+receipts=root/'.harness/runtime/command-results'
+try:
+    first=facade.exec_command('sleep 0.5; printf FINISHED',str(root),'/bin/sh',False,False,250)
+    sid=re.search(r'session ID ([a-f0-9]+)',first).group(1)
+    deadline=time.monotonic()+5
+    while list(directory.glob('*.json')) and time.monotonic()<deadline:time.sleep(0.02)
+    assert not list(directory.glob('*.json')), 'completion must not depend on write_stdin'
+    records=[json.loads(p.read_text()) for p in receipts.glob('*.json')]
+    assert records and records[-1]['exit_code']==0
+    assert 'FINISHED' in facade.write_stdin(sid,'',5000)
+    code="from http.server import HTTPServer,SimpleHTTPRequestHandler; s=HTTPServer(('127.0.0.1',0),SimpleHTTPRequestHandler); print('PORT='+str(s.server_port),flush=True); s.serve_forever()"
+    command=shlex.quote(sys.executable)+' -I -u -c '+shlex.quote(code)
+    service=facade.exec_command(command,str(root),'/bin/sh',False,False,1000,8000,True)
+    sid=re.search(r'session ID ([a-f0-9]+)',service).group(1)
+    port=int(re.search(r'PORT=(\\d+)',service).group(1))
+    assert urllib.request.urlopen('http://127.0.0.1:'+str(port),timeout=3).status==200
+    live=json.loads(next(directory.glob('*.json')).read_text())
+    assert live['read_only_verified'] and live['sandbox_policy']=='readOnly'
+    denied=facade.exec_command('printf denied > forbidden',str(root),'/bin/sh',False,False,1000,8000,True)
+    assert not (root/'forbidden').exists()
+    assert 'Process exited with code 0' not in denied
+    facade.write_stdin(sid,'\\x03',5000)
+    deadline=time.monotonic()+5
+    while list(directory.glob('*.json')) and time.monotonic()<deadline:time.sleep(0.02)
+    assert not list(directory.glob('*.json'))
+    print(json.dumps({'completion':True,'http':True,'writeDenied':True}))
+finally: client.close()
+`);
+ if(result)assert.deepEqual(result.out,{completion:true,http:true,writeDenied:true});
 });
 
 test('Windows: Codex is found behind the npm launcher, on PATH and by architecture; macOS search is unchanged', { timeout: 30_000 }, async t => {
