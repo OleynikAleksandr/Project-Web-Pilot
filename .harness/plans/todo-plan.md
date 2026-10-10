@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1722,
+  "plan_revision": 1725,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -66,7 +66,7 @@
     ]
   },
   "baseline_commit": "8cd7dd464a4056c86a982d3bd8840bc07f9df9c6",
-  "current_task_id": "T007",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -413,8 +413,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T007",
@@ -426,22 +426,80 @@
       ],
       "functional_paths": [
         "package.json",
-        "package-lock.json",
+        "package-lock.json"
+      ],
+      "documentation_paths": [],
+      "verification_ids": [
+        "release-source"
+      ],
+      "id": "T007",
+      "title": "Подготовить и зафиксировать версию 0.6.111 до сборки",
+      "why": "Одна парная сборка допустима только после подтверждённого Git-коммита package.json и package-lock.json",
+      "acceptance_criteria": [
+        "Версия приложения и lockfile 0.6.111 зафиксирована до сборки; Workflow Kit 1.7.2.",
+        "Отдельная delivery-задача запускает paired-release однократно после нового DOCS."
+      ],
+      "expected_commit_message": "release: подготовить исходники версии 0.6.111",
+      "parallel_safe": false,
+      "actual_files": [
+        "package.json",
+        "package-lock.json"
+      ]
+    },
+    {
+      "id": "DOCS-2",
+      "title": "Актуализация всех документов проекта",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-final-stage-recovery-20261010",
+        "task_id": "DOCS-2",
+        "role": "implementation",
+        "iteration": 2
+      },
+      "why": "Перед выпуском сверить README, OVERVIEW и действующие контракты модулей с результатом; обновить устаревшее.",
+      "dependencies": [
+        "T007"
+      ],
+      "functional_paths": [],
+      "documentation_paths": [
+        "docs/architecture/OVERVIEW.md"
+      ],
+      "acceptance_criteria": [
+        "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
+      ],
+      "verification_ids": [],
+      "expected_commit_message": "docs: актуализировать документацию проекта",
+      "parallel_safe": false
+    },
+    {
+      "id": "T010",
+      "title": "Собрать один проверенный парный выпуск 0.6.111",
+      "why": "Запустить paired-release ровно один раз из Kit после исходного коммита версии и DOCS-2",
+      "dependencies": [
+        "T007",
+        "DOCS-2"
+      ],
+      "functional_paths": [
         "release-manifest.json"
       ],
       "documentation_paths": [],
       "verification_ids": [
         "paired-release"
       ],
-      "id": "T007",
-      "title": "Собрать один парный выпуск после DOCS",
-      "why": "Предоставить версионированный проверенный набор macOS arm64 и Windows x64.",
       "verification_kind": "package",
       "acceptance_criteria": [
-        "Установленные версии, evidence, пакеты, sourceCommit, подпись и manifest согласованы.",
-        "Одна сборка произведена назначенной проверкой commit после DOCS, без запуска вручную ранее."
+        "Пакеты macOS arm64 и Windows x64, поставка из шести assets, подпись, manifest и sourceCommit согласованы.",
+        "Одна сборка запускается проверкой paired-release при коммите T010, не вручную и не до фиксации исходников."
       ],
-      "expected_commit_message": "release: собрать парный выпуск финального этапа",
+      "expected_commit_message": "release: собрать парный выпуск 0.6.111",
+      "implementation_status": "TODO",
+      "commit_status": "PENDING",
+      "commit_ref": {
+        "scope_id": "parallel-final-stage-recovery-20261010",
+        "task_id": "T010",
+        "role": "implementation"
+      },
       "parallel_safe": false
     },
     {
@@ -454,7 +512,9 @@
       },
       "dependencies": [
         "T007",
-        "DOCS"
+        "DOCS",
+        "DOCS-2",
+        "T010"
       ],
       "functional_paths": [
         "release-manifest.json"
@@ -484,7 +544,8 @@
       },
       "dependencies": [
         "T008",
-        "DOCS"
+        "DOCS",
+        "DOCS-2"
       ],
       "functional_paths": [
         "release-manifest.json"
@@ -528,8 +589,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
-Current Task: T007
-Revision: 1722
+Current Task: нет
+Revision: 1725
 
 ## Цель
 
@@ -590,24 +651,36 @@ Revision: 1722
   - Файлы: docs/planning/final-stage-recovery-spec.md, docs/planning/final-stage-recovery-todo-draft.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/command-activity.md, docs/modules/codex-app-server-executor.md, docs/modules/workspace-sidebar-ui.md, docs/modules/release.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004, T005, T006
-- [IN_PROGRESS] T007: Собрать один парный выпуск после DOCS — В работе
-  - Git Commit: [PENDING] release: собрать парный выпуск финального этапа
+- [DONE] T007: Подготовить и зафиксировать версию 0.6.111 до сборки — Завершено
+  - Git Commit: [DONE] release: подготовить исходники версии 0.6.111
   - Reference: parallel-final-stage-recovery-20261010 / T007 / implementation
-  - Файлы: package.json, package-lock.json, release-manifest.json
+  - Файлы: package.json, package-lock.json
   - Параллельность: исключительное выполнение
   - Зависимости: T006, DOCS
+- [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
+  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+  - Reference: parallel-final-stage-recovery-20261010 / DOCS-2 / implementation
+  - Файлы: docs/architecture/OVERVIEW.md
+  - Параллельность: исключительное выполнение
+  - Зависимости: T007
+- [TODO] T010: Собрать один проверенный парный выпуск 0.6.111 — Ожидает
+  - Git Commit: [PENDING] release: собрать парный выпуск 0.6.111
+  - Reference: parallel-final-stage-recovery-20261010 / T010 / implementation
+  - Файлы: release-manifest.json
+  - Параллельность: исключительное выполнение
+  - Зависимости: T007, DOCS-2
 - [TODO] T008: Установить готовый выпуск без пересборки — Ожидает
   - Git Commit: [PENDING] release: установить готовый выпуск финального этапа
   - Reference: parallel-final-stage-recovery-20261010 / T008 / implementation
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
-  - Зависимости: T007, DOCS
+  - Зависимости: T007, DOCS, DOCS-2, T010
 - [TODO] T009: Опубликовать и сверить GitHub release — Ожидает
   - Git Commit: [PENDING] release: опубликовать выпуск финального этапа
   - Reference: parallel-final-stage-recovery-20261010 / T009 / implementation
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
-  - Зависимости: T008, DOCS
+  - Зависимости: T008, DOCS, DOCS-2
 
 ## Context Pack For This Cycle
 
