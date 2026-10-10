@@ -99,6 +99,18 @@
     #session-notice p{margin:4px 0 8px}
     .plan-task-id{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
     .plan-task-mode{color:var(--muted)}.plan-task-status{font-weight:600}
+    .execution-stages{list-style:none;margin:0;padding:0;display:grid;gap:5px;min-width:0}
+    #execution-actions{min-width:0;max-width:100%;overflow-wrap:anywhere}
+    #execution-message,#command-issues{min-width:0;max-width:100%;overflow-wrap:anywhere}
+    .execution-stages li{min-width:0;padding:7px 9px;border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:7px;background:var(--tree-panel);overflow-wrap:anywhere}
+    .execution-stages strong{display:block;font-size:11px;line-height:1.4;color:var(--tree-text)}
+    .execution-stages span{display:block;margin-top:2px;font-size:10px;line-height:1.55;color:var(--muted)}
+    .execution-stages li[data-status=done],.execution-stages li[data-status=ready],.execution-stages li[data-status=sent]{border-left-color:var(--teal)}
+    .execution-stages li[data-status=blocked],.execution-stages li[data-status=unknown]{border-left-color:#b67232}
+    .execution-next-action{margin:3px 0 0;padding:8px 9px;border:1px solid var(--line);border-radius:7px;font-size:11px;line-height:1.6;overflow-wrap:anywhere;color:var(--tree-text)}
+    .execution-next-action[data-attention=true]{border-color:#b67232}
+    :root[data-theme=dark] .execution-stages li[data-status=blocked],:root[data-theme=dark] .execution-stages li[data-status=unknown]{border-left-color:#dfac74}
+    :root[data-theme=dark] .execution-next-action[data-attention=true]{border-color:#dfac74}
   </style>
 </head>
 <body>
@@ -390,6 +402,8 @@ SOFTWARE.
           <ul id="plan-tasks" class="plan-tasks" aria-label="Микрозадачи плана"></ul>
           <div id="execution-actions" class="actions" hidden>
             <p id="execution-message" class="description" role="status"></p>
+            <ol id="execution-stages" class="execution-stages" aria-label="Проверяемые этапы завершения"></ol>
+            <p id="execution-next-action" class="execution-next-action" role="status"></p>
             <div id="command-issues"></div>
           </div>
           <div class="actions">

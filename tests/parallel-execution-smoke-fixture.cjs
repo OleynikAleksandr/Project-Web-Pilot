@@ -69,6 +69,15 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   const wait=(predicate,name)=>waitFor(predicate,'parallel: '+name,()=>({...snapshot(),parallelRuntimes:[...liveSessions.records.values()]
     .filter(r=>r.identity?.assignmentId).map(r=>({identity:r.identity,ready:r.ready,loading:r.loading,
       phase:r.controller.state.phase,error:r.controller.state.error,runtimeError:r.error,url:r.view.webContents.getURL()}))}));
+  const stageSnapshot=()=>sidebar.executeJavaScript(`(()=>{
+    const root=document.getElementById('execution-actions'),list=document.getElementById('execution-stages');
+    return {hidden:root.hidden,stages:Object.fromEntries([...list.querySelectorAll('li')].map(el=>[
+      el.dataset.stage,{status:el.dataset.status,text:el.textContent}])),
+      action:document.getElementById('execution-next-action').textContent,
+      aria:list.getAttribute('aria-label'),role:document.getElementById('execution-next-action').getAttribute('role'),
+      width:document.documentElement.clientWidth,overflow:root.scrollWidth>root.clientWidth+1,
+      theme:document.documentElement.dataset.theme,
+      focusable:document.getElementById('auto-plan-toggle').tabIndex>=0};})()`);
   const root=(await run('--create',path.join(dataDir+'-projects','parallel-e2e'))).root;
   const {SessionPlans}=await import('../src/session-plans.mjs');
   const plans=new SessionPlans({setup:workspaceSetup});
@@ -276,6 +285,22 @@ const httpPreview=await require('./protected-preview-fixture.cjs').start(root,pa
       await wait(()=>snapshot().execution.assignments.some(a=>a.id===last.id
         &&a.status==='READY_FOR_INTEGRATION'&&a.commandActive),'last source held by real writer');
       await wait(()=>snapshot().execution.diagnosticStatus==='sent','blocked F03 delivers a read-only diagnostic');
+      await ipc('setSidebarWidth',312);
+      await wait(()=>snapshot().sidebarWidth===312,'minimum width for final-stage UI');
+      for(const theme of ['light','dark']) {
+        await ipc('setTheme',theme);
+        await wait(async()=>(await stageSnapshot()).theme===theme,'final-stage theme '+theme);
+        const stages=await stageSnapshot();
+        assert.equal(stages.hidden,false);assert.equal(stages.width,312);
+        assert.equal(stages.overflow,false,'status and operation paths wrap within the minimum sidebar');
+        assert.equal(stages.aria,'Проверяемые этапы завершения');assert.equal(stages.role,'status');
+        assert.equal(stages.focusable,true);
+        assert.equal(stages.stages.source.status,'ready');assert.equal(stages.stages.main.status,'blocked');
+        assert.equal(stages.stages.diagnostic.status,'sent');assert.equal(stages.stages.reply.status,'waiting');
+        assert.match(stages.action,new RegExp(f03Writer.id));
+        assert.match(stages.action,/Не останавливайте сервер/);
+      }
+      await ipc('setTheme','light');
       assert.equal(snapshot().execution.finalizationStatus==='sent',false,'diagnostic does not transfer final ownership');
       assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+1,
         'one diagnostic Send while writable command is active');
@@ -292,6 +317,9 @@ const httpPreview=await require('./protected-preview-fixture.cjs').start(root,pa
     }finally{if(f03Writer)await f03Writer.stop();}
     await wait(()=>snapshot().execution.planView.completed===5,'queue alone integrates source after diagnostic');
     await wait(()=>snapshot().execution.finalizationStatus==='sent','one final Send after main integration');
+    const sentStages=await stageSnapshot();
+    assert.equal(sentStages.stages.main.status,'done','only verified main is marked DONE');
+    assert.equal(sentStages.stages.final.status,'sent');assert.equal(sentStages.stages.reply.status,'waiting');
     if(httpPreview) {
       assert.match(await (await fetch(httpPreview.url+'/RESULT.md')).text(),/worker-e/,'protected main preview reflects verified integration');
       const {readCommandActivity}=await import('../src/command-activity.mjs');
@@ -305,6 +333,9 @@ const httpPreview=await require('./protected-preview-fixture.cjs').start(root,pa
     const report='Пять задач проверены в общем main. '+root+(httpPreview?' · '+httpPreview.url:'')+'. TEST FIXTURE; приёмку выполняет пользователь.';
     await newMain.view.webContents.executeJavaScript('document.getElementById("parallel-held")?.remove();window.fixtureAssistant('+JSON.stringify(report)+')');
     await wait(()=>snapshot().execution.finalizationStatus==='reply-observed'&&!snapshot().autoPlan.enabled,'one final report and completion OFF');
+    const completedStages=await stageSnapshot();
+    assert.equal(completedStages.stages.reply.status,'done');
+    assert.match(completedStages.action,/приёмка пользователя/);
     assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+2);
     await ipc('selectSession',otherRoot,store.project(otherRoot).sessionId);await ipc('selectSession',root,newOrigin.sessionId);
     assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+2,'project switching cannot repeat diagnostic or final handoff');

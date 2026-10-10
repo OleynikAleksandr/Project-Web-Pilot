@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1715,
+  "plan_revision": 1717,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -47,7 +47,8 @@
       "tests/electron-smoke.mjs",
       "release-manifest.json",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "tests/sidebar.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/final-stage-recovery-spec.md",
@@ -312,8 +313,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T006",
@@ -329,7 +330,8 @@
         "src/execution-projection.mjs",
         "tests/parallel-execution-ui.test.mjs",
         "tests/parallel-execution-smoke-fixture.cjs",
-        "tests/electron-smoke.mjs"
+        "tests/electron-smoke.mjs",
+        "tests/sidebar.test.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -344,7 +346,15 @@
         "UI показывает source, blocked, diagnostic, final, reply и user-action ясно при 312px/двух темах/keyboard/aria; сервер worker не объявлен проверкой main."
       ],
       "expected_commit_message": "test: проверить последний этап и диагностику финала",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/execution-projection.mjs",
+        "src/ui/index.html",
+        "src/ui/sidebar.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/parallel-execution-ui.test.mjs",
+        "tests/sidebar.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -505,7 +515,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1715
+Revision: 1717
 
 ## Цель
 
@@ -554,10 +564,10 @@ Revision: 1715
   - Файлы: src/project-auto-plan.mjs, src/project-session-auto-plan.mjs, src/auto-plan.mjs, src/main.mjs, tests/project-auto-plan.test.mjs, tests/auto-plan.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T004
-- [TODO] T006: Сквозной финальный цикл и UI блокировок — Ожидает
-  - Git Commit: [PENDING] test: проверить последний этап и диагностику финала
+- [DONE] T006: Сквозной финальный цикл и UI блокировок — Завершено
+  - Git Commit: [DONE] test: проверить последний этап и диагностику финала
   - Reference: parallel-final-stage-recovery-20261010 / T006 / implementation
-  - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/execution-projection.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs
+  - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/execution-projection.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, tests/sidebar.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T004, T005
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

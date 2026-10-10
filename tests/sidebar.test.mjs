@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
+import { executionFinalStages } from '../src/execution-projection.mjs';
 
 test('project picker searches, marks current/background work, keeps one parent and supports keyboard escape',async t=>{
   const f=await fixture(t),base=f.state,other={workspace:'/other',name:'Другой',activity:'working',expanded:true,sessions:[{sessionId:'other-chat',createdAt:1000,title:'Другой чат'}]};
@@ -72,7 +73,8 @@ async function fixture(t) {
     async chooseWorkspace() { calls.push(['chooseWorkspace']); return { state: structuredClone(state) }; },
   };
   window.webPilot = api;
-  window.eval(`const createProgress = () => ({show(){},destroy(){}}); const operationLabel = () => ''; const settingsPanelView = () => ({render(){}}); const workspaceSetupView = () => ({render(state){document.getElementById('projects').hidden=!!state.setup;}});\n` + source.replace(/^import .*;\n/gm, ''));
+  window.eval(`const createProgress = () => ({show(){},destroy(){}}); const operationLabel = () => ''; const settingsPanelView = () => ({render(){}}); const workspaceSetupView = () => ({render(state){document.getElementById('projects').hidden=!!state.setup;}});\n`
+    + 'const executionFinalStages='+executionFinalStages.toString()+';\n'+source.replace(/^import .*;\n/gm, ''));
   const settle = () => new Promise(resolve => setTimeout(resolve, 0));
   await settle();
   return { window, document, calls, emit, get state() { return structuredClone(state); }, settle };

@@ -1,6 +1,7 @@
 import { createProgress, operationLabel } from './progress.mjs';
 import { settingsPanelView } from './settings-panel.mjs';
 import { workspaceSetupView } from './workspace-setup.mjs';
+import { executionFinalStages } from '../execution-projection.mjs';
 const $ = id => document.getElementById(id);
 const api = window.webPilot;
 let lastProjects = '';
@@ -414,6 +415,19 @@ function render(state) {
   }
   const parallel=selected?.planExecution?.execution_strategy==='parallel'||!!selected?.assignmentId;
   $('execution-actions').hidden=!parallel;
+  const stages=executionFinalStages(execution);
+  const stageList=$('execution-stages');
+  stageList.replaceChildren();
+  for(const [key,label] of [['source','Источник'],['main','Общий main'],['diagnostic','Диагностика'],
+    ['final','Финальное поручение'],['reply','Итоговый ответ']]) {
+    const line=document.createElement('li');line.dataset.stage=key;line.dataset.status=stages[key].status;
+    const heading=document.createElement('strong');heading.textContent=label;
+    const description=document.createElement('span');description.textContent=stages[key].text;
+    line.append(heading,description);stageList.append(line);
+  }
+  $('execution-next-action').textContent=stages.action;
+  $('execution-next-action').dataset.attention=String(['unknown','blocked'].includes(stages.main.status)
+    ||['unknown'].includes(stages.diagnostic.status)||['unknown'].includes(stages.final.status));
   $('execution-message').textContent=execution.error?.message??({sending:'Поручение исправления отправляется…',sent:'Поручение исправления отправлено. Ждём основной чат.',unknown:'Исход отправки исправления неизвестен. Повтор не отправляется.'}[execution.correctionStatus])??({preparing:'Подготавливаем исполнителей…',merging:'Проверяем слияние в main…',
     complete:'Все результаты интегрированы. Ожидается приёмка.',integration:'Интеграция удерживает main. Другие слияния ждут.',
     paused:'Автовыполнение проекта выключено. Новые задачи и сообщения не запускаются.',waiting:'Состояния исполнителей показаны в дереве. Пауза не означает вопрос пользователя.'}[execution.phase]??'Включите автовыполнение этого проекта для запуска готовых задач.');

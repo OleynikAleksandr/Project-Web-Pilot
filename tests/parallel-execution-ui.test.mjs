@@ -2,7 +2,33 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
-import { executorStatus,projectExecutors,projectExecutionPlan,integrationProblem } from '../src/execution-projection.mjs';
+import { executorStatus,projectExecutors,projectExecutionPlan,integrationProblem,executionFinalStages } from '../src/execution-projection.mjs';
+
+test('F20: worker source and HTTP preview never equal verified main or a final reply',()=>{
+  const assignment={id:'a',status:'READY_FOR_INTEGRATION',source_commit:'sha',worktree:'/worktree',commandActive:true,
+    commands:[{id:'op-1',blocksIntegration:true}]};
+  const execution={assignments:[assignment],integration:{status:'IDLE'},planView:{completed:0,total:1}};
+  let view=executionFinalStages(execution);
+  assert.equal(view.source.status,'ready');assert.equal(view.main.status,'blocked');
+  assert.match(view.source.text,/ещё не проверка main/);assert.match(view.action,/op-1/);
+  assert.match(view.action,/Не останавливайте сервер/);
+  execution.diagnosticStatus='sent';view=executionFinalStages(execution);
+  assert.equal(view.diagnostic.status,'sent');assert.equal(view.main.status,'blocked');
+  assignment.commandActive=false;assignment.status='INTEGRATED';execution.planView.completed=1;
+  execution.finalizationStatus='sent';view=executionFinalStages(execution);
+  assert.equal(view.main.status,'done');assert.equal(view.reply.status,'waiting');
+  execution.finalizationStatus='reply-observed';view=executionFinalStages(execution);
+  assert.equal(view.reply.status,'done');assert.match(view.action,/приёмка пользователя/);
+});
+
+test('F07/F08/F15: missing proof, unknown merge and uncertain send never become DONE',()=>{
+  const execution={assignments:[{status:'UNKNOWN'}],integration:{status:'UNKNOWN'},planView:{completed:0,total:1},
+    diagnosticStatus:'unknown',finalizationStatus:'unknown'};
+  const view=executionFinalStages(execution);
+  assert.equal(view.source.status,'unknown');assert.equal(view.main.status,'unknown');
+  assert.equal(view.diagnostic.status,'unknown');assert.equal(view.final.status,'unknown');
+  assert.equal(view.reply.status,'waiting');assert.match(view.action,/Не повторяйте сообщение/);
+});
 
 test('status distinguishes observed work, unknown, source readiness and verified integration without inventing a user question',()=>{
   const record={pageState:{current:{state:{busy:true,lastMessageRole:'assistant'}}}};
@@ -42,7 +68,8 @@ test('real sidebar renders executor group, worktree/status/time, protected actio
   const action=name=>async(...args)=>{calls.push([name,...args]);return {state};};
   window.webPilot={getState:async()=>state,onState:fn=>{listener=fn;},
     selectSession:action('selectSession')};
-  window.eval('const createProgress=()=>({show(){},destroy(){}});const operationLabel=()=>"";const settingsPanelView=()=>({render(){}});const workspaceSetupView=()=>({render(){}});\n'+source.replace(/^import .*;\n/gm,''));
+  window.eval('const createProgress=()=>({show(){},destroy(){}});const operationLabel=()=>"";const settingsPanelView=()=>({render(){}});const workspaceSetupView=()=>({render(){}});'
+    +'const executionFinalStages='+executionFinalStages.toString()+';\n'+source.replace(/^import .*;\n/gm,''));
   const settle=()=>new Promise(resolve=>setTimeout(resolve,0));await settle();
   assert.match(document.querySelector('.executor-group summary').textContent,/Исполнители · Планировщик/);
   assert.match(document.querySelector('.executor-row').textContent,/worktree/);
@@ -51,6 +78,10 @@ test('real sidebar renders executor group, worktree/status/time, protected actio
   document.querySelector('.executor-row').click();await settle();assert.deepEqual(calls.pop(),['selectSession','/tree','child']);
   assert.match(document.getElementById('auto-plan-message').textContent,/Автовыполнение этого проекта выключено/);
   assert.equal(document.getElementById('execute-tasks'),null);assert.equal(document.getElementById('reconcile-execution'),null);
+  assert.equal(document.querySelectorAll('#execution-stages li').length,5);
+  assert.equal(document.getElementById('execution-stages').getAttribute('aria-label'),'Проверяемые этапы завершения');
+  assert.equal(document.getElementById('execution-next-action').getAttribute('role'),'status');
+  assert.equal(document.querySelector('#execution-stages [data-stage=reply]').dataset.status,'waiting');
   state={...state,selected:{...state.selected,workspace:'/tree',parentWorkspace:'/main',assignmentId:'a',sessionId:'child',
     planView:{state:'awaiting-acceptance',completed:1,total:1,tasks:[{id:'T1',title:'Task',status:'done'}]}},
     execution:{...state.execution,phase:'integration',integration:{status:'CONFLICT'}}};
@@ -66,6 +97,20 @@ test('real sidebar renders executor group, worktree/status/time, protected actio
   assert.equal(document.getElementById('assignment-card').hidden,true);
   assert.equal(document.getElementById('plan-card').hidden,false);
   assert.equal(document.querySelector('.plan-task').dataset.status,'current','main uses assignment projection, not stale main TODO');
+  state={...state,execution:{...state.execution,phase:'blocked',assignments:[{id:'a',parent_task_id:'T1',
+    status:'READY_FOR_INTEGRATION',source_commit:'sha',worktree:'/tree',commandActive:true,
+    commands:[{id:'op-9',blocksIntegration:true}]}],diagnosticStatus:'sent',finalizationStatus:'pending'}};
+  listener(state);
+  assert.equal(document.querySelector('[data-stage=source]').dataset.status,'ready');
+  assert.equal(document.querySelector('[data-stage=main]').dataset.status,'blocked');
+  assert.equal(document.querySelector('[data-stage=diagnostic]').dataset.status,'sent');
+  assert.match(document.getElementById('execution-next-action').textContent,/op-9/);
+  state={...state,execution:{...state.execution,planView:{state:'awaiting-acceptance',completed:1,total:1,tasks:[{id:'T1',title:'Task',status:'done'}]},assignments:[{id:'a',parent_task_id:'T1',status:'INTEGRATED'}],
+    phase:'complete',finalizationStatus:'reply-observed',diagnosticStatus:'reply-observed'}};
+  listener(state);
+  assert.equal(document.querySelector('[data-stage=main]').dataset.status,'done');
+  assert.equal(document.querySelector('[data-stage=reply]').dataset.status,'done');
+  assert.match(document.getElementById('execution-next-action').textContent,/приёмка пользователя/);
 });
 
 test('parent projection distinguishes assigned, ready and integrated results; launch failure is not a code conflict',()=>{
@@ -79,4 +124,46 @@ test('parent projection distinguishes assigned, ready and integrated results; la
   const failure={status:'CHECKS_FAILED',error:JSON.stringify({details:{result:{id:'test',status:'FAILED',exit_code:null,output:'spawnSync node ENOENT'}}})};
   assert.equal(integrationProblem(failure).code,'INTEGRATION_CHECK_START_FAILED');
   failure.error=JSON.stringify({details:{result:{status:'FAILED',exit_code:1}}});assert.equal(integrationProblem(failure),null);
+});
+
+// Traceability only: this inventory cannot turn an unexecuted fixture into
+// evidence. Kit's unit-all/electron-smoke run the linked cases; a separate
+// live ChatGPT, native Windows and clean-OS acceptance remain with the user.
+test('F01-F20/A01-A06 map to named regression cases rather than invented PASS claims',async()=>{
+  const root=new URL('./',import.meta.url);
+  const cases={
+    F01:['parallel-finalization.test.mjs','final READY returns control before DONE'],
+    F02:['codex-app-server-mcp.test.mjs','real command completion is witnessed without polling and read-only preview'],
+    F03:['parallel-finalization.test.mjs','F03: real Git/Kit source'],
+    F04:['parallel-execution-recovery.test.mjs','F04: child receipt replacement wakes main'],
+    F05:['command-activity.test.mjs','F05 previous-boot deletion exception'],
+    F06:['command-activity.test.mjs','read-only UNKNOWN after restart'],
+    F07:['parallel-finalization.test.mjs','F07/F08: missing source'],
+    F08:['parallel-finalization.test.mjs','F07/F08: missing source'],
+    F09:['parallel-execution.test.mjs','conflict keeps main exclusive'],
+    F10:['parallel-execution.test.mjs','a failed launch is visible'],
+    F11:['parallel-execution.test.mjs','ON waits for main readiness'],
+    F12:['automation-send-state.test.mjs','F11/F12: cancelled pre-click'],
+    F13:['parallel-finalization.test.mjs','manual OFF revokes pending finalization'],
+    F14:['parallel-finalization.test.mjs','F14: scope, URL, HEAD'],
+    F15:['automation-send-state.test.mjs','F15: the sending reservation'],
+    F16:['parallel-finalization.test.mjs','F16: diagnostic pause is durable'],
+    F17:['parallel-finalization.test.mjs','pending draft permits verified integration'],
+    F18:['parallel-finalization.test.mjs','F18: changing pause, busy'],
+    F19:['project-auto-plan.test.mjs','A01/A02/A04/A06: two main monitors in one project'],
+    F20:['parallel-execution-ui.test.mjs','F20: worker source and HTTP preview'],
+    A01:['project-auto-plan.test.mjs','A01-A05: awaitingPlan survives'],
+    A02:['project-auto-plan.test.mjs','A01/A02/A04/A06: two main monitors'],
+    A03:['project-auto-plan.test.mjs','A03/A06: only the user records manual OFF'],
+    A04:['project-auto-plan.test.mjs','A04/A05: a new archived-plan epoch'],
+    A05:['project-auto-plan.test.mjs','only confirmed completion disables'],
+    A06:['auto-plan.test.mjs','A03/A06: executor-style and Review disables'],
+  };
+  assert.deepEqual(Object.keys(cases).sort(),[
+    ...Array.from({length:20},(_,i)=>'F'+String(i+1).padStart(2,'0')),
+    ...Array.from({length:6},(_,i)=>'A'+String(i+1).padStart(2,'0'))].sort());
+  for(const [id,[file,title]] of Object.entries(cases)){
+    const contents=await fs.readFile(new URL(file,root),'utf8');
+    assert.ok(contents.includes("test('"+title)||contents.includes('test("'+title),id+' missing test: '+file);
+  }
 });
