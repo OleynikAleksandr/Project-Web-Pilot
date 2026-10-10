@@ -6,7 +6,7 @@ import path from 'node:path';
 import { PLAN, planPath, check, hash, id, json, atomic, withLock, safePath } from './common.mjs';
 import { readPlan, renderPlan, parsePlan, isDocumentationFinalizationTask } from './plan.mjs';
 import { validate, journal, taskChecks, retryCommand } from './validate.mjs';
-import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot, documentText } from './git.mjs';
+import { git, head, paths, localPath, gitPath, allChanges, ensureIdleGit, identityReady, snapshot, documentText, commitTimeout } from './git.mjs';
 
 export const saveJournal = (root, data) => atomic(localPath(root, 'transaction.json'), json(data));
 export const messageFor = t => t.message + '\n\nWorkflow-Scope: ' + (t.scope_id ?? 'NONE') + '\nWorkflow-Task: ' + (t.task_id ?? t.id) + '\nWorkflow-Role: ' + t.role + (t.role === 'implementation' ? '\nWorkflow-Iteration: ' + (t.task?.commit_ref?.iteration ?? 1) : '') + '\nWorkflow-Transaction: ' + t.id + (t.role === 'integration' ? '\nWorkflow-Source: ' + t.source_commit : '');
@@ -116,7 +116,7 @@ export function commitCandidate(root, { plan, role, task = null, selected, messa
   t.snapshot = snapshot(root, files).fingerprint; t.phase = 'PREPARED'; saveJournal(root, t);
   // Explicit failpoints are only for deterministic crash tests in temporary repositories.
   if (process.env.WORKFLOW_TEST_FAILPOINT === 'prepared') check(false, 'TEST_INTERRUPTION', 'Тестовое прерывание после подготовки кандидата.');
-  const result = git(root, ['commit', '-m', messageFor(t)], { allowFailure: true, timeout: 600000 });
+  const result = git(root, ['commit', '-m', messageFor(t)], { allowFailure: true, timeout: commitTimeout(t.checks) });
   if (result.status !== 0) {
     t = journal(root) ?? t; t.phase = 'CHECKS_FAILED'; t.error = String(result.stderr || result.stdout).slice(-5000); saveJournal(root, t);
     // A normal failed check is not a crash. Restore only our own plan/index;

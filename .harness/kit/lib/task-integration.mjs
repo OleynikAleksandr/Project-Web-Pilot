@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PLAN, CONFIG, check, hash, json, atomic, readJSON, safePath, withLock } from './common.mjs';
-import { git, head, gitPath, localPath, allChanges, paths, isAncestor, commitHistory, commitPaths, ensureIdleGit } from './git.mjs';
+import { git, head, gitPath, localPath, allChanges, paths, isAncestor, commitHistory, commitPaths, ensureIdleGit, commitTimeout } from './git.mjs';
 import { parsePlan, readPlan, renderPlan } from './plan.mjs';
 import { validate, journal, taskChecks, readConfig, resolveReferences } from './validate.mjs';
 import { assignmentStatus } from './task-assignment.mjs';
@@ -228,7 +228,7 @@ function resume(root,record) {
     selected:[PLAN,...actual].sort(),excluded_changes:[],checks:taskChecks({...task,actual_files:actual},readConfig(root)),phase:'PREPARED'};
   saveJournal(root,t);record.phase='CHECKING';save(root,record);
   if(process.env.WORKFLOW_TEST_FAILPOINT==='integration-prepared')check(false,'TEST_INTERRUPTION','Прерывание до merge-коммита.');
-  const result=git(root,['commit','-m',messageFor(t)],{allowFailure:true,timeout:600000});
+  const result=git(root,['commit','-m',messageFor(t)],{allowFailure:true,timeout:commitTimeout(t.checks)});
   if(result.status!==0) {
     record.phase='CHECKS_FAILED';record.error=String(result.stderr||result.stdout).slice(-4000);save(root,record);
     // Keep source corrections and MERGE_HEAD; expose PENDING until the commit succeeds.

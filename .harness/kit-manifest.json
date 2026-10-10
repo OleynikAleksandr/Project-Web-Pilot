@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "1.7.1",
+  "version": "1.7.2",
   "initialized_git": true,
   "hook_mechanism": "git",
   "node_runtime": "system",
@@ -99,7 +99,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "77413a0cb3f221603dcca5565daf3527672f88a816e48bf716634504e87e2018",
-      "hash": "77413a0cb3f221603dcca5565daf3527672f88a816e48bf716634504e87e2018",
+      "hash": "f6f11bf0c40ec31af2b135d7d992d8437f1548f05ac4fb1f851ae6dd15afb802",
       "existed": true
     },
     {
@@ -107,7 +107,7 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "dac8252f0c2dd95179cb3e9b993344242394a4a296900e5965fe25b8b92c314b",
+      "original_hash": "2723266f74b53896603e65e3991f6264075cd7d9efeb80a7a660211bb31a3f2c",
       "hash": "2723266f74b53896603e65e3991f6264075cd7d9efeb80a7a660211bb31a3f2c",
       "existed": true
     },
@@ -125,7 +125,7 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "fb75d92367715353c32ddd3a47fc8785867bd37c35cce554434205202caa17e7",
+      "original_hash": "eaaf48a24939c96e461eca5ebaf808e5d94a8ea1daedfd7e97e8972702126b2f",
       "hash": "eaaf48a24939c96e461eca5ebaf808e5d94a8ea1daedfd7e97e8972702126b2f",
       "existed": true
     },
@@ -134,8 +134,8 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "68bc5bd3553e65f56e4beee90613b8d02fe09df6adedfcf053d40c9b5ce72b2f",
-      "hash": "b86f93fe8b5728cc2802bdac8768ce6d68fb65c697a639eba368fac985afecdf",
+      "original_hash": "b86f93fe8b5728cc2802bdac8768ce6d68fb65c697a639eba368fac985afecdf",
+      "hash": "8ac2ee23de7e62dc247ef519296cfbdfb7493ad5bed54af2e759ddff9dbfb460",
       "existed": true
     },
     {
@@ -153,7 +153,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "3a84aa81c0ed2515b6f47f0c6c3d7f4d094dadf91db1ce0a90382e84faa78cf2",
-      "hash": "3a84aa81c0ed2515b6f47f0c6c3d7f4d094dadf91db1ce0a90382e84faa78cf2",
+      "hash": "a2d49a84cf4ae3feec97d51d626949c3625ae218e16698999deb20c16030de10",
       "existed": true
     },
     {
@@ -170,8 +170,8 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "3841a0b44287db9a640d46caf4a4f5727907f2e5b4d3b1fff94909832d9404ff",
-      "hash": "a7c96ea33d3e3fc12ea5747e12f84d9323bca0eeafcba2be33b5be1b35cd68ce",
+      "original_hash": "a7c96ea33d3e3fc12ea5747e12f84d9323bca0eeafcba2be33b5be1b35cd68ce",
+      "hash": "0819b727034f1e3eb78d2f90f05dd35c473eaf1a460c47fb922b2403746a0000",
       "existed": true
     },
     {
@@ -197,7 +197,7 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "2a5e6f5266a7a1aabcbf9e1b444d93c2a91e6de0599bcc0b9ff89a1602453e36",
+      "original_hash": "474995d6573acbe47493d4ef75da446723a06f28a6ce94e4ed53da62343612b3",
       "hash": "474995d6573acbe47493d4ef75da446723a06f28a6ce94e4ed53da62343612b3",
       "existed": true
     },
@@ -207,7 +207,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "02405d8e15aa94af895259ac6a4756e77bfbe723dca0449ad3ebf301516991d1",
-      "hash": "02405d8e15aa94af895259ac6a4756e77bfbe723dca0449ad3ebf301516991d1",
+      "hash": "1a033f874d06acc3ccd617ecc7b118ec915ac23cd2a3dbe4a80109850f40f30a",
       "existed": true
     },
     {
@@ -251,8 +251,8 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "aad6f8350fc853fa16bb9f33ac79d64fc73613a2e9d6a6b7679aa2c7fbe37f18",
-      "hash": "22de7dc55383d2627c1c4bfed79889bb386292b9913fed171bb26ec10d01c068",
+      "original_hash": "22de7dc55383d2627c1c4bfed79889bb386292b9913fed171bb26ec10d01c068",
+      "hash": "d7f91e6fef78ab92dd433724df1898a9470e1ed238b16ae7c479132d0557ce2c",
       "existed": true
     },
     {
@@ -323,7 +323,7 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "5bea455f033d82d51cb62269a5957faef53c235b3ea4c3b38cf8739753159656",
+      "original_hash": "3de4f004197cea2be7af27486965fd104882293b953bf2a7029bcda1524f1f9f",
       "hash": "3de4f004197cea2be7af27486965fd104882293b953bf2a7029bcda1524f1f9f",
       "existed": true
     },
@@ -359,7 +359,7 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "5c9b85007c50a031ebe6da3a6dd2b11566618ac5b61ce1dc817929a5fad5071a",
+      "original_hash": "1d447471b87dbaf1c086baafecb644468d710a743d2c10a01ab66983305f718f",
       "hash": "1d447471b87dbaf1c086baafecb644468d710a743d2c10a01ab66983305f718f",
       "existed": true
     },
@@ -386,8 +386,8 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "232c105df3329878d964ea2554c27f7cf4fc2bf6c8cee2c5bcc50ff32897667a",
-      "hash": "e7c220e8bf8212d6e66d555e13ca04c4c3e2b9dc82853dce899fd1e9610bf717",
+      "original_hash": "e7c220e8bf8212d6e66d555e13ca04c4c3e2b9dc82853dce899fd1e9610bf717",
+      "hash": "9ad4acb0c6271f996a53d20eb84ce4be2651eee1e194d64a28efa9765b5cf2d5",
       "existed": true
     },
     {
@@ -404,7 +404,7 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": "b6782a5c230aa991667b82b505e98d9444f14b0794429056beeb8cdc60ae8b88",
+      "original_hash": "527853bf74dae5c6ee24e71cb0525b3bc43c2090071b9b0b2c6e103241aa24ad",
       "hash": "527853bf74dae5c6ee24e71cb0525b3bc43c2090071b9b0b2c6e103241aa24ad",
       "existed": true
     },
@@ -441,7 +441,7 @@
       "kind": "owned",
       "mode": 420,
       "original_hash": "0cc040ec2092e82a9848160eb0ce7271345c9e15da833e669e2a2c5dd7687b7a",
-      "hash": "0cc040ec2092e82a9848160eb0ce7271345c9e15da833e669e2a2c5dd7687b7a",
+      "hash": "29e7a2f88adc35965d464d3c033c0d5e1c17a823f2a08d5a0d4427c6ec0a9626",
       "existed": true
     },
     {
@@ -449,9 +449,9 @@
       "external": false,
       "kind": "owned",
       "mode": 420,
-      "original_hash": null,
+      "original_hash": "ccffaecd56e2034cb372000a53746d4606090d3a9a0cab2f1151b1fa98217793",
       "hash": "ccffaecd56e2034cb372000a53746d4606090d3a9a0cab2f1151b1fa98217793",
-      "existed": false
+      "existed": true
     },
     {
       "path": ".harness/plans/todo-plan.template.md",
@@ -459,7 +459,7 @@
       "kind": "editable",
       "mode": 420,
       "original_hash": null,
-      "hash": "22de7dc55383d2627c1c4bfed79889bb386292b9913fed171bb26ec10d01c068",
+      "hash": "d7f91e6fef78ab92dd433724df1898a9470e1ed238b16ae7c479132d0557ce2c",
       "existed": false
     },
     {
@@ -477,22 +477,22 @@
       "external": false,
       "kind": "editable",
       "mode": 420,
-      "original_hash": "14d8a8f0b1d765d3c874b9e60df0d620d9d3c48a29b96cc1255170882c5aeb86",
-      "hash": "14d8a8f0b1d765d3c874b9e60df0d620d9d3c48a29b96cc1255170882c5aeb86",
+      "original_hash": "965bd974ca6808be158c59be259407767684376c578ccf352e2f2eaa3e6efd45",
+      "hash": "965bd974ca6808be158c59be259407767684376c578ccf352e2f2eaa3e6efd45",
       "existed": true
     }
   ],
-  "upgraded_from": "1.7.0",
-  "upgraded_at": "2026-10-09T14:20:34.178Z",
+  "upgraded_from": "1.7.1",
+  "upgraded_at": "2026-10-10T08:32:00.578Z",
   "doctor_reconciled_at": "2026-09-17T11:37:46.304Z",
   "legacy_plan_migration": {
     "model": "single-active-plan",
     "removed_count": 0,
-    "source_commit": "0b741c9b85e69dab69797b7752a3ebfd13d61d91",
-    "migrated_at": "2026-10-09T14:20:34.185Z"
+    "source_commit": "fc9caba30591e31ae1312e6d5b933ce5b6bdcc91",
+    "migrated_at": "2026-10-10T08:32:00.585Z"
   },
   "required_documents": [
     "docs/architecture/OVERVIEW.md"
   ],
-  "installed_at": "2026-10-09T14:20:34.185Z"
+  "installed_at": "2026-10-10T08:32:00.586Z"
 }

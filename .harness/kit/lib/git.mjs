@@ -16,6 +16,10 @@ export function run(executable, args, cwd, options = {}) {
 }
 export const git = (root, args, options) => run(gitExecutable(root), ['--literal-pathspecs', '-c', 'core.quotePath=false', '-c', 'diff.external=', '-c', 'diff.autoRefreshIndex=false', ...args], root, options);
 export const output = (root, args, options) => git(root, args, options).stdout.trim();
+// Commit hooks run checks sequentially. Their enclosing process must allow the
+// whole configured budget, plus Git/validation overhead, not one check's limit.
+export const commitTimeout = (checks = []) => Math.max(600000,
+  checks.reduce((total, item) => total + (item.timeout_ms ?? 30000), 0) + 60000);
 export function repoRoot(cwd) {
   const r = git(cwd, ['rev-parse', '--show-toplevel'], { allowFailure: true });
   check(r.status === 0, 'NOT_GIT_REPOSITORY', 'Выберите папку Git-проекта.', { cwd });
