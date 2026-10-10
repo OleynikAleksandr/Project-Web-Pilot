@@ -7,11 +7,13 @@ import {plannedExecution} from './execution-projection.mjs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 const executeGit=promisify(execFile);
+export const workspaceGit=async(workspace,args)=>(await executeGit('git',['--no-optional-locks','-C',workspace,...args],
+  {encoding:'utf8',timeout:10000,maxBuffer:1024*1024,windowsHide:true})).stdout.trim();
 
 // A path alone is not ownership: legacy records need the assignment's committed parent identity.
 export const ownedExecutor = (child,parent) => !!parent && !!child.parentProjectId
   && child.parentProjectId===parent.projectId && child.parentWorkspace===parent.workspace;
-export async function assignmentOwnership(parent,workspace,id) {
+export async function assignmentOwnership(parent,workspace,id,git=workspaceGit) {
   try {
     if(!parent||!path.isAbsolute(workspace)||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(id))return null;
     const folder=await fs.lstat(workspace);
@@ -28,8 +30,7 @@ export async function assignmentOwnership(parent,workspace,id) {
     const fields=['id','parent_root','parent_scope_id','parent_task_id','worktree','base_commit','branch'];
     if(fields.some(k=>record[k]!==bound[k])||record.id!==id||record.parent_root!==parent.workspace
       ||record.worktree!==workspace||!/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(record.base_commit??''))return null;
-    const {stdout}=await executeGit('git',['-C',parent.workspace,'show',record.base_commit+':.harness/plans/todo-plan.md'],
-      {encoding:'utf8',timeout:10000,maxBuffer:1024*1024,windowsHide:true});
+    const stdout=await git(parent.workspace,['show',record.base_commit+':.harness/plans/todo-plan.md']);
     const base=JSON.parse(stdout.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/)?.[1]??'');
     return base.project_id===parent.projectId&&base.scope_id===record.parent_scope_id?record:null;
   }catch{return null;}
@@ -368,8 +369,8 @@ function currentView(project, sessionId = project?.selectedSessionId) {
 
 export class WorkspaceSessions {
   constructor(file, { inspect = readWorkspace, uuid = randomUUID, now = Date.now, planService = null,
-    getExecutionSettings = () => validateParallelSettings() } = {}) {
-    Object.assign(this, { file, uuid, now, planService, getExecutionSettings });
+    getExecutionSettings = () => validateParallelSettings(), git=workspaceGit } = {}) {
+    Object.assign(this, { file, uuid, now, planService, getExecutionSettings, git });
     this.inspect = (workspace, sessionId = this.project(workspace)?.sessionId) => inspect(workspace, sessionId);
     this.saveTail = Promise.resolve();
     this.mutationTail = Promise.resolve();
@@ -410,7 +411,7 @@ export class WorkspaceSessions {
       const parent=data.projects.find(p=>p.workspace===child.parentWorkspace&&!p.parentWorkspace);
       let confirmed=ownedExecutor(child,parent);
       if(parent&&!child.parentProjectId) {
-        const proofs=await Promise.all(child.sessions.map(s=>assignmentOwnership(parent,child.workspace,s.assignmentId)));
+        const proofs=await Promise.all(child.sessions.map(s=>assignmentOwnership(parent,child.workspace,s.assignmentId,this.git)));
         confirmed=proofs.length>0&&proofs.every((proof,i)=>proof&&proof.parent_scope_id===child.sessions[i].parentScopeId
           &&proof.parent_task_id===child.sessions[i].taskId&&parent.sessions.some(s=>s.sessionId===child.sessions[i].executionOriginSessionId));
         if(confirmed){child.parentProjectId=parent.projectId;for(const s of child.sessions)s.parentProjectId=parent.projectId;ownershipChanged=true;}

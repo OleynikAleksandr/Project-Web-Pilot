@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1688,
+  "plan_revision": 1690,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -90,7 +90,14 @@
       "tests/parallel-execution-ui.test.mjs",
       "src/chat-colors-window.mjs",
       "src/ui/project-doctor.mjs",
-      "src/ui/workspace-setup.mjs"
+      "src/ui/workspace-setup.mjs",
+      "packages/workflow-kit/src/lib/git.mjs",
+      "packages/workflow-kit/src/lib/transaction.mjs",
+      "packages/workflow-kit/src/lib/task-integration.mjs",
+      "tools/codex-app-server-mcp/codex-tools.lock.json",
+      "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs",
+      "packages/workflow-kit/scripts/check-previous-upgrade-fixture.mjs",
+      "tests/protected-preview-fixture.cjs"
     ],
     "documentation_paths": [
       "docs/planning/reliable-completion-sidebar.md",
@@ -119,7 +126,7 @@
     ]
   },
   "baseline_commit": "c3da7b29a5e29945637f1f54f70071269605f6a6",
-  "current_task_id": "T005",
+  "current_task_id": null,
   "context_pack": {
     "documents": [
       {
@@ -360,8 +367,8 @@
       ]
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "T005",
@@ -383,7 +390,18 @@
         "scripts/check-installed-release.mjs",
         "tests/workflow-kit-source.test.mjs",
         "packages/workflow-kit/src/lib/common.mjs",
-        "packages/workflow-kit/src/lib/installer.mjs"
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/git.mjs",
+        "packages/workflow-kit/src/lib/transaction.mjs",
+        "packages/workflow-kit/src/lib/task-integration.mjs",
+        "tools/codex-app-server-mcp/codex-tools.lock.json",
+        "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs",
+        "packages/workflow-kit/scripts/check-previous-upgrade-fixture.mjs",
+        "src/main.mjs",
+        "src/workspace-deletion.mjs",
+        "src/workspace-session.mjs",
+        "tests/protected-preview-fixture.cjs",
+        "tests/workspace-deletion.test.mjs"
       ],
       "documentation_paths": [
         "packages/workflow-kit/src/templates/PLAN.md",
@@ -403,10 +421,34 @@
         "Полный временный Git/Electron цикл с сервером завершает main и один финальный ответ без пользовательского толчка; restart/сбои/два проекта проверены",
         "Правила Kit выбирают декомпозицию по результату/зависимостям/контрактам/риску без нормативов файлов/строк; текущая работа sequential",
         "Версии 0.6.110 и Kit 1.7.2, lockfiles и evidence согласованы; Kit установлен штатно",
-        "Kit 1.7.2 поддерживает upgradeFrom 1.7.1 и установлен штатно с проверкой миграции"
+        "Kit 1.7.2 поддерживает upgradeFrom 1.7.1 и установлен штатно с проверкой миграции",
+        "Общий deadline коммита и интеграции покрывает сумму timeout_ms последовательных проверок; installed Kit обновлён штатно с сохранением активного плана",
+        "Установленный Codex 0.162.1 сверён с исходниками тега: определения трёх инструментов совпадают с 0.162.0"
       ],
       "expected_commit_message": "fix: Сквозная регрессия и подготовка выпуска 0.6.110",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "package-lock.json",
+        "package.json",
+        "packages/workflow-kit/package.json",
+        "packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs",
+        "packages/workflow-kit/scripts/check-previous-upgrade-fixture.mjs",
+        "packages/workflow-kit/src/WORKFLOW.md",
+        "packages/workflow-kit/src/lib/common.mjs",
+        "packages/workflow-kit/src/lib/git.mjs",
+        "packages/workflow-kit/src/lib/installer.mjs",
+        "packages/workflow-kit/src/lib/task-integration.mjs",
+        "packages/workflow-kit/src/lib/transaction.mjs",
+        "packages/workflow-kit/src/templates/PLAN.md",
+        "packages/workflow-kit/src/templates/PROTOTYPE.md",
+        "src/main.mjs",
+        "src/workspace-deletion.mjs",
+        "src/workspace-session.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/protected-preview-fixture.cjs",
+        "tests/workspace-deletion.test.mjs",
+        "tools/codex-app-server-mcp/codex-tools.lock.json"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -571,8 +613,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
-Current Task: T005
-Revision: 1688
+Current Task: нет
+Revision: 1690
 
 ## Цель
 
@@ -637,10 +679,10 @@ Revision: 1688
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/ui/settings-panel.mjs, src/context-session.mjs, src/main.mjs, src/workspace-session.mjs, src/session-plans.mjs, src/execution-projection.mjs, tests/sidebar.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/settings-chatgpt-channel.test.mjs, src/chat-colors-window.mjs, src/ui/project-doctor.mjs, src/ui/workspace-setup.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/workspace-deletion.test.mjs, tests/workspace-session.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T003, T002
-- [IN_PROGRESS] T005: Сквозная регрессия и подготовка выпуска 0.6.110 — В работе
-  - Git Commit: [PENDING] fix: Сквозная регрессия и подготовка выпуска 0.6.110
+- [DONE] T005: Сквозная регрессия и подготовка выпуска 0.6.110 — Завершено
+  - Git Commit: [DONE] fix: Сквозная регрессия и подготовка выпуска 0.6.110
   - Reference: reliable-completion-sidebar-20261010 / T005 / implementation
-  - Файлы: tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/package.json, package.json, package-lock.json, scripts/check-codex-tools.mjs, scripts/check-installed-release.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
+  - Файлы: tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/package.json, package.json, package-lock.json, scripts/check-codex-tools.mjs, scripts/check-installed-release.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/task-integration.mjs, tools/codex-app-server-mcp/codex-tools.lock.json, packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs, packages/workflow-kit/scripts/check-previous-upgrade-fixture.mjs, src/main.mjs, src/workspace-deletion.mjs, src/workspace-session.mjs, tests/protected-preview-fixture.cjs, tests/workspace-deletion.test.mjs, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004
 - [TODO] DOCS: Актуализация всех документов проекта — Ожидает

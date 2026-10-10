@@ -233,6 +233,7 @@ const liveSessions = new SessionRuntimes({store,runtime:()=>runtime,contextCache
   onChatBound:record=>{if(record===liveSessions.visible)void syncSelectedSessionTitle({force:true,reason:'chat-bound'});},
   onPage:(record,event)=>applyObservedPage(event,record),onError:sessionRuntimeError,decorate:decorateSessionRuntime});
 const executionKit=new ParallelKit({plans:sessionPlans,setup:workspaceSetup});
+store.git=(workspace,args)=>executionKit.git(workspace,['--no-optional-locks',...args]);
 const liveRecord=project=>project&&liveSessions.records.get(sessionRuntimeKey(project));
 async function restoreExecutionPage(project,assignment=null) {
   if(liveRecord(project)?.ready&&(!assignment||liveRecord(project).executor))return project;
@@ -1563,7 +1564,7 @@ else {
         : path.join(sourceDir, '../.harness/runtime/windows-payload', WINDOWS_RUNTIME_ARCHIVE);
       windowsBootstrap = new WindowsExecutorBootstrap({ payloadFile, stateDir: runtimeFolder });
     }
-    deletion = new WorkspaceDeletion({ store, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder], prepare:prepareProjectRemoval, cleanup:cleanupDeletedProject, purgeState:(dir,identities)=>{
+    deletion = new WorkspaceDeletion({ store, git:store.git, journalDir: path.join(dataDir, 'deletions'), protectedPaths: [app.getAppPath(), runtimeFolder], prepare:prepareProjectRemoval, cleanup:cleanupDeletedProject, purgeState:(dir,identities)=>{
       settingsSaveTail=queueProjectStatePurge(settingsSaveTail,dir,identities);return settingsSaveTail;
     } });
     if (!storageError) {

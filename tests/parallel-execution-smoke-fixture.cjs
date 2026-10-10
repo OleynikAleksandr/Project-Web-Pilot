@@ -167,20 +167,86 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   assert.equal(belongsToProject(settingsAfter,[{workspace:root,projectId:oldProjectId,sessionIds:[origin.sessionId]}]),false);
   getArchiveWindow().close();
   // Same folder name and same scope, different identity: no inherited grant or old assignment.
-  await ipc('openSettings');await ipc('setParallelExecution',{parallel_allowed:true,max_workers:2});await ipc('closeSettings');
+  await ipc('openSettings');await ipc('setParallelExecution',{parallel_allowed:true,max_workers:3});await ipc('closeSettings');
   const recreated=(await run('--create',path.dirname(root))).root;assert.equal(recreated,root);
   await selectWorkspace(root);
   await wait(()=>store.selected()?.workspace===root&&snapshot().context.phase==='delivered','recreated main context');
   const newOrigin=store.selected();assert.notEqual(newOrigin.projectId,oldProjectId);assert.equal(snapshot().autoPlan.enabled,false);
   const newMain=record(root,newOrigin.sessionId);await newMain.view.webContents.executeJavaScript('window.fixtureAssistant("Новый план готов")');
-  await run('--plan',root,newOrigin.sessionId);
+  await run('--plan-five',root,newOrigin.sessionId);
   await wait(()=>snapshot().selected?.scopeId==='parallel-fixture','same scope republished');
   assert.equal(snapshot().autoPlan.enabled,false);assert.equal(snapshot().execution.assignments.length,0);
-  assert.equal((await ipc('setAutoPlan',true)).ok,true);
-  await wait(()=>snapshot().execution.assignments.length===2,'fresh assignments after deletion');
-  assert.ok(snapshot().execution.assignments.every(a=>!oldIds.includes(a.id)));
-  await ipc('setAutoPlan',false);
+const httpPreview=await require('./protected-preview-fixture.cjs').start(root,path.join(dataDir,'preview-state'));
+  try {
+    if(httpPreview) {
+      assert.equal(httpPreview.writeDenied,true);
+      assert.equal((await fetch(httpPreview.url+'/RESULT.md')).status,200);
+    }
+    assert.equal((await ipc('setAutoPlan',true)).ok,true);
+    await wait(()=>snapshot().execution.assignments.length===1,'exclusive foundation gets one assignment');
+    const foundation=snapshot().execution.assignments[0];
+    assert.equal(foundation.parent_task_id,'T001');assert.ok(!oldIds.includes(foundation.id));
+    await wait(()=>record(foundation.worktree)?.controller.state.phase==='delivered','foundation delivered');
+    await hold(record(foundation.worktree));await run('--complete',foundation.worktree);await finish(record(foundation.worktree));
+    await wait(()=>snapshot().execution.assignments.length===4,'three independent tools start after foundation');
+    const tools=snapshot().execution.assignments.filter(a=>a.parent_task_id!=='T001');
+    assert.deepEqual(tools.map(a=>a.parent_task_id).sort(),['T002','T003','T004']);
+    assert.equal(new Set(tools.map(a=>a.base_commit)).size,1);
+    await wait(()=>tools.every(a=>record(a.worktree)?.controller.state.phase==='delivered'),'three tools delivered');
+    for(const a of tools) {
+      assert.match(await fs.readFile(path.join(a.worktree,'FOUNDATION.md'),'utf8'),/worker-a/);
+      assert.equal(store.project(a.worktree).parentProjectId,newOrigin.projectId);
+      await hold(record(a.worktree));
+    }
+    for(const a of tools){await run('--complete',a.worktree);await finish(record(a.worktree));}
+    await wait(()=>snapshot().execution.assignments.length===5,'final task waits for all verified dependencies');
+    const last=snapshot().execution.assignments.find(a=>a.parent_task_id==='T005');
+    await wait(()=>record(last.worktree)?.controller.state.phase==='delivered','final task delivered');
+    for(const file of ['FOUNDATION.md','TOOL-A.md','TOOL-B.md','TOOL-C.md'])
+      assert.match(await fs.readFile(path.join(last.worktree,file),'utf8'),/worker-/);
+    const beforeFinal=await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length');
+    await hold(record(last.worktree));await run('--complete',last.worktree);await finish(record(last.worktree));
+    await wait(()=>snapshot().execution.finalizationStatus==='sent','ready final source reaches primary before DONE');
+    assert.equal(snapshot().execution.planView.completed,4);
+    if(httpPreview) {
+      assert.match(await (await fetch(httpPreview.url+'/RESULT.md')).text(),/Original/,'worktree result is not yet main');
+      const {readCommandActivity}=await import('../src/command-activity.mjs');
+      const activity=await readCommandActivity(root);
+      assert.equal(activity.commandActive,false);assert.equal(activity.deletionBlocked,true);
+      assert.ok(activity.commands.some(c=>c.readOnly));
+    }
+    const ready=await plans.call(root,'assignment:status',['--id',last.id]);
+    await hold(newMain);await wait(()=>newMain.pageState.current?.state.busy,'primary final verification running');
+    await plans.call(root,'integration:start',[],{id:last.id,source_commit:ready.source_commit});
+    const validation=await plans.call(root,'validate');assert.equal(Object.keys(validation.resolved).length,5);
+    if(httpPreview)assert.match(await (await fetch(httpPreview.url+'/RESULT.md')).text(),/worker-e/);
+    const report='Пять задач проверены в общем main. '+root+(httpPreview?' · '+httpPreview.url:'')+'. TEST FIXTURE; приёмку выполняет пользователь.';
+    await newMain.view.webContents.executeJavaScript('document.getElementById("parallel-held")?.remove();window.fixtureAssistant('+JSON.stringify(report)+')');
+    await wait(()=>snapshot().execution.finalizationStatus==='reply-observed'&&!snapshot().autoPlan.enabled,'one final report and completion OFF');
+    assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+1);
+    await ipc('selectSession',otherRoot,store.project(otherRoot).sessionId);await ipc('selectSession',root,newOrigin.sessionId);
+    assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal+1,'project switching cannot repeat final handoff');
+    // A live read-only httpPreview blocks deletion. Stopping its exact session permits a new confirmation.
+    await ipc('archiveProject',root);await ipc('openArchive',root);
+    await wait(()=>getArchiveWindow()&&!getArchiveWindow().isDestroyed(),'five-task archive ready');
+    const archive=getArchiveWindow().webContents;
+    await wait(()=>archive.executeJavaScript('typeof window.webPilotArchive==="object"'),'five-task archive preload');
+    const item={workspace:root,projectId:newOrigin.projectId};
+    const inspect=()=>archive.executeJavaScript('window.webPilotArchive.previewDelete('+JSON.stringify(item)+')');
+    const remove=httpPreview=>archive.executeJavaScript('window.webPilotArchive.deleteProject('+JSON.stringify(httpPreview.result.token)+','+JSON.stringify(store.project(root).name)+')');
+    if(httpPreview) {
+      const ticket=await inspect();assert.equal(ticket.ok,true);
+      const blocked=await remove(ticket);assert.equal(blocked.ok,false);assert.equal(blocked.error.code,'DELETE_PROJECT_BUSY');
+      assert.ok(store.project(root));await httpPreview.stop();
+    }
+    const ticket=await inspect();assert.equal(ticket.ok,true,JSON.stringify(ticket));
+    const deleted=await remove(ticket);assert.equal(deleted.ok,true,JSON.stringify(deleted));
+    assert.equal(store.project(root),null);assert.ok(store.project(otherRoot));
+    for(const a of [foundation,...tools,last])assert.equal(store.project(a.worktree),null);
+    getArchiveWindow().close();
+  }finally{if(httpPreview)await httpPreview.stop();}
   await fs.writeFile(path.join(dataDir,'parallel-execution-result.json'),JSON.stringify({mode:'isolated-fixture',realIpc:true,
-    realDependency:true,workers:3,independentPages:true,conflictCorrectionMainChat:true,mergeCommits:3,fullProjectDeletion:true,recreatedProjectFreshAssignments:true,liveChatGPT:false,nativeWindows:false,cleanOS:false},null,2));
+    realDependency:true,workers:8,fiveTaskDependencyChain:true,readOnlyHttp:!!httpPreview,oneFinalReport:true,
+    independentPages:true,conflictCorrectionMainChat:true,mergeCommits:8,fullProjectDeletion:true,recreatedProjectFreshAssignments:true,liveChatGPT:false,nativeWindows:false,cleanOS:false},null,2));
   return true;
 };

@@ -54,7 +54,7 @@ test('multiple owned children are journaled, archived with parent visibility, an
 
 test('a replaced child directory stops journal recovery before parent removal',async t=>{
   const {store,service,project}=await fixture(t),a=await project('A'),child=await boundChild(store,a,'replace');
-  await store.setArchived(a,true);service.prepare=async()=>{throw Error('interrupt');};
+  await store.setArchived(a,true);service.finish=async()=>{throw Error('interrupt');};
   const preview=await service.preview(a);await assert.rejects(service.apply(preview.token,preview.name),/interrupt/);
   await fs.rename(child,child+'-original');await fs.mkdir(child);await fs.writeFile(path.join(child,'foreign'),'keep');
   const restarted=new WorkspaceDeletion({store,journalDir:service.journalDir});

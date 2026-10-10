@@ -2,10 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
-import { readWorkspace, WorkspaceError, assignmentOwnership, ownedExecutor } from './workspace-session.mjs';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-const executeGit=promisify(execFile);
+import { readWorkspace, WorkspaceError, assignmentOwnership, ownedExecutor, workspaceGit } from './workspace-session.mjs';
 import { diagnosticFiles, queueDiagnosticFile } from './common.mjs';
 import { purgeProjectStateFiles } from './project-state-cleanup.mjs';
 
@@ -16,8 +13,8 @@ const identity = stat => ({ dev: String(stat.dev), ino: String(stat.ino) });
 const same = (stat, expected) => stat?.isDirectory() && !stat.isSymbolicLink() && String(stat.dev) === expected.dev && String(stat.ino) === expected.ino;
 
 export class WorkspaceDeletion {
-  constructor({ store, journalDir, protectedPaths = [], home = os.homedir(), prepare=async()=>{}, cleanup=async()=>{}, purgeState=purgeProjectStateFiles }) {
-    Object.assign(this, { store, journalDir, protectedPaths, home, prepare, cleanup, purgeState });
+  constructor({ store, journalDir, protectedPaths = [], home = os.homedir(), prepare=async()=>{}, cleanup=async()=>{}, purgeState=purgeProjectStateFiles, git=workspaceGit }) {
+    Object.assign(this, { store, journalDir, protectedPaths, home, prepare, cleanup, purgeState, git });
     this.tickets = new Map(); this.pending = new Set();
   }
   clear() { this.tickets.clear(); }
@@ -73,11 +70,10 @@ export class WorkspaceDeletion {
         const pointer=gitFile.trim().replace(/^gitdir: /,'');
         if(!gitFile.startsWith('gitdir: ')||!within(pointer,path.join(project.workspace,'.git/worktrees')))
           fail('DELETE_WORKTREE_CHANGED','Git исполнителя принадлежит другому проекту.');
-        const binding=await assignmentOwnership(project,item.workspace,item.id);
+        const binding=await assignmentOwnership(project,item.workspace,item.id,this.git);
         if(!binding)
           fail('DELETE_WORKTREE_CHANGED','Назначение исполнителя не соответствует удаляемому проекту.');
-        const {stdout}=await executeGit('git',['--no-optional-locks','-C',item.workspace,'status','--porcelain'],
-          {encoding:'utf8',timeout:10000,maxBuffer:1024*1024,windowsHide:true});
+        const stdout=await this.git(item.workspace,['status','--porcelain']);
         if(stdout.trim()||binding.phase!=='INTEGRATED')fail('DELETE_WORKTREE_BUSY','У исполнителя осталась незавершённая работа. Сначала завершите её.');
         item.identity=identity(stat);
       }
@@ -120,6 +116,8 @@ export class WorkspaceDeletion {
       fail('DELETE_PREVIEW_CHANGED', 'Проект изменился после проверки. Откройте подтверждение заново.');
     const id = randomUUID();
     const job = { ...expected, id, quarantine: path.join(path.dirname(expected.workspace), '.web-pilot-delete-' + id), stage: 'confirmed' };
+    // A busy server or page has not admitted deletion. Do not leave an unusable confirmed journal.
+    await this.prepare(job);
     await fs.mkdir(this.journalDir, { recursive: true, mode: 0o700 });
     await fs.writeFile(this.jobFile(job), JSON.stringify(job), { mode: 0o600, flag: 'wx' });
     this.pending.add(job.workspace);

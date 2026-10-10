@@ -27,7 +27,8 @@ export function createFixture(directory) {
   fs.mkdirSync(directory,{recursive:true});const root=path.join(fs.realpathSync(directory),'main');fs.mkdirSync(root);
   git(root,'init','-b','main');git(root,'config','user.name','Parallel Fixture');git(root,'config','user.email','fixture@example.invalid');
   write(root,'.gitignore','node_modules/\n');
-  for(const file of ['README.md','SECOND.md','THIRD.md'])write(root,file,'# Original\n');
+  for(const file of ['README.md','SECOND.md','THIRD.md','FOUNDATION.md','TOOL-A.md','TOOL-B.md','TOOL-C.md','RESULT.md'])write(root,file,'# Original\n');
+  write(root,'verify-five.mjs',"import assert from 'node:assert/strict';import fs from 'node:fs';if(fs.readFileSync('RESULT.md','utf8').includes('worker-e'))for(const f of ['FOUNDATION.md','TOOL-A.md','TOOL-B.md','TOOL-C.md'])assert.match(fs.readFileSync(f,'utf8'),/worker-/);\n");
   write(root,'vendor/fixture-dep/package.json',JSON.stringify({name:'fixture-dep',version:'1.0.0',type:'module',exports:'./index.mjs'}));
   write(root,'vendor/fixture-dep/index.mjs','export const value=37;\n');
   write(root,'package.json',JSON.stringify({name:'parallel-fixture',version:'1.0.0',private:true,type:'module',
@@ -48,6 +49,24 @@ export function planFixture(root,origin='fixture-origin') {
     context_pack:{documents:[],dependency_task_ids:[],include_last_completed_task:false},
     tasks:[task('T001','README.md'),task('T002','SECOND.md'),task('T003','THIRD.md',['T001','T002'])]});
 }
+export function planFiveFixture(root,origin) {
+  const files=['FOUNDATION.md','TOOL-A.md','TOOL-B.md','TOOL-C.md','RESULT.md'];
+  const config=readConfig(root);
+  config.checks.push({id:'five',executable:process.execPath,args:['verify-five.mjs'],required:false,timeout_ms:30000});
+  applyConfig(root,config);
+  const task=(id,file,dependencies,parallel_safe)=>({id,title:'Write '+file,why:'Verified dependency result',dependencies,parallel_safe,
+    functional_paths:[],documentation_paths:[file],verification_ids:['dependency','five'],
+    acceptance_criteria:['Output committed and dependencies available'],expected_commit_message:'docs: '+file,
+    context_pack:{documents:[{path:'README.md',required:false}],dependency_task_ids:[],include_last_completed_task:false}});
+  return createScope(root,{scope_id:'parallel-fixture',objective:'Foundation, independent tools, verified final result',
+    approval_note:'Isolated automated fixture',parallel_allowed:true,max_workers:3,execution_strategy:'parallel',
+    execution_reason:'Foundation precedes independent tools; final result uses their verified integrations.',execution_origin_session_id:origin,
+    acceptance_criteria:['Five verified sources, one final response and working main preview'],
+    approved_scope:{functional_paths:[],documentation_paths:files},
+    context_pack:{documents:[],dependency_task_ids:[],include_last_completed_task:false},
+    tasks:[task('T001',files[0],[],false),task('T002',files[1],['T001'],true),task('T003',files[2],['T001'],true),
+      task('T004',files[3],['T001'],true),task('T005',files[4],['T002','T003','T004'],false)]});
+}
 export function legacyStartFixture(root) {
   const plan=readPlan(root),task=plan.tasks[0];beginTaskFiles(root,plan,task);
   task.implementation_status='IN_PROGRESS';plan.current_task_id=task.id;plan.plan_revision++;writePlan(root,plan);
@@ -55,8 +74,8 @@ export function legacyStartFixture(root) {
 }
 export function completeFixture(root) {
   const task=readPlan(root).tasks[0];
-  if(task.id==='T003')for(const file of ['README.md','SECOND.md'])assert.match(fs.readFileSync(path.join(root,file),'utf8'),/worker-/);
-  startTask(root,task.id);write(root,task.documentation_paths[0],'# worker-'+({T001:'a',T002:'b',T003:'c'}[task.id])+'\n');
+  if(task.documentation_paths[0]==='THIRD.md')for(const file of ['README.md','SECOND.md'])assert.match(fs.readFileSync(path.join(root,file),'utf8'),/worker-/);
+  startTask(root,task.id);write(root,task.documentation_paths[0],'# worker-'+({T001:'a',T002:'b',T003:'c',T004:'d',T005:'e'}[task.id])+'\n');
   return commitTask(root,task.id);
 }
 export function conflictFixture(root) {
@@ -100,6 +119,7 @@ export function runFixture() {
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
   const [mode,root,value]=process.argv.slice(2);
   const result=mode==='--create'?{root:createFixture(root)}:mode==='--plan'?planFixture(root,value)
+    :mode==='--plan-five'?planFiveFixture(root,value)
     :mode==='--legacy-start'?legacyStartFixture(root):mode==='--complete'?completeFixture(root):mode==='--conflict'?conflictFixture(root)
       :mode==='--correct'?correctFixture(root,value):runFixture();
   console.log(JSON.stringify(result));
