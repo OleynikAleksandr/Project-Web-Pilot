@@ -2,7 +2,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
-import { readWorkspace, WorkspaceError } from './workspace-session.mjs';
+import { readWorkspace, WorkspaceError, assignmentOwnership, ownedExecutor } from './workspace-session.mjs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+const executeGit=promisify(execFile);
 import { diagnosticFiles, queueDiagnosticFile } from './common.mjs';
 import { purgeProjectStateFiles } from './project-state-cleanup.mjs';
 
@@ -45,14 +48,19 @@ export class WorkspaceDeletion {
     return stat;
   }
   async related(project) {
-    const records=this.store.snapshot().projects.filter(p=>p.parentWorkspace===project.workspace);
+    const records=this.store.snapshot().projects.filter(p=>ownedExecutor(p,project));
     const assignments=path.join(project.workspace,'.git/workflow-kit/assignments');
-    const candidates=new Map(records.map(p=>[p.workspace,{workspace:p.workspace,id:p.sessions[0]?.assignmentId,projectId:p.projectId,sessionIds:p.sessions.map(s=>s.sessionId)}]));
+    const candidates=new Map(records.map(p=>[p.workspace,{workspace:p.workspace,id:p.sessions[0]?.assignmentId,projectId:p.projectId,parentProjectId:project.projectId,sessionIds:p.sessions.map(s=>s.sessionId)}]));
     for(const name of await fs.readdir(assignments).catch(e=>{if(e.code==='ENOENT'||e.code==='ENOTDIR')return [];throw e;})) {
       if(!/^[A-Za-z0-9_-]+\.json$/.test(name))continue;
       const a=JSON.parse(await fs.readFile(path.join(assignments,name),'utf8'));
       if(a.parent_root!==project.workspace)continue;
-      if(!candidates.has(a.worktree))candidates.set(a.worktree,{workspace:a.worktree,id:a.id,sessionIds:[]});
+      if(!candidates.has(a.worktree)) {
+        const saved=this.store.snapshot().projects.find(p=>p.workspace===a.worktree);
+        if(saved&&saved.parentProjectId&& !ownedExecutor(saved,project))fail('DELETE_WORKTREE_CHANGED','Исполнитель принадлежит другой записи проекта.');
+        candidates.set(a.worktree,{workspace:a.worktree,id:a.id,projectId:saved?.projectId,parentProjectId:project.projectId,
+          legacyVerified:!!saved&&!saved.parentProjectId,sessionIds:saved?.sessions.map(s=>s.sessionId)??[]});
+      }
     }
     const result=[];
     for(const item of candidates.values()) {
@@ -65,9 +73,12 @@ export class WorkspaceDeletion {
         const pointer=gitFile.trim().replace(/^gitdir: /,'');
         if(!gitFile.startsWith('gitdir: ')||!within(pointer,path.join(project.workspace,'.git/worktrees')))
           fail('DELETE_WORKTREE_CHANGED','Git исполнителя принадлежит другому проекту.');
-        const binding=JSON.parse(await fs.readFile(path.join(pointer,'workflow-kit/assignment.json'),'utf8'));
-        if(binding.id!==item.id||binding.parent_root!==project.workspace||binding.worktree!==item.workspace)
+        const binding=await assignmentOwnership(project,item.workspace,item.id);
+        if(!binding)
           fail('DELETE_WORKTREE_CHANGED','Назначение исполнителя не соответствует удаляемому проекту.');
+        const {stdout}=await executeGit('git',['--no-optional-locks','-C',item.workspace,'status','--porcelain'],
+          {encoding:'utf8',timeout:10000,maxBuffer:1024*1024,windowsHide:true});
+        if(stdout.trim()||binding.phase!=='INTEGRATED')fail('DELETE_WORKTREE_BUSY','У исполнителя осталась незавершённая работа. Сначала завершите её.');
         item.identity=identity(stat);
       }
       result.push(item);
@@ -142,6 +153,12 @@ export class WorkspaceDeletion {
   async finish(job) {
     const record = this.store.project(job.workspace);
     if (record && (!record.archivedAt || record.projectId !== job.projectId)) fail('DELETE_RECORD_CHANGED', 'Запись проекта изменилась. Автоматическая очистка остановлена.');
+    for(const child of job.related??[]) {
+      const current=this.store.project(child.workspace);
+      if(current&&(current.projectId!==child.projectId||current.parentWorkspace!==job.workspace
+        ||current.parentProjectId&&current.parentProjectId!==job.projectId))
+        fail('DELETE_RECORD_CHANGED','Запись исполнителя изменилась. Очистка остановлена.');
+    }
     await this.prepare(job);
     await this.guard(job.workspace);
     let quarantined = await lstatOrNull(job.quarantine);
@@ -175,7 +192,7 @@ export class WorkspaceDeletion {
     await this.purgeState(path.dirname(this.store.file),identities);
     for(const item of identities)await this.purgeCopies(item.workspace);
     await this.store.removeTemporaries();
-    await this.store.forgetDeletedProject(job.workspace, job.projectId);
+    await this.store.forgetDeletedProject(job.workspace, job.projectId, job.related);
     await fs.unlink(this.jobFile(job)); this.pending.delete(job.workspace);
   }
   async recover() {

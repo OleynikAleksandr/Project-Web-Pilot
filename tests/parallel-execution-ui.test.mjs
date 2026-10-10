@@ -18,7 +18,7 @@ test('status distinguishes observed work, unknown, source readiness and verified
 });
 
 test('saved executor belongs to its original main session, keeps totals without a live page and never copies conversation text',()=>{
-  const projects=[{workspace:'/tree',parentWorkspace:'/main',sessions:[{sessionId:'child',assignmentId:'a',taskId:'T1',
+  const projects=[{workspace:'/main',projectId:'parent'},{workspace:'/tree',parentWorkspace:'/main',parentProjectId:'parent',sessions:[{sessionId:'child',assignmentId:'a',taskId:'T1',
     executionOriginSessionId:'original',title:'Task',experience:'work',executionTime:{activeMs:10,waitingMs:20},attempt:{text:'PRIVATE'}}]}];
   const view=projectExecutors(projects,'/main',{assignments:[{id:'a',status:'READY_FOR_INTEGRATION'}]},()=>null);
   assert.equal(view.length,1);assert.equal(view[0].originSessionId,'original');assert.equal(view[0].phase,'unknown');

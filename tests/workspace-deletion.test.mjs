@@ -3,8 +3,64 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import {execFileSync} from 'node:child_process';
 import { WorkspaceSessions } from '../src/workspace-session.mjs';
 import { WorkspaceDeletion } from '../src/workspace-deletion.mjs';
+
+async function boundChild(store,a,id) {
+  const {createHash}=await import('node:crypto'),git=(cwd,...args)=>execFileSync('git',['-C',cwd,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+  try{git(a,'rev-parse','HEAD');}catch{
+    git(a,'init');git(a,'config','user.name','Fixture');git(a,'config','user.email','fixture@example.invalid');git(a,'add','.');git(a,'commit','-m','fixture');
+  }
+  const origin=store.project(a),worktree=path.join(path.dirname(a),'.web-pilot-worktrees',createHash('sha256').update(a).digest('hex').slice(0,16),id);
+  await fs.mkdir(path.dirname(worktree),{recursive:true});git(a,'worktree','add','-b',id,worktree);
+  const assignment={id,parent_root:a,worktree,base_commit:git(a,'rev-parse','HEAD'),parent_scope_id:'scope',parent_task_id:'T001',phase:'INTEGRATED',title:id};
+  const admin=git(worktree,'rev-parse','--absolute-git-dir');
+  await fs.mkdir(path.join(admin,'workflow-kit'),{recursive:true});await fs.mkdir(path.join(a,'.git/workflow-kit/assignments'),{recursive:true});
+  await fs.writeFile(path.join(admin,'workflow-kit/assignment.json'),JSON.stringify(assignment));
+  await fs.writeFile(path.join(a,'.git/workflow-kit/assignments',id+'.json'),JSON.stringify(assignment));
+  await store.ensureExecutor(assignment,origin);
+  return worktree;
+}
+
+test('legacy migration needs committed ownership, keeps foreign and missing parents as recovery records',async t=>{
+  const {store,project}=await fixture(t),a=await project('A'),child=await boundChild(store,a,'legacy');
+  const saved=store.data.projects.find(p=>p.workspace===child);
+  delete saved.parentProjectId;for(const s of saved.sessions)delete s.parentProjectId;
+  await store.save();const restart=new WorkspaceSessions(store.file);await restart.load();
+  assert.equal(restart.project(child).parentProjectId,'A');
+  assert.equal(restart.project(child).ownershipState,'confirmed');
+  delete saved.parentProjectId;store.data.projects.find(p=>p.workspace===a).projectId='replacement';await store.save();
+  const replaced=new WorkspaceSessions(store.file);await replaced.load();
+  assert.equal(replaced.project(child).parentProjectId,undefined);assert.equal(replaced.project(child).ownershipState,'recovery');
+  await assert.rejects(replaced.selectSession(child,replaced.project(child).sessionId),{code:'ASSIGNMENT_OWNER'});
+  store.data.projects=store.data.projects.filter(p=>p.workspace!==a);await store.save();
+  const missing=new WorkspaceSessions(store.file);await missing.load();
+  assert.equal(missing.project(child).ownershipState,'recovery');assert.equal(missing.landing(),null);
+});
+
+test('multiple owned children are journaled, archived with parent visibility, and cleaned after restart',async t=>{
+  const {store,service,project}=await fixture(t),a=await project('A'),b=await project('B');
+  const one=await boundChild(store,a,'one'),two=await boundChild(store,a,'two');
+  await store.selectSession(one,store.project(one).sessionId);await store.setArchived(a,true);
+  assert.equal(store.selected(),null);assert.equal(store.landing().workspace,b);
+  service.cleanup=async()=>{throw Error('restart checkpoint');};
+  const preview=await service.preview(a);await assert.rejects(service.apply(preview.token,preview.name),/restart checkpoint/);
+  const restart=new WorkspaceDeletion({store,journalDir:service.journalDir});assert.deepEqual(await restart.recover(),[]);
+  assert.equal(store.project(one),null);assert.equal(store.project(two),null);assert.ok(store.project(b));
+  assert.deepEqual(await restart.recover(),[]);
+});
+
+test('a replaced child directory stops journal recovery before parent removal',async t=>{
+  const {store,service,project}=await fixture(t),a=await project('A'),child=await boundChild(store,a,'replace');
+  await store.setArchived(a,true);service.prepare=async()=>{throw Error('interrupt');};
+  const preview=await service.preview(a);await assert.rejects(service.apply(preview.token,preview.name),/interrupt/);
+  await fs.rename(child,child+'-original');await fs.mkdir(child);await fs.writeFile(path.join(child,'foreign'),'keep');
+  const restarted=new WorkspaceDeletion({store,journalDir:service.journalDir});
+  assert.ok((await restarted.recover()).length);assert.equal(await fs.readFile(path.join(child,'foreign'),'utf8'),'keep');
+  assert.ok(await fs.stat(a));
+});
+
 
 const directoryLink = (target, link) => fs.symlink(target, link, process.platform === 'win32' ? 'junction' : 'dir');
 
@@ -16,7 +72,7 @@ async function fixture(t) {
   const project = async name => {
     const folder = path.join(root, name);
     await fs.mkdir(path.join(folder, '.harness/plans'), { recursive: true }); await fs.mkdir(path.join(folder, 'scripts'));
-    const plan = { schema_version: 1, project_id: name, project_name: name, plan_revision: 1, tasks: [] };
+    const plan = { schema_version: 1, project_id: name, project_name: name, plan_revision: 1, scope_id:'scope', tasks: [] };
     await fs.writeFile(path.join(folder, '.harness/plans/todo-plan.md'), '<!-- workflow-state:begin -->\n```json\n' + JSON.stringify(plan) + '\n```\n<!-- workflow-state:end -->');
     await fs.writeFile(path.join(folder, 'scripts/workflow.mjs'), ''); await fs.writeFile(path.join(folder, 'my-file.txt'), 'keep until confirmed');
     await store.select(folder); return folder;
@@ -121,13 +177,19 @@ test('deletion removes only verified worktrees and all child sessions',async t=>
   const {root,store,service,project}=await fixture(t),a=await project('A');
   const {createHash}=await import('node:crypto');
   const id='wp-child',child=path.join(root,'.web-pilot-worktrees',createHash('sha256').update(a).digest('hex').slice(0,16),id);
-  const gitDir=path.join(a,'.git/worktrees/child'),binding={id,parent_root:a,worktree:child};
-  await fs.mkdir(path.join(gitDir,'workflow-kit'),{recursive:true});await fs.mkdir(child,{recursive:true});
+  const git=(cwd,...args)=>execFileSync('git',['-C',cwd,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+  git(a,'init');git(a,'config','user.name','Fixture');git(a,'config','user.email','fixture@example.invalid');git(a,'add','.');git(a,'commit','-m','fixture');
+  const base=git(a,'rev-parse','HEAD');await fs.mkdir(path.dirname(child),{recursive:true});git(a,'worktree','add','-b','child',child);
+  const gitDir=git(child,'rev-parse','--absolute-git-dir'),binding={id,parent_root:a,worktree:child,base_commit:base,parent_scope_id:'scope',parent_task_id:'T001',phase:'INTEGRATED'};
+  await fs.mkdir(path.join(gitDir,'workflow-kit'),{recursive:true});
   await fs.mkdir(path.join(a,'.git/workflow-kit/assignments'),{recursive:true});
   await fs.writeFile(path.join(child,'.git'),'gitdir: '+gitDir+'\n');
   await fs.writeFile(path.join(gitDir,'workflow-kit/assignment.json'),JSON.stringify(binding));
   await fs.writeFile(path.join(a,'.git/workflow-kit/assignments',id+'.json'),JSON.stringify(binding));
-  const data=store.data.projects[0];store.data.projects.push({...structuredClone(data),workspace:child,parentWorkspace:a,projectId:'child',sessions:[{...data.sessions[0],sessionId:'worker',assignmentId:id}]});await store.save();
+  const data=store.data.projects[0];store.data.projects.push({...structuredClone(data),workspace:child,parentWorkspace:a,parentProjectId:data.projectId,projectId:'child',sessions:[{...data.sessions[0],sessionId:'worker',assignmentId:id}]});await store.save();
+  await fs.writeFile(path.join(child,'unfinished.txt'),'work');
+  await store.setArchived(a,true);await assert.rejects(service.preview(a),{code:'DELETE_WORKTREE_BUSY'});
+  await fs.rm(path.join(child,'unfinished.txt'));
   await store.setArchived(a,true);const p=await service.preview(a);await service.apply(p.token,p.name);
   await assert.rejects(fs.stat(child),{code:'ENOENT'});await assert.rejects(fs.stat(path.dirname(child)),{code:'ENOENT'});assert.equal(store.project(child),null);assert.equal(store.project(a),null);
 });

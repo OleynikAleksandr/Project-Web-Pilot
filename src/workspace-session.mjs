@@ -3,6 +3,36 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { validateParallelSettings } from './parallel-settings.mjs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+const executeGit=promisify(execFile);
+
+// A path alone is not ownership: legacy records need the assignment's committed parent identity.
+export const ownedExecutor = (child,parent) => !!parent && !!child.parentProjectId
+  && child.parentProjectId===parent.projectId && child.parentWorkspace===parent.workspace;
+export async function assignmentOwnership(parent,workspace,id) {
+  try {
+    if(!parent||!path.isAbsolute(workspace)||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(id))return null;
+    const folder=await fs.lstat(workspace);
+    if(!folder.isDirectory()||folder.isSymbolicLink()||await fs.realpath(workspace)!==workspace)return null;
+    const main=await readWorkspace(parent.workspace);
+    if(main.projectId!==parent.projectId)return null;
+    const pointerText=await fs.readFile(path.join(workspace,'.git'),'utf8');
+    if(!pointerText.startsWith('gitdir: '))return null;
+    const pointer=path.resolve(workspace,pointerText.trim().slice(8));
+    const admin=path.join(parent.workspace,'.git/worktrees');
+    if(!pointer.startsWith(admin+path.sep)||await fs.realpath(pointer)!==pointer)return null;
+    const record=JSON.parse(await fs.readFile(path.join(parent.workspace,'.git/workflow-kit/assignments',id+'.json'),'utf8'));
+    const bound=JSON.parse(await fs.readFile(path.join(pointer,'workflow-kit/assignment.json'),'utf8'));
+    const fields=['id','parent_root','parent_scope_id','parent_task_id','worktree','base_commit','branch'];
+    if(fields.some(k=>record[k]!==bound[k])||record.id!==id||record.parent_root!==parent.workspace
+      ||record.worktree!==workspace||!/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(record.base_commit??''))return null;
+    const {stdout}=await executeGit('git',['-C',parent.workspace,'show',record.base_commit+':.harness/plans/todo-plan.md'],
+      {encoding:'utf8',timeout:10000,maxBuffer:1024*1024,windowsHide:true});
+    const base=JSON.parse(stdout.match(/<!-- workflow-state:begin -->\s*```json\s*([\s\S]*?)```\s*<!-- workflow-state:end -->/)?.[1]??'');
+    return base.project_id===parent.projectId&&base.scope_id===record.parent_scope_id?record:null;
+  }catch{return null;}
+}
 
 export class WorkspaceError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -203,7 +233,8 @@ function validate(data) {
       if(s.assignmentId!==undefined) {
         if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(s.assignmentId)||typeof s.taskId!=='string'
           ||typeof s.parentScopeId!=='string'||typeof s.parentWorkspace!=='string'||!path.isAbsolute(s.parentWorkspace)
-          ||typeof s.executionOriginSessionId!=='string'||p.parentWorkspace!==s.parentWorkspace)throw invalid();
+          ||typeof s.executionOriginSessionId!=='string'||p.parentWorkspace!==s.parentWorkspace
+          ||(s.parentProjectId!==undefined&&(typeof s.parentProjectId!=='string'||s.parentProjectId!==p.parentProjectId)))throw invalid();
       }
       // Additive v6 field: missing means a legacy session, never today's Settings.
       if (s.executionSnapshot !== undefined) {
@@ -373,8 +404,22 @@ export class WorkspaceSessions {
       }
     }
     this.data = data;
-    if (!data.projects.some(p => p.workspace === data.selectedWorkspace && p.archivedAt === null)) this.data.selectedWorkspace = null;
-    if (legacy || removedEstimate) await this.save();
+    let ownershipChanged=false;
+    for(const child of data.projects.filter(p=>p.parentWorkspace)) {
+      const parent=data.projects.find(p=>p.workspace===child.parentWorkspace&&!p.parentWorkspace);
+      let confirmed=ownedExecutor(child,parent);
+      if(parent&&!child.parentProjectId) {
+        const proofs=await Promise.all(child.sessions.map(s=>assignmentOwnership(parent,child.workspace,s.assignmentId)));
+        confirmed=proofs.length>0&&proofs.every((proof,i)=>proof&&proof.parent_scope_id===child.sessions[i].parentScopeId
+          &&proof.parent_task_id===child.sessions[i].taskId&&parent.sessions.some(s=>s.sessionId===child.sessions[i].executionOriginSessionId));
+        if(confirmed){child.parentProjectId=parent.projectId;for(const s of child.sessions)s.parentProjectId=parent.projectId;ownershipChanged=true;}
+      }
+      const state=confirmed?'confirmed':'recovery';
+      if(child.ownershipState!==state){child.ownershipState=state;ownershipChanged=true;}
+    }
+    if (!data.projects.some(p => p.workspace === data.selectedWorkspace && p.archivedAt === null
+      &&(!p.parentWorkspace||data.projects.some(parent=>ownedExecutor(p,parent)&&!parent.archivedAt)))) this.data.selectedWorkspace = null;
+    if (legacy || removedEstimate || ownershipChanged) await this.save();
     return this.snapshot();
   }
 
@@ -382,11 +427,17 @@ export class WorkspaceSessions {
   selected() { return this.project(this.data.selectedWorkspace); }
   // Archiving or deleting the selected project clears the selection; the UI then returns
   // to another active project. Only an empty active list means first run.
-  landing() { return this.selected() ?? currentView(this.data.projects.find(p => p.archivedAt === null)); }
+  landing() { return this.selected() ?? currentView(this.data.projects.find(p => p.archivedAt === null&&!p.parentWorkspace)); }
   project(workspace, sessionId) { return currentView(this.data.projects.find(p => p.workspace === workspace), sessionId); }
+
+  assertParent(project,data=this.data) {
+    if(project?.parentWorkspace&&!data.projects.some(p=>ownedExecutor(project,p)&&!p.archivedAt))
+      throw new WorkspaceError('ASSIGNMENT_OWNER','Родитель исполнителя отсутствует или находится в архиве. Файлы и чат сохранены.');
+  }
 
   activeRecord(workspace, sessionId, data = this.data, { background = false } = {}) {
     const project = data.projects.find(p => p.workspace === workspace);
+    this.assertParent(project,data);
     if (project?.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
     const session = project?.sessions.find(s => s.sessionId === sessionId);
     if (!session || session.archivedAt || !background && project.selectedSessionId !== sessionId) {
@@ -456,6 +507,7 @@ export class WorkspaceSessions {
     return this.mutate(async data => {
       const info = await this.inspect(input);
       let project = data.projects.find(p => p.workspace === info.workspace);
+      this.assertParent(project,data);
       if (project?.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива в настройках.');
       if (project && project.projectId !== info.projectId) throw new WorkspaceError('PROJECT_REPLACED', 'В этой папке теперь другой проект. Сохранённые чаты оставлены без изменений.');
       if (!project) {
@@ -482,6 +534,7 @@ export class WorkspaceSessions {
     const info = await this.inspect(input, sessionId);
     return this.mutate(data => {
       const project = data.projects.find(p => p.workspace === info.workspace);
+      this.assertParent(project,data);
       if (!project || !project.sessions.some(s => s.sessionId === sessionId)) throw new WorkspaceError('SESSION_NOT_FOUND', 'Эта сессия не принадлежит выбранному проекту.');
       if (project.sessions.find(s => s.sessionId === sessionId)?.archivedAt) throw new WorkspaceError('SESSION_ARCHIVED', 'Сначала верните сессию из архива.');
       if (project.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
@@ -539,22 +592,25 @@ export class WorkspaceSessions {
       if(typeof assignment.worktree!=='string'||!path.isAbsolute(assignment.worktree))
         throw new WorkspaceError('ASSIGNMENT_OWNER','Неверная папка назначения.');
       const workspace=await fs.realpath(assignment.worktree);
+      const parent=data.projects.find(p=>p.workspace===origin.workspace&&!p.parentWorkspace);
+      if(!parent||parent.projectId!==origin.projectId||parent.archivedAt||!parent.sessions.some(s=>s.sessionId===origin.sessionId&&!s.archivedAt))
+        throw new WorkspaceError('ASSIGNMENT_OWNER','Родитель назначения изменился.');
       if(workspace===assignment.parent_root||assignment.parent_root!==origin.workspace)
         throw new WorkspaceError('ASSIGNMENT_OWNER','Неверная папка назначения.');
       let project=data.projects.find(p=>p.workspace===workspace);
       const existing=project?.sessions.find(s=>s.assignmentId===assignment.id);
       if(existing) {
-        if(existing.taskId!==assignment.parent_task_id||existing.parentScopeId!==assignment.parent_scope_id
+        if(!ownedExecutor(project,parent)||existing.parentProjectId!==parent.projectId||existing.taskId!==assignment.parent_task_id||existing.parentScopeId!==assignment.parent_scope_id
           ||existing.executionOriginSessionId!==origin.sessionId||existing.archivedAt||project.archivedAt)
           throw new WorkspaceError('ASSIGNMENT_OWNER','Сохранённая сессия не соответствует назначению.');
         return currentView(project,existing.sessionId);
       }
       if(project)throw new WorkspaceError('ASSIGNMENT_OWNER','Worktree уже подключён без этого назначения.');
       const info=await this.inspect(workspace),session=this.createSession(origin.experience,origin.executionSnapshot);
-      Object.assign(session,{assignmentId:assignment.id,taskId:assignment.parent_task_id,parentWorkspace:origin.workspace,
+      Object.assign(session,{assignmentId:assignment.id,taskId:assignment.parent_task_id,parentWorkspace:origin.workspace,parentProjectId:parent.projectId,
         parentScopeId:assignment.parent_scope_id,executionOriginSessionId:origin.sessionId,
         title:sessionName(assignment.parent_task_id+' — '+assignment.title),titleSource:'manual'});
-      project={...info,parentWorkspace:origin.workspace,parentScopeId:assignment.parent_scope_id,
+      project={...info,parentWorkspace:origin.workspace,parentProjectId:parent.projectId,ownershipState:'confirmed',parentScopeId:assignment.parent_scope_id,
         selectedSessionId:session.sessionId,sessions:[session],expanded:false,archivedAt:null};
       data.projects.push(project);return currentView(project);
     });
@@ -720,16 +776,18 @@ export class WorkspaceSessions {
       const project = data.projects.find(p => p.workspace === workspace);
       if (!project || typeof archived !== 'boolean') throw new WorkspaceError('WORKSPACE_REQUIRED', 'Выберите проект из списка.');
       project.archivedAt = archived ? (project.archivedAt ?? this.now()) : null;
-      if (archived && data.selectedWorkspace === workspace) data.selectedWorkspace = null;
+      if (archived && (data.selectedWorkspace === workspace||data.projects.some(p=>p.workspace===data.selectedWorkspace&&ownedExecutor(p,project)))) data.selectedWorkspace = null;
       return currentView(project);
     });
   }
 
-  forgetDeletedProject(workspace, projectId) {
+  forgetDeletedProject(workspace, projectId, related = []) {
     return this.mutate(data=>{
       const project=data.projects.find(p=>p.workspace===workspace);
       if(project&&(!project.archivedAt||project.projectId!==projectId))throw new WorkspaceError('DELETE_RECORD_CHANGED','Запись удаляемого проекта изменилась.');
-      const removed=new Set(data.projects.filter(p=>p.workspace===workspace||p.parentWorkspace===workspace).map(p=>p.workspace));
+      const removed=new Set(data.projects.filter(p=>p.workspace===workspace||related.some(r=>r.workspace===p.workspace
+        &&r.projectId===p.projectId&&r.parentProjectId===projectId&&(ownedExecutor(p,{workspace,projectId})
+          ||r.legacyVerified&&!p.parentProjectId&&p.parentWorkspace===workspace))).map(p=>p.workspace));
       data.projects=data.projects.filter(p=>!removed.has(p.workspace));
       if(removed.has(data.selectedWorkspace))data.selectedWorkspace=null;
       return true;

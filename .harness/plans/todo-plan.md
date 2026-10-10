@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1681,
+  "plan_revision": 1683,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -86,7 +86,8 @@
       "release-manifest.json",
       "packages/workflow-kit/src/lib/common.mjs",
       "packages/workflow-kit/src/lib/installer.mjs",
-      "tests/parallel-finalization.test.mjs"
+      "tests/parallel-finalization.test.mjs",
+      "tests/parallel-execution-ui.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/reliable-completion-sidebar.md",
@@ -243,8 +244,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "T003",
@@ -259,7 +260,8 @@
         "src/main.mjs",
         "tests/workspace-session.test.mjs",
         "tests/workspace-deletion.test.mjs",
-        "tests/project-state-cleanup.test.mjs"
+        "tests/project-state-cleanup.test.mjs",
+        "tests/parallel-execution-ui.test.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -275,7 +277,16 @@
         "Активность, чужая identity/одноимённый сосед, повторная папка и подмена worktree защищены; облачные чаты сохранены"
       ],
       "expected_commit_message": "fix: Связь исполнителей с родителем и каскадное удаление",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/execution-projection.mjs",
+        "src/main.mjs",
+        "src/workspace-deletion.mjs",
+        "src/workspace-session.mjs",
+        "tests/parallel-execution-ui.test.mjs",
+        "tests/workspace-deletion.test.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -534,7 +545,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1681
+Revision: 1683
 
 ## Цель
 
@@ -587,10 +598,10 @@ Revision: 1681
   - Файлы: src/parallel-execution.mjs, src/main.mjs, src/project-auto-plan.mjs, src/automation-send-state.mjs, src/executor-session.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/automation-send-state.test.mjs, tests/project-auto-plan.test.mjs, tests/parallel-finalization.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T001
-- [TODO] T003: Связь исполнителей с родителем и каскадное удаление — Ожидает
-  - Git Commit: [PENDING] fix: Связь исполнителей с родителем и каскадное удаление
+- [DONE] T003: Связь исполнителей с родителем и каскадное удаление — Завершено
+  - Git Commit: [DONE] fix: Связь исполнителей с родителем и каскадное удаление
   - Reference: reliable-completion-sidebar-20261010 / T003 / implementation
-  - Файлы: src/workspace-session.mjs, src/workspace-deletion.mjs, src/project-state-cleanup.mjs, src/execution-projection.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/workspace-deletion.test.mjs, tests/project-state-cleanup.test.mjs
+  - Файлы: src/workspace-session.mjs, src/workspace-deletion.mjs, src/project-state-cleanup.mjs, src/execution-projection.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/workspace-deletion.test.mjs, tests/project-state-cleanup.test.mjs, tests/parallel-execution-ui.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: нет
 - [TODO] T004: Один выбранный проект и обновлённый сайдбар — Ожидает

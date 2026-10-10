@@ -48,7 +48,8 @@ export function executorStatus(assignment,record,integration) {
 }
 
 export function projectExecutors(projects,workspace,execution,recordFor) {
-  return projects.filter(p=>p.parentWorkspace===workspace&&!p.archivedAt).flatMap(project=>project.sessions
+  const parent=projects.find(p=>p.workspace===workspace&&!p.parentWorkspace&&!p.archivedAt);
+  return projects.filter(p=>parent&&p.parentWorkspace===workspace&&p.parentProjectId===parent.projectId&&!p.archivedAt).flatMap(project=>project.sessions
     .filter(s=>s.assignmentId&&!s.archivedAt).map(session=>{
       const target={...project,...session},record=recordFor(target);
       const assignment=execution.assignments.find(a=>a.id===session.assignmentId);

@@ -274,7 +274,7 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
       return null;
     }
     if(project.assignmentId!==assignment.id||project.taskId!==assignment.parent_task_id||project.parentScopeId!==assignment.parent_scope_id
-      ||project.executionOriginSessionId!==origin.sessionId||project.parentWorkspace!==origin.workspace||project.archivedAt||project.sessionArchivedAt)
+      ||project.executionOriginSessionId!==origin.sessionId||project.parentWorkspace!==origin.workspace||project.parentProjectId!==origin.projectId||project.archivedAt||project.sessionArchivedAt)
       throw Object.assign(new Error('Сессия не соответствует назначению Kit. Откройте её для проверки.'),{code:'EXECUTOR_SESSION_MISMATCH'});
     const restored=await restoreExecutionPage(project,assignment);
     if(recovery)await liveRecord(restored)?.controller.resumePreparation();
@@ -342,12 +342,12 @@ async function prepareProjectRemoval(job) {
   const records=[...liveSessions.records.values()].filter(r=>workspaces.includes(r.identity?.workspace));
   for(const record of records)if(record.pageState.current?.state.busy||record.controller.pending||record.composer.inFlight)
     throw Object.assign(new Error('Остановите работу чатов удаляемого проекта перед удалением.'),{code:'DELETE_PROJECT_BUSY'});
+  for(const workspace of workspaces)await execution.suspend(workspace);
   for(const workspace of workspaces) {
     const activity=await readCommandActivity(workspace),command=activity.commands.find(c=>c.blocksDeletion);
     if(command)throw Object.assign(new Error('Удаление ожидает завершения операции '+command.id+'. '+command.reason+
       '. Для сервера попросите агента остановить его по session ID; неизвестный исход требует диагностики.'),{code:'DELETE_PROJECT_BUSY'});
   }
-  for(const workspace of workspaces)await execution.suspend(workspace);
   job.sessionIds=[...new Set([...(job.sessionIds??[]),...records.map(r=>r.diagnostics?.log.sessionId).filter(Boolean)])];
   for(const record of records)await record.diagnostics?.stop();
   for(const record of records)if(!liveSessions.release(record))
@@ -389,12 +389,12 @@ function closeSettings() {
 
 function publicError(error) { return { code: error.code ?? 'APP_ERROR', message: String(error.message ?? error).slice(0, 700) }; }
 function projectedArchives() {
-  return store.snapshot().projects.filter(project => project.archivedAt).map(({ workspace, projectId, name, displayName, archivedAt, sessions }) => ({
+  return store.snapshot().projects.filter(project => project.archivedAt&&!project.parentWorkspace).map(({ workspace, projectId, name, displayName, archivedAt, sessions }) => ({
     workspace, projectId, name: displayName || name, archivedAt, sessionCount: sessions.length, deletionPending: deletion?.isPending(workspace) ?? false,
   }));
 }
 function projectedSessionArchives() {
-  return store.snapshot().projects.filter(project => !project.archivedAt).flatMap(project => project.sessions
+  return store.snapshot().projects.filter(project => !project.archivedAt&&!project.parentWorkspace).flatMap(project => project.sessions
     .filter(session => session.archivedAt)
     .map((session, index) => ({ workspace: project.workspace, projectId: project.projectId, projectName: project.displayName || project.name,
       sessionId: session.sessionId, title: session.title || `Сессия ${index + 1}`, experience: session.experience,
@@ -416,12 +416,14 @@ function snapshot() {
     requestId: saved.attempt.requestId, state: saved.attempt.state }, receipt: undefined,
     ...(info?.workspace === saved.workspace && info.inspectedSessionId === saved.sessionId ? info : {}),
     planReadError: planMonitor.error ?? planMonitor.watchError, agentRun: agentTimer?.view(saved) ?? null };
-  return { projects: projects.filter(p => !p.archivedAt&&(!p.parentWorkspace||!projects.some(parent=>parent.workspace===p.parentWorkspace&&!parent.archivedAt)))
+  return { projects: projects.filter(p => !p.archivedAt&&!p.parentWorkspace)
     .map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
     executors:projectExecutors(projects,workspace,execution.view(workspace),liveRecord),
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
+    executorRecovery:projects.filter(p=>p.parentWorkspace&&!projects.some(parent=>parent.workspace===p.parentWorkspace&&parent.projectId===p.parentProjectId))
+      .map(p=>({workspace:p.workspace,name:p.displayName||p.name,message:'Связь с родителем не подтверждена. Файлы и чаты сохранены.'})),
     archives: projectedArchives(), settings: settingsState, doctor: doctorState, parallelExecution: { ...parallelExecution },
     execution: {...execution.view(saved?.parentWorkspace??saved?.workspace),commands:(execution.view(saved?.parentWorkspace??saved?.workspace).commands??[])
       .map(c=>({...c,projectId:store.project(c.workspace)?.projectId}))},
