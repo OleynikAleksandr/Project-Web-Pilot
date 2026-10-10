@@ -25,19 +25,19 @@
 
 **Результат:** изолированный Git/Kit fixture с минимальным source/коммитами и одним последним назначением на фоне ранее интегрированных задач; управляемые остановки на source pending, READY, writer started, merge pending, DONE и final pending. Нужные события и таймауты наблюдаемы независимо от разработки CSV/JSON/diff.
 
-**Работа:** переиспользовать tests/parallel-execution-smoke-fixture.cjs, tests/parallel-finalization.test.mjs, packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs; подготовить точный сценарий writer-сервера, стартующего после commit последнего исполнителя, и законченный ответ worker. На прежнем коде получить наблюдаемый blocker и отсутствие финального Send. При необходимости объединить регрессию с T002, чтобы не оставлять падающую обязательную проверку в DONE-коммите.
+**Работа:** переиспользовать tests/parallel-execution-smoke-fixture.cjs, tests/parallel-finalization.test.mjs и Git/Kit fixture; запустить writer после source commit и после окончания ответа worker. **T001 фиксирует исходную ошибку зелёным характеризующим тестом:** blocker виден, фактические Send=0/merge=0; независимое описание старого ожидаемого «красного» F03 остаётся в evidence/коммите. **T003 меняет тест на требование diagnostic→terminal event→merge→final**. Не оставлять падающую обязательную проверку в коммите. Если граница T001/T003 мешает воспроизводимости, согласованно объединить без потери двух стадий доказательства.
 
 **Проверки:** F01 (контрольная точка), F03 (красный сценарий), снимки source/assignment/integration/Send; очистка только собственного fixture-процесса даже при падении. Не имитировать DONE простым подставлением флага вместо Git-доказательства.
 
 **Файлы:** tests/parallel-finalization.test.mjs, tests/parallel-execution-smoke-fixture.cjs, новая узкая fixture только при необходимости.
 
-**Verification:** unit-all; electron-smoke при изменении тестовой Electron-границы. **Зависимости:** утверждённый Review/P001.
+**Verification:** unit-all, **electron-smoke** (изменяется файл, исполняемый именно этим suite). **Зависимости:** утверждённый Review/P001.
 
 ## T002 — Жизненный цикл команд, сервер и гарантированные события
 
 **Результат:** read_only сервер остаётся защищённым и живым, writer завершается наблюдаемым событием, а его блокировка точно видна; child command-activity будит очередь main. Ни один успешный source не ослабляет права записи команды.
 
-**Работа:** сверить фактические инструкции назначений, SERVER_INSTRUCTIONS, описание exec_command(read_only) и код tools/codex-app-server-mcp с контрактом. Если backend уже корректен — не переписывать его ради нового изменения, исправить лишь недостающий путь событий и диагностики. Не определять безопасность по npm start, HTTP method, cwd, PID, имени или порту. Не менять количество MCP-инструментов. Проверить отдельную защиту удаления после acknowledged_unknown через прошлый boot, сохранить запрет для наблюдаемой живой службы.
+**Работа:** сверить инструкции назначений, SERVER_INSTRUCTIONS, exec_command(read_only) и backend. Если backend корректен — исправить только отсутствующее событие. Не выводить sandbox из npm/порта/метода HTTP/PID. Сохранить исключение удаления для признанного UNKNOWN **подтверждённо предыдущей загрузки ОС**, но заменить ненадёжную опору лишь на wall-clock started_at_ms; при неверном времени, недоказанном reboot или живом сервере удаление запрещено, показан способ проверки.
 
 **Проверки:** F02/F04/F05/F06, Writer→completion без write_stdin, child event→main reconcile, sandbox deny-write включая дочерний процесс, unsupported sandbox, потеря executor generation, legacy/malformed, защищённое удаление. Native Windows не объявлять проверенной по Mac. Только принадлежащие fixture процессы можно завершать автоматически.
 
@@ -53,7 +53,7 @@
 
 **Проверки:** F03/F07/F08/F09/F10/F16, writer после READY, исчезновение blocker до Send, завершение writer во время Send preparation, main/child dirty, assignment binding mismatch, transaction, check failed/launch failed, correction против diagnostic, snapshot/restart. Подтвердить **количество реальных Send и Git-интеграций**, а не только статус ledger.
 
-**Критерии:** blocker показывается с ID, checkout, причиной и безопасным действием; разрешённая диагностика доходит до правильного origin или честно ждёт; не возникает безусловного разрешения merge, автоматического Ctrl-C чужой службы, потери source/pending и ложного DONE.
+**Критерии:** blocker с ID/checkout/причиной; разрешённая диагностика доходит до origin или ждёт. Допустимо снять writer только по **terminal event**: сам завершился; либо пользователь явно поручил остановку **конкретной сессии у владеющего ею executor** с ожиданием подтверждения (main не предполагает доступ к чужому write_stdin); либо пользователь остановил процесс и App Server зафиксировал exit. Иначе UNKNOWN с адресным пользовательским признанием по действующим правилам. **После diagnostic очередь остаётся единственным владельцем записи main**, основной агент только читает и сообщает пользователю, не выполняет integration:start/continue. После terminal event очередь делает одну интеграцию, и лишь отдельный final Send передаёт владение основному агенту. Тест: diagnostic→ответ без записи→terminal→один merge→один final, без Ctrl-C агента по собственной инициативе.
 
 **Файлы:** src/parallel-execution.mjs, src/parallel-kit.mjs, src/execution-projection.mjs, src/main.mjs, src/automation-send-state.mjs, tests/parallel-finalization.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution.test.mjs.
 
@@ -83,9 +83,9 @@
 
 **Критерии:** только пользовательское OFF/Stop либо подтверждённый completion меняет авторизацию; stale read может приостановить отправку, но не отозвать волю пользователя.
 
-**Файлы:** src/project-auto-plan.mjs, src/project-session-auto-plan.mjs, src/auto-plan.mjs, src/main.mjs, tests/project-auto-plan.test.mjs и узкие тесты планового monitor.
+**Файлы:** src/project-auto-plan.mjs, src/project-session-auto-plan.mjs, src/auto-plan.mjs, src/main.mjs, tests/project-auto-plan.test.mjs, **tests/auto-plan.test.mjs** и узкие тесты plan monitor. Убедиться, что программное disable() у executor и Review не становится MANUAL_OFF и не меняет их контрактов.
 
-**Verification:** unit-all, project-lifecycle. **Зависимости:** T004 как порядок последовательной разработки; технически основание дефекта независимо от T003.
+**Verification:** unit-all, project-lifecycle, **electron-smoke**. **Зависимости:** T004 как порядок последовательной разработки; технически основание дефекта независимо от T003.
 
 ## T006 — Сводная регрессия последнего этапа и UI диагностики
 
