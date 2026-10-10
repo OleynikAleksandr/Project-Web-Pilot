@@ -4,12 +4,12 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1698,
+  "plan_revision": 1700,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
   "execution_scope_status": "ACTIVE",
-  "delivery_status": "IN_PROGRESS",
+  "delivery_status": "READY_FOR_ACCEPTANCE",
   "objective": "Исправить автоматический финал, учёт команд и ownership исполнителей, упростить сайдбар и выпустить 0.6.110",
   "acceptance_criteria": [
     "Завершение exec/patch отражается независимо от write_stdin; ошибки и legacy сохраняют UNKNOWN с ID и причиной",
@@ -600,8 +600,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "T008",
@@ -627,7 +627,8 @@
       ],
       "expected_commit_message": "release: Опубликовать выпуск 0.6.110 на GitHub",
       "parallel_safe": false,
-      "verification_kind": "package"
+      "verification_kind": "package",
+      "actual_files": []
     }
   ],
   "blocked_reason": null,
@@ -650,10 +651,10 @@
 ## Состояние
 
 Execution Scope Status: ACTIVE
-Delivery Status: IN_PROGRESS
+Delivery Status: READY_FOR_ACCEPTANCE
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1698
+Revision: 1700
 
 ## Цель
 
@@ -742,8 +743,8 @@ Revision: 1698
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
   - Зависимости: T006, DOCS
-- [TODO] T008: Опубликовать выпуск 0.6.110 на GitHub — Ожидает
-  - Git Commit: [PENDING] release: Опубликовать выпуск 0.6.110 на GitHub
+- [DONE] T008: Опубликовать выпуск 0.6.110 на GitHub — Завершено
+  - Git Commit: [DONE] release: Опубликовать выпуск 0.6.110 на GitHub
   - Reference: reliable-completion-sidebar-20261010 / T008 / implementation
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
