@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1725,
+  "plan_revision": 1727,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -449,8 +449,8 @@
     {
       "id": "DOCS-2",
       "title": "Актуализация всех документов проекта",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "DOCS-2",
@@ -463,14 +463,21 @@
       ],
       "functional_paths": [],
       "documentation_paths": [
-        "docs/architecture/OVERVIEW.md"
+        "docs/architecture/OVERVIEW.md",
+        "README.md",
+        "docs/modules/release.md"
       ],
       "acceptance_criteria": [
         "Документы описывают текущий результат, существенное из выпущенных рабочих спецификаций перенесено в контракты модулей; история остаётся в Git."
       ],
       "verification_ids": [],
       "expected_commit_message": "docs: актуализировать документацию проекта",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/release.md"
+      ]
     },
     {
       "id": "T010",
@@ -590,7 +597,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1725
+Revision: 1727
 
 ## Цель
 
@@ -657,10 +664,10 @@ Revision: 1725
   - Файлы: package.json, package-lock.json
   - Параллельность: исключительное выполнение
   - Зависимости: T006, DOCS
-- [TODO] DOCS-2: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать документацию проекта
+- [DONE] DOCS-2: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать документацию проекта
   - Reference: parallel-final-stage-recovery-20261010 / DOCS-2 / implementation
-  - Файлы: docs/architecture/OVERVIEW.md
+  - Файлы: docs/architecture/OVERVIEW.md, README.md, docs/modules/release.md
   - Параллельность: исключительное выполнение
   - Зависимости: T007
 - [TODO] T010: Собрать один проверенный парный выпуск 0.6.111 — Ожидает

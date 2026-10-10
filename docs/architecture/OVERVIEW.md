@@ -1,6 +1,6 @@
 # Краткая архитектура проекта
 
-Стек: Workflow Kit 1.7.2, Electron 44.5.1, Node 24.21.0; выпуск 0.6.110. Установка — [README](../../README.md), работа — current plan и Git, факты выпуска — release-manifest.json и GitHub Release. Постоянные ограничения — [AGENTS.md](../../AGENTS.md).
+Стек: Workflow Kit 1.7.2, Electron 44.5.1, Node 24.21.0. Последний опубликованный выпуск — **0.6.110**; версия **0.6.111** уже зафиксирована в `package.json`/`package-lock.json` и Git (`T007`), но **пока не собрана, не установлена и не опубликована**. Установка — [README](../../README.md), работа — current plan и Git, доказательства следующего выпуска — его `release-manifest.json` и GitHub Release только после выполнения соответствующих delivery-задач. Постоянные ограничения — [AGENTS.md](../../AGENTS.md).
 
 ## Назначение
 
@@ -63,7 +63,7 @@ Web Pilot Sidebar — отдельный репозиторий; публичн�
 
 ## Проверки и документы
 
-`npm start` запускает исходники; `npm test` — Node suite; `npm run smoke` — Electron TEST FIXTURE; `npm run build` — парный выпуск macOS arm64 + Windows x64. Назначенные verification_ids запускает Kit при commit. Сборка только в delivery после DOCS, установка и публикация без пересборки — [release](../modules/release.md).
+`npm start` запускает исходники; `npm test` — Node suite; `npm run smoke` — Electron TEST FIXTURE; `npm run build` — парный выпуск macOS arm64 + Windows x64. Назначенные `verification_ids` запускает Kit при `commit`. Для версии **0.6.111** версия приложения и lockfile предварительно зафиксированы отдельной задачей **T007** с проверкой `release-source`: `releaseAll` отказывает на незакоммиченных `package*.json`, в том числе когда они только добавлены в candidate коммита сборки. Затем **DOCS-2** фиксирует этот контракт перед выпуском; **T010** — единственная задача, чей commit запускает `paired-release`, после неё **T008** устанавливает готовый пакет и **T009** сверяет GitHub без пересборки. `sourceCommit` — HEAD перед сборкой, то есть уже закоммиченная версия и DOCS-2, но не последующий коммит T010. Нельзя запускать build вручную или обходить Git hooks. Порядок и ограничения — [release](../modules/release.md).
 
 Fixtures не подтверждают живой ChatGPT, native Windows или чистую ОС; это [пользовательская приёмка](../modules/parallel-execution-acceptance.md). [Отложенный аудит](../modules/technical-audit-followups.md) в выпуск не входит.
 
