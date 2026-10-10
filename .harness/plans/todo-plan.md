@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1685,
+  "plan_revision": 1687,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -119,7 +119,7 @@
     ]
   },
   "baseline_commit": "c3da7b29a5e29945637f1f54f70071269605f6a6",
-  "current_task_id": null,
+  "current_task_id": "T005",
   "context_pack": {
     "documents": [
       {
@@ -360,7 +360,7 @@
       ]
     },
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
@@ -571,8 +571,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
-Current Task: нет
-Revision: 1685
+Current Task: T005
+Revision: 1687
 
 ## Цель
 
@@ -637,7 +637,7 @@ Revision: 1685
   - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/ui/settings-panel.mjs, src/context-session.mjs, src/main.mjs, src/workspace-session.mjs, src/session-plans.mjs, src/execution-projection.mjs, tests/sidebar.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/settings-chatgpt-channel.test.mjs, src/chat-colors-window.mjs, src/ui/project-doctor.mjs, src/ui/workspace-setup.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/workspace-deletion.test.mjs, tests/workspace-session.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T003, T002
-- [TODO] T005: Сквозная регрессия и подготовка выпуска 0.6.110 — Ожидает
+- [IN_PROGRESS] T005: Сквозная регрессия и подготовка выпуска 0.6.110 — В работе
   - Git Commit: [PENDING] fix: Сквозная регрессия и подготовка выпуска 0.6.110
   - Reference: reliable-completion-sidebar-20261010 / T005 / implementation
   - Файлы: tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/package.json, package.json, package-lock.json, scripts/check-codex-tools.mjs, scripts/check-installed-release.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
