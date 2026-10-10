@@ -60,7 +60,7 @@
         "run",
         "build"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.110: macOS arm64 + Windows x64 ZIP, ZIP Windows-runtime, SHA256SUMS.txt, INSTALL.txt, release-manifest.json; packaged sources и bundled Workflow Kit 1.7.2 verified. Сборку выполняет эта проверка при коммите задачи, один раз"
+      "evidence": "~/Downloads/WebPilot-0.6.111: macOS arm64 и Windows x64, 2 ZIP + Windows-runtime + SHA256SUMS.txt + INSTALL.txt + release-manifest.json; sourceCommit и packaged Workflow Kit 1.7.2 подтверждены; одна сборка только штатным paired-release при коммите T007"
     },
     {
       "required": false,
@@ -71,7 +71,7 @@
       "args": [
         "scripts/check-installed-release.mjs"
       ],
-      "evidence": "Root app и /Applications/Project Web Pilot.app — 0.6.110 с Workflow Kit 1.7.2 из готового staging; identity/signature/runtime и release artifacts verified без пересборки"
+      "evidence": "0.6.111, Workflow Kit 1.7.2: установка из готового staging без пересборки; сохранённые app identity/signature и контроль manifest"
     },
     {
       "required": false,
@@ -82,7 +82,7 @@
       "args": [
         "scripts/check-github-release.mjs"
       ],
-      "evidence": "GitHub Release v0.6.110 с Workflow Kit 1.7.2: tag, шесть assets и remote main сверены с локальным release-manifest.json без пересборки"
+      "evidence": "GitHub Release v0.6.111 и Workflow Kit 1.7.2: remote main, tag на sourceCommit, ровно шесть assets и digest сверены с manifest без пересборки"
     },
     {
       "required": false,

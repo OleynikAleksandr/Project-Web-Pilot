@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1719,
+  "plan_revision": 1721,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -66,7 +66,7 @@
     ]
   },
   "baseline_commit": "8cd7dd464a4056c86a982d3bd8840bc07f9df9c6",
-  "current_task_id": null,
+  "current_task_id": "T007",
   "context_pack": {
     "documents": [
       {
@@ -413,7 +413,7 @@
       ]
     },
     {
-      "implementation_status": "TODO",
+      "implementation_status": "IN_PROGRESS",
       "commit_status": "PENDING",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
@@ -528,8 +528,8 @@
 Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
-Current Task: нет
-Revision: 1719
+Current Task: T007
+Revision: 1721
 
 ## Цель
 
@@ -590,7 +590,7 @@ Revision: 1719
   - Файлы: docs/planning/final-stage-recovery-spec.md, docs/planning/final-stage-recovery-todo-draft.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/command-activity.md, docs/modules/codex-app-server-executor.md, docs/modules/workspace-sidebar-ui.md, docs/modules/release.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004, T005, T006
-- [TODO] T007: Собрать один парный выпуск после DOCS — Ожидает
+- [IN_PROGRESS] T007: Собрать один парный выпуск после DOCS — В работе
   - Git Commit: [PENDING] release: собрать парный выпуск финального этапа
   - Reference: parallel-final-stage-recovery-20261010 / T007 / implementation
   - Файлы: package.json, package-lock.json, release-manifest.json
