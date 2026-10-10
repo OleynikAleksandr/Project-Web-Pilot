@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1687,
+  "plan_revision": 1688,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -572,7 +572,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: T005
-Revision: 1687
+Revision: 1688
 
 ## Цель
 
