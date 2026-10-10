@@ -60,7 +60,7 @@
         "run",
         "build"
       ],
-      "evidence": "~/Downloads/WebPilot-0.6.111: macOS arm64 и Windows x64, 2 ZIP + Windows-runtime + SHA256SUMS.txt + INSTALL.txt + release-manifest.json; sourceCommit и packaged Workflow Kit 1.7.2 подтверждены; одна сборка только штатным paired-release при коммите T007"
+      "evidence": "~/Downloads/WebPilot-0.6.111: macOS arm64 и Windows x64, два ZIP + Windows-runtime + SHA256SUMS.txt + INSTALL.txt + release-manifest.json; sourceCommit, подпись и bundled Workflow Kit 1.7.2 проверены. Единственную сборку выполняет paired-release при коммите T010 после T007 и DOCS-2"
     },
     {
       "required": false,
