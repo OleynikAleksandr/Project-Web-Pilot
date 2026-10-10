@@ -18,7 +18,7 @@
 - Модель работает в ChatGPT Web и сама принимает решения; App Server — только исполнитель и источник формы инструментов. Клиент отклоняет `turn/start` (`Forbidden App Server model method`); thread, `mcpServer/tool/call`, `node_repl`/`@oai/sky`, Computer Use, Responses API, `codex exec`, второй агент не используются.
 - Решение пользователя: модели даются родные инструменты Codex, а не собственные; Codex не собирается и не копируется, потому что получился бы форк. Поиск — `rg` в `exec_command`, остальное — командами.
 - Local-only: наружу — только то, что требует доступа к компьютеру. Web search, публичные документы, облачные возможности ChatGPT, `codex_apps`, downstream MCP Codex не публикуются: «видно Codex» ≠ «разрешено в ChatGPT».
-- Команды выполняются с правами пользователя, новой песочницы нет: все `command/exec` идут с `sandboxPolicy: dangerFullAccess`, потому что read-only sandbox ломал `/usr/bin/git` через xcrun и добавлял ≈600 мс. Ограничения одной папкой нет и обещать его нельзя.
+- Обычные команды выполняются с правами пользователя (`dangerFullAccess`), ограничения одной папкой нет. Явный `read_only:true` включает проверенную файловую ReadOnly sandbox с сетью, без fallback к writable; после подготовки подходит для сервера предпросмотра. Проверка deny-write выполняется на поколение App Server. Lifecycle, UNKNOWN и безопасная интеграция — [command-activity](command-activity.md).
 - Контекст проекта MCP не доставляет: пакет приходит вложениями стартового сообщения ([context-delivery.md](context-delivery.md)).
 
 ### Сервер MCP
@@ -57,7 +57,7 @@
 
 ### `apply_patch`
 
-Для согласования интеграции exec/apply_patch создают в проекте `.harness/runtime/command-activity/<uuid>.json` с version, PID исполнителя и временем; команда, вывод и секреты не сохраняются. Долгая сессия держит отметку до подтверждённого завершения write_stdin. Ошибка с неизвестным исходом оставляет её и блокирует интеграцию; автоматической очистки по отсутствию PID нет. Каталог инструментов остаётся прежним, модельных запросов нет.
+Exec/apply_patch создают lifecycle v2 marker; терминальное событие App Server пишет receipt и снимает active независимо от write_stdin. Живая read-only команда не блокирует интеграцию, но блокирует удаление; потерянный исход остаётся UNKNOWN без очистки по возрасту/PID. Детали — [command-activity](command-activity.md). Каталог содержит прежние девять инструментов, без модельных запросов.
 
 - Формат Codex (`*** Begin Patch` … `*** End Patch`, Add/Delete/Update File, `*** Move to`); отклоняются пустой, не начинающийся с `*** Begin Patch` и больший 1 000 000 байт. `git apply` не используется.
 - macOS: псевдоним `apply_patch` из PATH команд App Server через `command/exec`, патч в stdin с `closeStdin`, ожидание ≤120 с. Windows: тот же `codex.exe` под именем `apply_patch`, патч в stdin, потому что `apply_patch.bat` берёт патч аргументом, а многострочный патч до 1 МБ в командную строку не помещается.
@@ -95,7 +95,7 @@
 
 ### Закрепление формы Codex
 
-- `codex-tools.lock.json`: `openai/codex` 0.162.0, тег `rust-v0.162.0`, SHA-256 shell_spec.rs, view_image_spec.rs, apply_patch.lark. От 0.161.0 shell_spec меняет только внутреннее имя include_login_parameter; параметры JSON прежние, два остальных файла побайтно совпадают. Пределы и тайминги сохранены.
+- `codex-tools.lock.json`: openai/codex 0.162.1, rust-v0.162.1, SHA-256 shell_spec.rs/view_image_spec.rs/apply_patch.lark. Проверка установленного CLI и исходников тега подтвердила: относительно 0.162.0 все три файла побайтно совпадают; формы и тайминги инструментов сохранены.
 - `npm run check:codex-tools` находит Codex порядком macOS (Windows-путей не знает) и сверяет три файла тега `rust-v<установленная версия>` на GitHub с lock: 0 — совпало; 1 — отличаются файлы или версия, lock повреждён или Codex не найден; 2 — сеть или тег недоступны («не проверено»).
 
 ### Связь с приложением

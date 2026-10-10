@@ -15,7 +15,7 @@
 
 ### Запуск мастера
 - Только darwin и win32 вне TEST FIXTURE: в `--smoke` мастер выключен, чтобы smoke не ставил службы разработчику.
-- Открывается сам при пустом списке проектов, иначе — «Начальная настройка» внизу сайдбара (готовые компоненты и туннель сохраняются; службы после настройки живут без окна — [runtime-lifecycle.md](runtime-lifecycle.md)). При создании окна — `check({ prepare: startupActive })`: без проектов подготовка идёт сразу, не дожидаясь входа.
+- Открывается при пустом списке проектов, иначе через Settings → «Начальная настройка». Готовые компоненты/туннель сохраняются; службы живут без окна. При создании окна check({prepare:startupActive}) запускает подготовку пустого проекта без ожидания входа.
 - IPC `pilot:startup`: `show | check | install-git | paste-tunnel-id | configure-tunnel | copy-diagnostics | chat | signup | plugins | tunnels | keys | help | continue`; кроме `show`, всё требует открытого мастера. ChatGPT и Plugins — во встроенном браузере; Tunnels, API keys и инструкция Secure MCP Tunnel — в системном (`shell.openExternal`).
 
 ### Состояние

@@ -8,7 +8,7 @@ AutoPlan и Review независимы между собой и между пр
 
 По умолчанию OFF. Явное ON до первого плана сразу отображается и сохраняет ожидание его публикации; без подтверждённого плана работа не начинается. OFF отменяет ожидание. Restart сохраняет выбор только своего проекта.
 
-Хранение: settings.json, projectAutoPlan[workspace] = {projectId,scopeId,enabled,sessionId,sessions,awaitingPlan}. Ожидание первого плана имеет scopeId="" и awaitingPlan=true; первый scope снимает awaitingPlan. Старое глобальное autoPlanEnabled=true игнорируется. Подтверждённое завершение сохраняет OFF; следующий scope OFF. Staged DONE и незавершённая транзакция не подтверждают завершение. Ошибка чтения запрещает Send/назначение и выключает уже привязанное разрешение.
+Хранение: settings.json, projectAutoPlan[workspace] = {projectId,scopeId,enabled,sessionId,sessions,awaitingPlan,offReason}. Ожидание первого плана имеет scopeId="" и awaitingPlan=true. Старое глобальное autoPlanEnabled игнорируется. Подтверждённое завершение сохраняет OFF с offReason=completion; уже подготовленное финальное поручение основной сессии остаётся разрешённым. Ручной OFF запрещает его; следующий scope начинает с OFF. Staged DONE и незавершённая транзакция не подтверждают завершение. Ошибка чтения запрещает Send/назначение.
 
 sessions[sessionId] содержит отдельные autoPlanCheckpoint/automationCheckpoint без текста беседы. Защита Review/AutoPlan от повторной отправки сохраняется при смене scope; UNKNOWN не повторяется.
 
@@ -26,4 +26,4 @@ main.mjs связывает защищённый pilot:auto-plan с чтение
 
 ## Проверки
 
-Unit проверяет разрешения, restart, OFF, завершение/новый scope, Send/UNKNOWN/Review/Stop. Electron TEST FIXTURE проверяет настоящие кнопку/preload/IPC до первого плана, противоположные состояния AutoPlan/Review двух проектов, публикацию parallel, назначения и завершение OFF. Живой ChatGPT, чистую ОС и native Windows принимает пользователь.
+Unit проверяет разрешения, restart, OFF/completion-OFF, финальное pending/sending/unknown/sent/reply-observed, новый scope, Stop и черновик. Electron TEST FIXTURE проверяет защищённые IPC, конфликт и пятизадачный граф с восемью интеграциями, одним финальным ответом, действующим read-only HTTP-сервером и безопасным удалением после его остановки. Живой ChatGPT, чистую ОС и native Windows принимает пользователь.

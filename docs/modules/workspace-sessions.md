@@ -22,7 +22,7 @@
 - Сессия: `sessionId` (`web-pilot-<uuid>`, уникален), `experience` (`chat|work`, неизменен), `chatUrl|null` (нормализован, уникален по всем проектам, совместим с `experience`), `title`, `titleSource` (`page|manual|scope|null`), `lastNamedScopeId`, `createdAt`, `lastOpenedAt`, `archivedAt|null`, `attempt`, `receipt`, opt. `manualStart`, opt. `agentTime {totalMs,lastMs}` (целые ≥0, `lastMs ≤ totalMs`). Legacy-поля `planId`, `originSessionId`, `legacyPlanId` (проверяется формат) и `planBinding` хранятся, но ничего не выбирают.
 - Инварианты при загрузке: у проекта ≥1 активная сессия, выбранная сессия активна; нарушение, повреждённый JSON или неизвестная версия → `SESSIONS_INVALID`, файл не перезаписывается, приложение открывается с `storageError` (создание, подключение и выбор заблокированы до восстановления файла).
 - Миграции v1→v6 выполняются цепочкой при загрузке. Исходник сохраняется в `workspaces.json.v<N>-backup` с флагом `wx` (0600): существующая копия не перезаписывается, повторной миграции нет. v3→v4: `/work/...` → `work`, иначе `chat`; v4→v5: `archivedAt = null` у сессий; v5→v6: legacy-поля плана, `legacyPlanId` только при единственной сессии с отправленным пакетом этого scope (иначе не угадывается), удаляются проектные `planView/preparedPlans/unassignedPlans/scopeTransition`. Устаревший `tokenEstimate` удаляется при загрузке. Требование пользователя: миграция без потери URL, попыток отправки, имён, Chat/Work, дат и архива.
-- `updateSession` принимает `attempt`, `receipt`, `manualStart`, `conversationRecovery`, иначе `INVALID_SESSION_PATCH`. Фоновая запись требует точного workspace/sessionId. Снимок `executionSnapshot` новой основной сессии неизменен; исполнитель хранит parentWorkspace/scope/task/assignment/origin, унаследованный снимок, `executionAutomation` и `executionTime`. Контракты — [назначения](parallel-execution.md) и [живые страницы](session-runtime.md).
+- `updateSession` принимает `attempt`, `receipt`, `manualStart`, `conversationRecovery`, иначе `INVALID_SESSION_PATCH`. Фоновая запись требует точных workspace/sessionId. `executionSnapshot` основной сессии неизменен. Исполнитель хранит parentProjectId/parentWorkspace/scope/task/assignment/origin, снимок, `executionAutomation` и `executionTime`; его запись и сессия принадлежат одному подтверждённому родителю.
 
 ## Связь с планом
 
@@ -34,7 +34,7 @@
 
 **Новая сессия** — операция проекта: «Новый Chat»/«Новый Work» в меню проекта или продолжение Доктора `chat|work`. IPC `pilot:new-session {workspace, experience}`: строгая проверка папки, затем `newSession(workspace, experience)` добавляет запись, выбирает её, раскрывает проект и открывает entrypoint с разовым разрешением очистить восстановленный черновик (`freshDraft`). Старые сессии не заменяются. Ошибки: `WORKSPACE_REQUIRED`, `PROJECT_ARCHIVED`, `SESSION_EXPERIENCE`. Черновик очищается только для новой сессии, только на entrypoint без сообщений, со сверкой документа в том же вызове; другая страница → `chat-changed`, неудачная очистка → `NEW_SESSION_DRAFT_CLEAR_FAILED`. Reopen и повтор черновик не трогают; clipboard, storage и аккаунт не очищаются (детали — context-delivery).
 
-**Выбор.** Клик по проекту (`pilot:select-workspace`, `latest`) раскрывает его и выбирает новейшую активную сессию сразу, без задержки ради двойного клика; стрелка только раскрывает/сворачивает (`pilot:set-expanded`). Строка сессии — `pilot:select-session`. Запуск, reload («Обновить ChatGPT», ⌘R), «Вернуться к чату проекта», служебное восстановление и выход из Settings сохраняют прежний выбор. Поколения выбора и навигации отбрасывают устаревшие результаты (A→B→A) — см. session-opening-performance.
+**Выбор.** `pilot:select-workspace` возвращает последнюю выбранную активную сессию (`latest:false`); при недоступной записи выбирается оставшаяся активная. Отдельный API `latest:true` сохранён для явного выбора новейшей. Стрелка только раскрывает дерево. Выбор сессии, reload, возврат к чату и Settings сохраняют точные workspace/sessionId; поколения навигации отбрасывают устаревшее A→B→A. Фоновые страницы продолжают работать со своим cwd.
 
 **Порядок.** Активные сессии — по `createdAt` убыв., при равенстве — поздняя запись выше (`activeSessionsNewestFirst`). Открытие старой сессии меняет только `lastOpenedAt`, порядок не меняется. Архивные в дереве не показываются.
 
@@ -48,7 +48,7 @@
 - `normalizeChatUrl`: только `https://chatgpt.com` без порта и учётных данных; пути `/c/<id>`, `/work/c/<id>`, `/work/<id>`, `/g/<gizmo>/c/<id>`, id ≥8 символов `[A-Za-z0-9_-]`; хвостовой `/` снимается. Chat не принимает `/work/...`; Work принимает `/work/...` и `/c/<id>`. Entrypoint не сохраняется.
 - `bindChat`: `CHAT_URL_INVALID`, `CHAT_EXPERIENCE_MISMATCH`, `CHAT_CHANGED` (у сессии уже другой URL), `CHAT_IN_USE` (URL у другой сессии); отказы — `SESSION_CHANGED`, `PROJECT_ARCHIVED`. У связанной сессии другой URL на странице → фаза `chat-changed`, перепривязки нет. `experience` не меняется никогда.
 - Ручной первый Send (своё сообщение пользователя на entrypoint без recovery этой сессии) привязывает URL с `manualStart: true` и даёт фазу `manual-session` без доставки.
-- Просмотр сохранённого чата не запускает службы, прогрев и доставку; recovery получают только новая сессия и явное «Обновить контекст»; отправка одна, без дубля (context-delivery).
+- Просмотр сохранённого/ручного/legacy чата не запускает recovery. Полный пакет получает только новая сессия; retry до первого Send сохраняет requestId/вложения, sending/sent/unknown не сбрасывается. Начатый чат не обновляется повторным пакетом.
 
 ## Имена
 
@@ -98,6 +98,10 @@
 
 - Автоматические (`unit-all` = `npm test`, `electron-smoke` = `npm run smoke`): `tests/workspace-session.test.mjs` (миграции и backup, брошенные временные копии, валидация, порядок, выбор, A→B→A, архив, удаление, имена, время агента), `tests/chatgpt-title.test.mjs`, `tests/agent-timer.test.mjs`, `tests/chatgpt-experience.test.mjs`, `tests/context-session.test.mjs` (привязка, fail-closed), `tests/sidebar.test.mjs`; smoke — переименование через диалог, удаление `tokenEstimate`. Smoke работает на TEST FIXTURE и живой ChatGPT не доказывает.
 - Ручные (пользователь, на установленной версии): новые Chat и Work в живом ChatGPT — подтверждение режима, привязка постоянного `/c/<id>`, нет повторной отправки; переоткрытие сохранённой сессии без отправки; restart возвращает выбранную сессию и её URL; переименование и автоимя доходят до названия разговора в аккаунте; архив/возврат/локальное удаление сессии не трогают облачный чат.
+
+## Принадлежность исполнителей
+
+`ownedExecutor` связывает parentProjectId + parentWorkspace. Legacy требует assignment/Git proof, иначе запись только в восстановлении. Выбор чужого родителя запрещён, архив допускает свои фоновые записи. Каскад адресный. Git использует платформенное окружение, включая bundled Windows Git. [Полный контракт](parallel-execution.md).
 
 ## Открыто
 

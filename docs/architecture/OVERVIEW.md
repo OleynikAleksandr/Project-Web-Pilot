@@ -1,6 +1,6 @@
 # Краткая архитектура проекта
 
-Стек: Workflow Kit 1.7.1, Electron 44.5.1, Node 24.21.0. Версия и установка — [README](../../README.md), ход работы — current plan и Git, факты выпуска — release-manifest.json и GitHub Release. Постоянные ограничения — [AGENTS.md](../../AGENTS.md).
+Стек: Workflow Kit 1.7.2, Electron 44.5.1, Node 24.21.0; выпуск 0.6.110. Установка — [README](../../README.md), работа — current plan и Git, факты выпуска — release-manifest.json и GitHub Release. Постоянные ограничения — [AGENTS.md](../../AGENTS.md).
 
 ## Назначение
 
@@ -32,7 +32,7 @@ Electron-приложение для macOS и Windows: одно окно, сле
 | Доктор | `project-doctor`, `ui/project-doctor`, `resources/project-doctor*` | [project-doctor](../modules/project-doctor.md) |
 | Первый запуск | `browser-startup`, `startup-readiness`, `ui/startup` | [first-run-onboarding](../modules/first-run-onboarding.md) |
 | Службы | `mac-runtime-switch`, `windows-runtime`, `vps-tunnel`, `zip-archive`, `control.py`, `resources/runtime-control/` | [runtime-lifecycle](../modules/runtime-lifecycle.md) |
-| Исполнитель | `tools/codex-app-server-mcp/*`, `scripts/check-codex-tools.mjs` | [codex-app-server-executor](../modules/codex-app-server-executor.md) |
+| Исполнитель | `tools/codex-app-server-mcp/*`, `scripts/check-codex-tools.mjs`, `command-activity.mjs` | [MCP](../modules/codex-app-server-executor.md), [жизненный цикл команд](../modules/command-activity.md) |
 | Выпуск | `scripts/release-*`, `prepare-*-toolchain`, `check-*` | [release](../modules/release.md) |
 | Kit | `packages/workflow-kit/**`, `scripts/workflow*` | [workflow-kit-package](../../packages/workflow-kit/docs/modules/workflow-kit-package.md) |
 
@@ -43,7 +43,7 @@ Electron-приложение для macOS и Windows: одно окно, сле
 3. Web Pilot проверяет пакет, прикрепляет части как файлы и отправляет короткий транспортный текст один раз после их загрузки (до 120 с). UNKNOWN Send не повторяется. Агент читает каждое вложение отдельно и кратко подтверждает проект; MCP в первом ответе основного агента не вызывается. Обычное открытие сохранённого чата контекст повторно не отправляет.
 4. Review ON согласует новый план с Claude CLI, каждый успешный отзыв требует сохранённой позиции автора. Ошибки и существенные споры возвращаются пользователю. Получатель Review — явный Session ID, он не владеет планом.
 5. AutoPlan независим от Review и других проектов. По умолчанию OFF; явное ON до первого плана ждёт его публикации и привязывается к первому scope. Последний подтверждённый DONE сохраняет OFF; следующий scope OFF. Разрешение незавершённого плана переживает restart; legacy global ON игнорируется.
-6. Sequential получает «Продолжай» в собственный основной чат. В parallel все задачи получают назначения; task:start в main запрещён. Источник снимка отдельно от получателя Review. У исполнителя собственные view, Composer, доставка, наблюдатель и recovery; локальный DONE означает готовность к интеграции. Общий прогресс main подтверждается Git. Точный протокол — [parallel-execution](../modules/parallel-execution.md).
+6. Sequential получает «Продолжай» в собственный основной чат. В parallel задачи получают назначения; обычный task:start в main запрещён. Когда все результаты DONE или READY_FOR_INTEGRATION, приложение до последнего DONE сохраняет одно финальное поручение основной сессии. Основной агент завершает оставшиеся интеграции через Kit, проверяет общий main и сообщает результат. Выключение AutoPlan по завершению сохраняет pending-поручение; ручной OFF/Stop, черновик и UNKNOWN защищены от отправки/повтора. План остаётся READY_FOR_ACCEPTANCE, сервер предпросмотра не останавливается. Протокол — [parallel-execution](../modules/parallel-execution.md).
 
 ## Состояние и безопасность
 
@@ -69,7 +69,9 @@ Fixtures не подтверждают живой ChatGPT, native Windows или
 
 README — для пользователя; OVERVIEW — карта; docs/modules — контракты; docs/planning — невыпущенные требования. При DOCS действующее содержание спецификаций переносится в модули, временные документы удаляются; история остаётся в Git. Каждый .md ≤28000 байт UTF-8. Вне текущей задачи документы фиксируются docs:commit.
 
-Окончательное удаление координирует WorkspaceDeletion, очередь execution и project-state-cleanup: очищаются локальные разрешения, назначения, checkpoints и подтверждённые worktree. Новый projectId в той же папке не наследует состояние. Архивирование сохраняет данные; профиль ChatGPT остаётся общим и не удаляется.
+Сайдбар показывает дерево только выбранного проекта; поиск и фоновые статусы доступны в меню проектов. Смена проекта возвращает его последнюю выбранную сессию, не меняет cwd и работу фоновых страниц. Настройки доступны сверху рядом с номером версии; постоянного блока контекста и повтора пакета в начатый чат нет.
+
+Окончательное удаление координирует WorkspaceDeletion, очередь execution и project-state-cleanup. Исполнители принадлежат parentProjectId и parentWorkspace, legacy требует доказательств назначения/Git; непривязанные записи видны только как восстановление. Журнал удаляет лишь проверенных детей, защищает соседей/подмены/изменённые worktree и блокируется живой либо неизвестной командой. Новый projectId по тому же пути ничего не наследует; архив сохраняет данные, облачные чаты не удаляются.
 
 ## Отложенные решения
 

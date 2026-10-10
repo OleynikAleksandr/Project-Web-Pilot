@@ -1,6 +1,6 @@
 # Диагностика Chromium
 
-Пассивные журналы встроенного ChatGPT (события Electron и CDP, телеметрия, composer), стартовая сетевая трасса, журнал фаз приложения и отчёт «Скопировать диагностику», а также правила приватности для всех них. Журналы только диагностические: compact не определяют, доставку и «Обновить контекст» не запускают. Единственная функциональная связь — сигнал HTTP 429 для [ConversationRecovery](context-delivery.md).
+Пассивные журналы Electron/CDP, телеметрия и composer, стартовая сетевая трасса, фазы приложения и отчёт «Скопировать диагностику». Они не определяют compact и не инициируют recovery. Единственная функциональная связь — HTTP 429 для [ConversationRecovery](context-delivery.md).
 
 ## Код
 - `src/chromium-diagnostics.mjs` — `ChromiumDiagnostics` (`start`, `stop`, `observePage`, `startupReport`, `flush`, поле `log`), `DiagnosticJsonl`, `safeUrl`, `payloadMetadata`, `contextTelemetry`, `contextServiceMetadata`.

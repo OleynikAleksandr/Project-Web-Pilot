@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1692,
+  "plan_revision": 1694,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -456,8 +456,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "DOCS",
@@ -510,7 +510,34 @@
         "Пользовательский повторный тест и ограничения native Windows/живого ChatGPT описаны; постоянное правило полного выпуска закреплено"
       ],
       "expected_commit_message": "docs: Актуализация всех документов проекта",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan-send.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/chromium-diagnostics.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/command-activity.md",
+        "docs/modules/context-delivery.md",
+        "docs/modules/first-run-onboarding.md",
+        "docs/modules/parallel-execution-acceptance.md",
+        "docs/modules/parallel-execution.md",
+        "docs/modules/plan-view.md",
+        "docs/modules/project-archive.md",
+        "docs/modules/project-doctor.md",
+        "docs/modules/release.md",
+        "docs/modules/runtime-lifecycle.md",
+        "docs/modules/session-opening-performance.md",
+        "docs/modules/workspace-sessions.md",
+        "docs/modules/workspace-setup.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "docs/planning/reliable-completion-sidebar.md",
+        "docs/planning/reliable-completion-validation.md",
+        "packages/workflow-kit/docs/modules/parallel-assignments.md",
+        "packages/workflow-kit/docs/modules/workflow-kit-package.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -624,7 +651,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1692
+Revision: 1694
 
 ## Цель
 
@@ -695,8 +722,8 @@ Revision: 1692
   - Файлы: tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, packages/workflow-kit/package.json, package.json, package-lock.json, scripts/check-codex-tools.mjs, scripts/check-installed-release.mjs, tests/workflow-kit-source.test.mjs, packages/workflow-kit/src/lib/common.mjs, packages/workflow-kit/src/lib/installer.mjs, packages/workflow-kit/src/lib/git.mjs, packages/workflow-kit/src/lib/transaction.mjs, packages/workflow-kit/src/lib/task-integration.mjs, tools/codex-app-server-mcp/codex-tools.lock.json, packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs, packages/workflow-kit/scripts/check-previous-upgrade-fixture.mjs, src/main.mjs, src/workspace-deletion.mjs, src/workspace-session.mjs, tests/protected-preview-fixture.cjs, tests/workspace-deletion.test.mjs, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: Актуализация всех документов проекта
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: Актуализация всех документов проекта
   - Reference: reliable-completion-sidebar-20261010 / DOCS / implementation
   - Файлы: AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/plan-view.md, docs/modules/workspace-sidebar-ui.md, docs/modules/workspace-sessions.md, docs/modules/context-delivery.md, docs/modules/project-archive.md, docs/modules/codex-app-server-executor.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/reliable-completion-sidebar.md, docs/planning/reliable-completion-validation.md, docs/modules/first-run-onboarding.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/modules/runtime-lifecycle.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md, docs/modules/command-activity.md, docs/modules/project-doctor.md, docs/modules/workspace-setup.md, docs/modules/chromium-diagnostics.md, docs/modules/session-opening-performance.md
   - Параллельность: исключительное выполнение

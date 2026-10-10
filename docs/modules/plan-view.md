@@ -29,7 +29,7 @@ Read-only показ current plan checkout (`.harness/plans/todo-plan.md`) в к
 - Выход: `projectId`, `name`, `planRevision`, `scopeId` (= `planId`), `scopeTitle` (H1 первого required-документа `docs/planning/*.md`, затем `docs/modules/*.md` из `context_pack`), `objective`, `scopeStatus`, `deliveryStatus`, `archivedScopeId`, `nextTaskId`/`nextTaskTitle` (`current_task_id`, иначе первая с `commit_status` ≠ DONE), `planView`, `watchInputs` (пути `docs/…` из `context_pack` плана и задач, без `..`), `inspectedSessionId`; для совместимости `preparedPlans: []`, `unassignedPlans: []`, `originSessionId: null`.
 - `planView = {state, completed, total, tasks: [{id, title, status}], blockedReason}`. Статус задачи: `commit_status DONE` → `done`; `IN_PROGRESS` → `current`; иначе `pending`.
 - `state`: `BLOCKED` → `blocked` (с `blocked_reason`); `ACTIVE` + `READY_FOR_ACCEPTANCE` + все задачи `done` (задач > 0) → `awaiting-acceptance`; прочий `ACTIVE` → `working`; не ACTIVE с `archived_scope_id` → `closed`; иначе `not-created`.
-- `planRevision` нужен для свежести пакета и проверки AutoPlan; в карточке плана не выводится (revision доставленного пакета есть только в подвале «Подробности подключения» — [workspace-sidebar-ui.md](workspace-sidebar-ui.md)).
+- `planRevision` нужен для свежести пакета и проверки AutoPlan; в карточке плана не выводится. Сведения о доставленном пакете находятся в Settings. Каждая строка задачи разделяет ID, название, запланированный способ выполнения и текущий статус. plannedExecution показывает последовательную задачу, независимую, исключительную либо «после …» по зависимостям; это не фактический RUNNING/DONE. Заголовок задачи не разбирается для определения статуса.
 
 ### PlanMonitor
 
