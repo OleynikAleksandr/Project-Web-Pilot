@@ -208,7 +208,9 @@ function applyObservedPage(event, record = liveSessions.visible) {
   record.primaryAutomation?.observe(event);
   record.executor?.observe(event);
   const safety=JSON.stringify([event.documentId,event.state?.url,event.state?.busy,event.state?.lastMessageRole,event.state?.connectionError,
-    event.state?.draftPresent,event.state?.editorAvailable,event.state?.writable,event.state?.turnId,event.state?.manualStopRevision,event.state?.manualSendRevision]);
+    event.state?.draftPresent,event.state?.editorAvailable,event.state?.writable,event.state?.turnId,event.state?.userTurnId,
+    event.state?.assistantRevision,event.state?.userMessagesRevision,event.state?.manualInputRevision,
+    event.state?.manualStopRevision,event.state?.manualSendRevision]);
   if(record.identity&&!record.identity.assignmentId&&execution.unwatch.has(record.identity.workspace)&&record.executionSafety!==safety) {
     record.executionSafety=safety;void execution.signal(record.identity.workspace);
   }
@@ -283,7 +285,14 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
     stop.update=paths=>{watcher.update(['.harness/runtime/command-activity/',...(paths??[])]);refreshAssignments();};
     stop.refreshAssignments=refreshAssignments;return stop;
   },
-  mainState:origin=>executorPageState(liveRecord(origin)),
+  mainState:origin=>{
+    const record=liveRecord(origin),page=record?.pageState.current;
+    return {...executorPageState(record),documentId:page?.documentId??null,
+      lastMessageRole:page?.state?.lastMessageRole??null,
+      userMessagesRevision:page?.state?.userMessagesRevision??null,
+      manualInputRevision:page?.state?.manualInputRevision??0,
+      manualStopRevision:page?.state?.manualStopRevision??0};
+  },
   workerState:(assignment,entry)=>executorPageState(liveRecord(store.project(assignment.worktree,entry?.sessionId))),
   restoreOrigin:origin=>restoreExecutionPage(origin),
   restoreWorker:async(assignment,origin,entry,recovery)=>{

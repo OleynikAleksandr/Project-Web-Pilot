@@ -40,7 +40,8 @@ export class AutomationSendState {
     try {
       if(!ready())return {state:'cancelled'};
       this.entries.set(key,{key,status:'sending',kind,scopeId:selected.scopeId});
-      await this.persist();
+      try {await this.persist();}
+      catch(error){if(previous)this.entries.set(key,previous);else this.entries.delete(key);throw error;}
       const result=ready()?await perform():{state:'cancelled'};
       if(result.state==='sent')this.entries.set(key,{key,status:'sent',kind,scopeId:selected.scopeId});
       else if(result.state!=='unknown'){if(previous)this.entries.set(key,previous);else this.entries.delete(key);}

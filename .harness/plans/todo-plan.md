@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1711,
+  "plan_revision": 1713,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -228,8 +228,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T004",
@@ -259,7 +259,14 @@
         "После подтверждённого main DONE completion OFF не теряет допустимый final; reply-observed не устанавливается чужим или незавершённым turn."
       ],
       "expected_commit_message": "fix: стабилизировать итоговую передачу и подтверждение ответа",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/automation-send-state.mjs",
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "tests/automation-send-state.test.mjs",
+        "tests/parallel-finalization.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -490,7 +497,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1711
+Revision: 1713
 
 ## Цель
 
@@ -527,8 +534,8 @@ Revision: 1711
   - Файлы: src/parallel-execution.mjs, src/parallel-kit.mjs, src/execution-projection.mjs, src/main.mjs, src/automation-send-state.mjs, tests/parallel-finalization.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-smoke-fixture.cjs
   - Параллельность: исключительное выполнение
   - Зависимости: T002
-- [TODO] T004: Долговечный финал, Send и доказанный reply — Ожидает
-  - Git Commit: [PENDING] fix: стабилизировать итоговую передачу и подтверждение ответа
+- [DONE] T004: Долговечный финал, Send и доказанный reply — Завершено
+  - Git Commit: [DONE] fix: стабилизировать итоговую передачу и подтверждение ответа
   - Reference: parallel-final-stage-recovery-20261010 / T004 / implementation
   - Файлы: src/parallel-execution.mjs, src/automation-send-state.mjs, src/main.mjs, tests/parallel-finalization.test.mjs, tests/automation-send-state.test.mjs, tests/parallel-execution-smoke-fixture.cjs
   - Параллельность: исключительное выполнение

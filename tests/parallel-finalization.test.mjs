@@ -25,7 +25,9 @@ function fixture(t) {
    execution_origin_session_id:'origin',parallel_allowed:true,max_workers:2,tasks:[{id:'T001',commit_status:'PENDING',dependencies:[],parallel_safe:false}]},
   assignments:[{id:'a',parent_task_id:'T001',status:'READY_FOR_INTEGRATION',source_commit:'source',worktree:'/worker'}]};
  const ledger={workspace:'/main',scope:'scope',projectId:'project',originSessionId:'origin',started:true,assignments:{a:{id:'a',taskId:'T001',sessionId:'worker'}},corrections:{}};
- const page={stopped:true,canSend:true,canContinueSend:true,pauseKey:'before',manualSendRevision:0};
+ const page={stopped:true,canSend:true,canContinueSend:true,pauseKey:'before',manualSendRevision:0,
+  documentId:'doc',lastMessageRole:'assistant',userTurnId:'user-before',userMessagesRevision:1,
+  turnId:'assistant-before',assistantRevision:1,manualInputRevision:0,manualStopRevision:0};
  const auth=new ProjectAutoPlan();auth.set('/main','scope',true,'origin');
  const calls={sent:0,merged:0,saved:[]};
  const kit={read:async()=>structuredClone(state),integrate:async()=>{
@@ -44,9 +46,11 @@ function fixture(t) {
 test('final READY returns control before DONE, then observes a distinct main reply without replay',async t=>{
  const f=fixture(t);await f.runtime.signal('/main');
  assert.equal(f.calls.sent,1);assert.equal(f.calls.merged,0);assert.equal(f.ledger.finalization.status,'sent');
- f.page.busy=true;f.page.stopped=false;await f.runtime.signal('/main');
+ f.page.busy=true;f.page.stopped=false;f.page.lastMessageRole='user';f.page.userTurnId='user-final';
+ f.page.userMessagesRevision=2;await f.runtime.signal('/main');
  f.state.plan.tasks[0].commit_status='DONE';f.state.assignments[0].status='INTEGRATED';
  f.page.busy=false;f.page.stopped=true;f.page.pauseKey='after';
+ f.page.lastMessageRole='assistant';f.page.turnId='assistant-final';f.page.assistantRevision=2;
  await f.runtime.signal('/main');await f.runtime.signal('/main');
  assert.equal(f.auth.enabled('/main','scope'),false);assert.equal(f.ledger.finalization.status,'reply-observed');assert.equal(f.calls.sent,1);
 });
@@ -65,6 +69,66 @@ test('restart sending/unknown states never repeat and cannot be mistaken for a m
   const f=fixture(t);f.ledger.finalization={status,projectId:'project',scope:'scope',sessionId:'origin'};
   await f.runtime.signal('/main');assert.equal(f.calls.sent+f.calls.merged,0);assert.equal(f.ledger.finalization.status,status);
  }
+});
+test('F18: changing pause, busy without own user or unfinished/foreign reply cannot acknowledge final',async t=>{
+ const f=fixture(t);await f.runtime.signal('/main');
+ f.state.plan.tasks[0].commit_status='DONE';f.state.assignments[0].status='INTEGRATED';
+ f.page.pauseKey='foreign-pause';f.page.turnId='foreign-assistant';f.page.assistantRevision=20;
+ await f.runtime.signal('/main');assert.equal(f.ledger.finalization.status,'sent');
+ f.page.busy=true;f.page.stopped=false;await f.runtime.signal('/main');
+ f.page.busy=false;f.page.stopped=true;f.page.lastMessageRole='assistant';
+ await f.runtime.signal('/main');assert.equal(f.ledger.finalization.status,'sent','foreign turn and busy do not suffice');
+ f.page.userMessagesRevision=2;f.page.userTurnId='user-after-send';f.page.lastMessageRole='user';
+ await f.runtime.signal('/main');assert.equal(f.ledger.finalization.status,'sent','user only is not a reply');
+ f.page.busy=true;f.page.stopped=false;await f.runtime.signal('/main');
+ f.page.busy=false;f.page.stopped=true;f.page.lastMessageRole='assistant';
+ f.page.turnId='own-answer';f.page.assistantRevision=21;await f.runtime.signal('/main');
+ assert.equal(f.ledger.finalization.status,'reply-observed');assert.equal(f.calls.sent,1);
+});
+test('F18: changed document or manual Send never confirms an old dispatched reply',async t=>{
+ const f=fixture(t);await f.runtime.signal('/main');
+ f.state.plan.tasks[0].commit_status='DONE';f.state.assignments[0].status='INTEGRATED';
+ f.page.documentId='reloaded';f.page.userTurnId='new-user';f.page.userMessagesRevision=50;
+ f.page.turnId='other-reply';f.page.assistantRevision=100;
+ await f.runtime.signal('/main');assert.equal(f.ledger.finalization.status,'sent');
+ f.page.documentId='doc';f.page.manualSendRevision=1;
+ await f.runtime.signal('/main');assert.equal(f.ledger.finalization.status,'sent');
+});
+test('F18: two new native turn identities prove a rapid own reply without a sampled busy frame',async t=>{
+ const f=fixture(t);await f.runtime.signal('/main');
+ f.state.plan.tasks[0].commit_status='DONE';f.state.assignments[0].status='INTEGRATED';
+ f.page.userTurnId='user-after-dispatch';f.page.userMessagesRevision=2;
+ f.page.turnId='assistant-after-dispatch';f.page.assistantRevision=2;
+ await f.runtime.signal('/main');
+ assert.equal(f.ledger.finalization.status,'reply-observed');
+});
+test('F18: first generated user turn can follow an initial assistant-only plan',async t=>{
+ const f=fixture(t);f.page.userTurnId='';await f.runtime.signal('/main');
+ f.state.plan.tasks[0].commit_status='DONE';f.state.assignments[0].status='INTEGRATED';
+ f.page.userTurnId='first-user';f.page.userMessagesRevision=2;
+ f.page.turnId='assistant-reply';f.page.assistantRevision=2;
+ await f.runtime.signal('/main');assert.equal(f.ledger.finalization.status,'reply-observed');
+});
+test('F14: scope, URL, HEAD and manual Stop changing during composition veto final Send',async t=>{
+ for(const change of ['scope','url','head','stop','input','document']){
+  const f=fixture(t);f.runtime.sendFinalization=async(_origin,_text,ready,before)=>{
+   if(change==='scope')f.state.plan.scope_id='other';
+   if(change==='url')f.origin.chatUrl='https://chatgpt.com/c/replaced';
+   if(change==='head')f.state.head='new-head';
+   if(change==='stop')f.page.manualStopped=true;
+   if(change==='input')f.page.manualInputRevision++;
+   if(change==='document')f.page.documentId='new-doc';
+   if(change!=='scope'&&change!=='head')assert.equal(ready(),false,change);
+   assert.equal(await before(),false,change);return {state:'cancelled'};
+  };
+  await f.runtime.signal('/main');assert.equal(f.calls.sent,0);assert.equal(f.ledger.finalization.status,'pending');
+ }
+});
+test('F15: failed pre-Send final checkpoint stays pending and never invokes composer',async t=>{
+ const f=fixture(t);let called=0;f.runtime.save=async()=>{throw Error('disk full');};
+ f.runtime.sendFinalization=async()=>{called++;return {state:'sent'};};
+ await f.runtime.signal('/main'); // Scoped identity must be persisted before the final intent can exist.
+ assert.equal(called,0);assert.equal(f.runtime.view('/main').phase,'attention');
 });
 test('last boundary rejects a changed scope or command and an unused cancelled attempt stays pending',async t=>{
  const f=fixture(t);f.runtime.sendFinalization=async(_o,_text,_ready,before)=>{
@@ -176,7 +240,9 @@ test('F16: diagnostic pause is durable, deduplicated and remains read-only after
   sendFinalization:async()=>{f.calls.sent++;return {state:'sent'};}});
  t.after(()=>restored.dispose());original.dispose();
  await restored.signal('/main');assert.equal(diagnostics,1);assert.equal(f.calls.merged,0);
- f.page.turnId='new-assistant';f.page.stopped=true;f.page.assistantRevision=1;
+ f.page.userMessagesRevision=2;f.page.userTurnId='sent-diagnostic';f.page.lastMessageRole='user';
+ await restored.signal('/main');
+ f.page.turnId='new-assistant';f.page.stopped=true;f.page.lastMessageRole='assistant';f.page.assistantRevision=2;
  await restored.signal('/main');
  assert.equal(f.ledger.diagnostic.status,'reply-observed');
  // The existing serialized queue may merge only once after the read-only reply.
@@ -262,7 +328,9 @@ test('F03: real Git/Kit source, diagnostic read-only reply, terminal event, one 
   auth.set(root,'parallel-fixture',true,'origin');
   const origin={workspace:root,sessionId:'origin',projectId:initial.plan.project_id,
    chatUrl:'https://chatgpt.com/c/fixture',executionSnapshot:{parallel_allowed:true,max_workers:2}};
-  const page={stopped:true,canSend:true,canContinueSend:true,pauseKey:'before',manualSendRevision:0};
+  const page={stopped:true,canSend:true,canContinueSend:true,pauseKey:'before',manualSendRevision:0,
+   documentId:'doc',lastMessageRole:'assistant',userTurnId:'user-before',userMessagesRevision:1,
+   turnId:'assistant-before',assistantRevision:1};
   let sends=0,diagnostics=0,merges=0;
   const book={[JSON.stringify([root,'parallel-fixture'])]:{
    workspace:root,scope:'parallel-fixture',started:true,assignments:{},corrections:{}}};
@@ -294,8 +362,10 @@ test('F03: real Git/Kit source, diagnostic read-only reply, terminal event, one 
   assert.equal(runtime.view(root).assignments.find(a=>a.id===last.id)?.commandActive,true);
   assert.equal(git('rev-parse','HEAD'),lastMainHead);
   assert.deepEqual(Object.keys(validate(root).resolved).sort(),['T001','T002']);
-  page.busy=true;page.stopped=false;await runtime.signal(root);
+  page.busy=true;page.stopped=false;page.userTurnId='diagnostic-sent';page.userMessagesRevision=2;
+  page.lastMessageRole='user';await runtime.signal(root);
   page.busy=false;page.stopped=true;page.pauseKey='after-diagnostic';
+  page.lastMessageRole='assistant';page.turnId='diagnostic-answer';page.assistantRevision=2;
   await runtime.signal(root);
   assert.equal(book[JSON.stringify([root,'parallel-fixture'])].diagnostic.status,'reply-observed');
   assert.equal(merges,0,'the main chat performed no write in its diagnostic answer');
@@ -308,8 +378,10 @@ test('F03: real Git/Kit source, diagnostic read-only reply, terminal event, one 
   assert.equal(sends,1,'a new final turn is sent only after verified integration');
   assert.equal(book[JSON.stringify([root,'parallel-fixture'])].finalization.status,'sent');
   assert.deepEqual(Object.keys(validate(root).resolved).sort(),['T001','T002','T003']);
-  page.busy=true;page.stopped=false;await runtime.signal(root);
-  page.busy=false;page.stopped=true;page.pauseKey='after';await runtime.signal(root);
+  page.busy=true;page.stopped=false;page.userTurnId='final-sent';page.userMessagesRevision=3;
+  page.lastMessageRole='user';await runtime.signal(root);
+  page.busy=false;page.stopped=true;page.lastMessageRole='assistant';
+  page.turnId='final-answer';page.assistantRevision=3;page.pauseKey='after';await runtime.signal(root);
   assert.equal(book[JSON.stringify([root,'parallel-fixture'])].finalization.status,'reply-observed');
   assert.equal(auth.enabled(root,'parallel-fixture'),false);
   assert.equal(sends,1,'no duplicate final message');

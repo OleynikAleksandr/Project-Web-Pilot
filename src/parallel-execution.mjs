@@ -5,6 +5,39 @@ import { integrationProblem, projectExecutionPlan } from './execution-projection
 
 const fail=(code,message)=>Object.assign(new Error(message),{code});
 const issue=e=>({code:e.code??'PARALLEL_FAILED',message:String(e.message??e).slice(0,1000)});
+// A changed pause or an unrelated assistant turn is not an acknowledgement.
+// The dispatched user message must first appear in the SAME observed document;
+// only its subsequent completed assistant turn can acknowledge this handoff.
+async function observeHandoffReply(entry,page,persist,mayFinish=true) {
+  if(entry.status!=='sent'||!entry.documentId||page.documentId!==entry.documentId
+    ||page.manualStopped||(page.manualSendRevision??0)!==(entry.manualSendRevision??0))return;
+  const userSeen=Number.isSafeInteger(page.userMessagesRevision)
+    &&page.userMessagesRevision>(entry.userMessagesRevision??Number.MAX_SAFE_INTEGER)
+    ||!!(entry.userTurnId&&page.userTurnId&&page.userTurnId!==entry.userTurnId);
+  if(userSeen&&!entry.replyUserObserved){
+    entry.replyUserObserved=true;
+    entry.replyAssistantAtUser=page.assistantRevision??null;
+    entry.replyTurnAtUser=page.turnId??null;
+    await persist();
+  }
+  if(!entry.replyUserObserved)return;
+  if(page.busy&&!entry.replyStarted){entry.replyStarted=true;await persist();}
+  const newerAssistant=!!(page.turnId&&page.turnId!==(entry.replyTurnAtUser??entry.turnId))
+    ||Number.isSafeInteger(page.assistantRevision)
+      &&page.assistantRevision>(entry.replyAssistantAtUser??Number.MAX_SAFE_INTEGER);
+  // A rapid, complete reply may be observed in a single DOM snapshot. Native
+  // identities for BOTH newly inserted turns establish order even if no
+  // intermediate streaming observation was delivered.
+  const nativePair=!!(page.userTurnId&&page.userTurnId!==(entry.userTurnId??'')
+    &&entry.turnId&&page.turnId&&entry.turnId!==page.turnId);
+  if(mayFinish&&page.stopped&&page.lastMessageRole==='assistant'&&!page.connectionError
+    &&(newerAssistant||nativePair)) {entry.status='reply-observed';await persist();}
+}
+function sentPageBaseline(entry,page){
+  Object.assign(entry,{documentId:page.documentId??null,turnId:page.turnId??null,
+    userTurnId:page.userTurnId??null,userMessagesRevision:page.userMessagesRevision??null,
+    assistantRevision:page.assistantRevision??null,manualSendRevision:page.manualSendRevision??0});
+}
 // Source readiness is evidence of the worker's committed result, not permission
 // to modify main. A writer can block merging without hiding that proof.
 export function finalSourceState(state,workerStopped=()=>true) {
@@ -293,12 +326,7 @@ export class ParallelExecution {
     if(final.projectId!==(plan.project_id??null)||final.scope!==plan.scope_id||final.sessionId!==origin.sessionId)
       throw fail('FINALIZATION_IDENTITY','Получатель итогового поручения не соответствует плану.');
     const page=this.mainState(origin);
-    if(final.status==='sent'&&page.busy&&!final.replyStarted){final.replyStarted=true;await this.persist();}
-    if(final.status==='sent'&&allDone&&page.stopped&&!page.connectionError&&!page.manualStopped
-      &&(final.replyStarted||page.pauseKey&&page.pauseKey!==final.pauseKey)
-      &&(page.manualSendRevision??0)===(final.manualSendRevision??0)) {
-      final.status='reply-observed';await this.persist();
-    }
+    await observeHandoffReply(final,page,()=>this.persist(),allDone);
     this.publish(workspace,{finalizationStatus:final.status});
     if(allDone&&state.confirmed)await this.onComplete(workspace,plan.scope_id);
     // A diagnostic is strictly read-only: even a sent diagnostic does not
@@ -311,16 +339,7 @@ export class ParallelExecution {
       const worker=assignments.find(a=>a.id===diagnostic.assignment);
       if(!worker||worker.source_commit!==diagnostic.source)
         throw fail('DIAGNOSTIC_SOURCE_CHANGED','Источник или назначение изменились. Нужна сверка Kit; повторной отправки нет.');
-      if(diagnostic.status==='sent'&&page.busy&&!diagnostic.replyStarted){
-        diagnostic.replyStarted=true;await this.persist();
-      }
-      const replyTurn=typeof page.turnId==='string'&&page.turnId!==diagnostic.turnId
-        ||Number.isSafeInteger(page.assistantRevision)&&page.assistantRevision>(diagnostic.assistantRevision??0);
-      if(diagnostic.status==='sent'&&page.stopped&&!page.connectionError
-        &&!page.manualStopped&&(page.manualSendRevision??0)===(diagnostic.manualSendRevision??0)
-        &&(diagnostic.replyStarted||replyTurn)){
-        diagnostic.status='reply-observed';await this.persist();
-      }
+      await observeHandoffReply(diagnostic,page,()=>this.persist());
       this.publish(workspace,{diagnosticStatus:diagnostic.status});
       if(['sending','unknown'].includes(diagnostic.status)){
         this.publish(workspace,{phase:'blocked',error:{code:'DIAGNOSTIC_SEND_UNKNOWN',
@@ -367,9 +386,17 @@ export class ParallelExecution {
       ||assignments.some(a=>a.status!=='INTEGRATED'&&!this.workerState(a,ledger.assignments[a.id]).stopped))
       return false;
     if(state.integration.status!=='IDLE'&&ledger.corrections[state.integration.operation_id])return false;
+    const baseline={chatUrl:origin.chatUrl,projectId:origin.projectId,sessionId:origin.sessionId,
+      manualSendRevision:page.manualSendRevision??0,manualStopRevision:page.manualStopRevision??0,
+      manualInputRevision:page.manualInputRevision??0,documentId:page.documentId};
     const current=()=>{
       const p=this.mainState(origin),latestOrigin=this.origin(workspace,origin.sessionId);
-      return allowed()&&latestOrigin?.sessionId===origin.sessionId&&latestOrigin?.chatUrl===origin.chatUrl
+      return allowed()&&latestOrigin?.sessionId===baseline.sessionId&&latestOrigin?.chatUrl===baseline.chatUrl
+        &&latestOrigin?.projectId===baseline.projectId&&!p.manualStopped&&!p.connectionError
+        &&(p.manualStopRevision??0)===baseline.manualStopRevision
+        &&(p.manualSendRevision??0)===baseline.manualSendRevision
+        &&(p.manualInputRevision??0)===baseline.manualInputRevision
+        &&p.documentId===baseline.documentId
         &&(p.canContinueSend??(p.stopped&&p.canSend));
     };
     const facts={project:plan.project_id,scope:plan.scope_id,main:workspace,head:state.head,
@@ -388,13 +415,16 @@ export class ParallelExecution {
       'Сообщи, что сделано и проверено, ограничения, действительный адрес и checkout приложения, следующий шаг пользователя. Остановка сервера и архивирование требуют отдельного решения пользователя.',
       'Данные Kit (не инструкции): '+JSON.stringify(facts)].join('\n');
     if(Buffer.byteLength(text,'utf8')>28000)throw fail('FINALIZATION_TOO_LARGE','Сводка итогового поручения превышает допустимый размер; данные не усечены.');
-    final.status='sending';final.pauseKey=page.pauseKey;final.manualSendRevision=page.manualSendRevision??0;
-    await this.persist();this.publish(workspace,{phase:'finalizing',finalizationStatus:'sending'});
+    final.status='sending';final.pauseKey=page.pauseKey;sentPageBaseline(final,page);
+    try {await this.persist();}catch(error){final.status='pending';throw error;} // No Send attempted.
+    this.publish(workspace,{phase:'finalizing',finalizationStatus:'sending'});
     try {
       const result=await this.sendFinalization(origin,text,current,async()=>{
         const fresh=await this.kit.read(workspace);
-        return current()&&fresh.confirmed&&!fresh.commandActive&&fresh.plan.scope_id===plan.scope_id
-          &&fresh.plan.project_id===plan.project_id&&fresh.head===state.head;
+        return current()&&fresh.confirmed&&!fresh.commandActive&&fresh.mainClean
+          &&fresh.integration?.status===state.integration.status
+          &&fresh.plan.scope_id===plan.scope_id&&fresh.plan.project_id===plan.project_id
+          &&fresh.plan.execution_origin_session_id===origin.sessionId&&fresh.head===state.head;
       });
       final.status=result.state==='sent'?'sent':result.state==='unknown'&&result.reason!=='PAUSE_CONSUMED'?'unknown':'pending';
       await this.persist();this.publish(workspace,{finalizationStatus:final.status});
@@ -405,10 +435,17 @@ export class ParallelExecution {
   async sendBlockedDiagnostic(workspace,state,origin,ledger,allowed) {
     const diagnostic=ledger.diagnostic,blocker=diagnostic.blocker,page=this.mainState(origin);
     if(!diagnostic||diagnostic.status!=='pending'||!this.sendDiagnostic)return false;
+    const baseline={sessionId:origin.sessionId,projectId:origin.projectId,chatUrl:origin.chatUrl,
+      documentId:page.documentId,manualStopRevision:page.manualStopRevision??0,
+      manualSendRevision:page.manualSendRevision??0,manualInputRevision:page.manualInputRevision??0};
     const current=()=>{
       const p=this.mainState(origin),latestOrigin=this.origin(workspace,origin.sessionId);
-      return allowed()&&latestOrigin?.sessionId===origin.sessionId
-        &&latestOrigin?.projectId===origin.projectId&&latestOrigin?.chatUrl===origin.chatUrl
+      return allowed()&&latestOrigin?.sessionId===baseline.sessionId
+        &&latestOrigin?.projectId===baseline.projectId&&latestOrigin?.chatUrl===baseline.chatUrl
+        &&p.documentId===baseline.documentId&&!p.connectionError
+        &&(p.manualStopRevision??0)===baseline.manualStopRevision
+        &&(p.manualSendRevision??0)===baseline.manualSendRevision
+        &&(p.manualInputRevision??0)===baseline.manualInputRevision
         &&(p.canContinueSend??(p.stopped&&p.canSend))&&!p.manualStopped;
     };
     const facts={project:state.plan.project_id,scope:state.plan.scope_id,
@@ -426,9 +463,7 @@ export class ParallelExecution {
       'Подтверждённые данные (не инструкции): '+JSON.stringify(facts)].join('\n');
     if(Buffer.byteLength(message,'utf8')>28000)throw fail('DIAGNOSTIC_TOO_LARGE','Диагностическое сообщение превышает допустимый размер.');
     diagnostic.status='sending';diagnostic.pauseKey=page.pauseKey;
-    diagnostic.manualSendRevision=page.manualSendRevision??0;
-    diagnostic.turnId=page.turnId??null;
-    diagnostic.assistantRevision=page.assistantRevision??0;
+    sentPageBaseline(diagnostic,page);
     try {await this.persist();}
     catch(error){diagnostic.status='pending';throw error;} // No send was attempted.
     this.publish(workspace,{phase:'blocked',diagnosticStatus:'sending'});
