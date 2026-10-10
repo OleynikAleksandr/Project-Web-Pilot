@@ -1244,6 +1244,8 @@ facade.exec_command('PRIVATE COMMAND TEXT',str(root),'/bin/sh',False)
 assert len(markers())==1
 metadata=json.loads(markers()[0].read_text())
 assert metadata['version']==2 and metadata['state']=='running' and metadata['process_id']=='12345678'
+if server.current_boot_identity():
+    assert metadata['boot_id']==server.current_boot_identity()
 assert metadata['workspace']==str(root) and metadata['kind']=='exec'
 assert 'PRIVATE' not in markers()[0].read_text()
 client.running=False
@@ -1296,9 +1298,16 @@ try:
     assert urllib.request.urlopen('http://127.0.0.1:'+str(port),timeout=3).status==200
     live=json.loads(next(directory.glob('*.json')).read_text())
     assert live['read_only_verified'] and live['sandbox_policy']=='readOnly'
+    assert live.get('boot_id')==server.current_boot_identity()
     denied=facade.exec_command('printf denied > forbidden',str(root),'/bin/sh',False,False,1000,8000,True)
     assert not (root/'forbidden').exists()
     assert 'Process exited with code 0' not in denied
+    # A shell child must not escape the same read-only filesystem sandbox.
+    subprocess=sys.modules['subprocess'] if 'subprocess' in sys.modules else __import__('subprocess')
+    nested='import subprocess,sys; p=subprocess.run([sys.executable,"-c","open(\\\"child-forbidden\\\",\\\"w\\\").write(\\\"unsafe\\\")"]); sys.exit(p.returncode)'
+    child_denied=facade.exec_command(shlex.quote(sys.executable)+' -c '+shlex.quote(nested),str(root),'/bin/sh',False,False,1000,8000,True)
+    assert not (root/'child-forbidden').exists()
+    assert 'Process exited with code 0' not in child_denied
     facade.write_stdin(sid,'\\x03',5000)
     deadline=time.monotonic()+5
     while list(directory.glob('*.json')) and time.monotonic()<deadline:time.sleep(0.02)

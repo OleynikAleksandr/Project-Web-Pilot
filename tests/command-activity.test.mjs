@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {readCommandActivity,acknowledgeUnknownCommand} from '../src/command-activity.mjs';
+import {readCommandActivity,acknowledgeUnknownCommand,currentBootIdentity} from '../src/command-activity.mjs';
 
 async function fixture(t) {
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'command-witness-'));
@@ -49,4 +49,39 @@ test('malformed, symlink and terminal-without-exit records fail closed; temporar
  await fs.writeFile(path.join(f.dir,'pending.tmp'),'{}');await fs.symlink(path.join(f.dir,'badexit.json'),path.join(f.dir,'link.json'));
  const view=await readCommandActivity(f.root,{isDead:()=>true});
  assert.equal(view.commands.length,3);assert.ok(view.commands.every(c=>c.blocksIntegration&&c.blocksDeletion));
+});
+
+test('F05 previous-boot deletion exception uses boot identity, not an adjustable wall clock',async t=>{
+ const f=await fixture(t),older='181c680c-917c-4d02-bb43-bf00e32dea75';
+ const newer='8a6e25ef-d64e-4811-b19a-6a2dd471f106';
+ await f.write('ack',{state:'acknowledged_unknown',acknowledged_at_ms:Date.now(),
+   boot_id:older,started_at_ms:Date.now()+86400000});
+ const read=(bootId,isDead)=>readCommandActivity(f.root,{bootId,isDead});
+ let item=(await read(older,()=>true)).commands[0];
+ assert.equal(item.blocksDeletion,true,'same boot stays blocked even when wall clock moved');
+ item=(await read(newer,()=>true)).commands[0];
+ assert.equal(item.blocksDeletion,false,'proved earlier boot with dead executor preserves exception');
+ assert.equal(item.state,'acknowledged_unknown');assert.equal(item.exitCode,null);
+ assert.equal(item.blocksIntegration,false,'manual acknowledgement is not fabricated completion');
+ item=(await read(newer,()=>false)).commands[0];
+ assert.equal(item.blocksDeletion,true,'an observed live PID must be investigated');
+ for(const bootId of [null,'',older]){
+  item=(await read(bootId,()=>true)).commands[0];assert.equal(item.blocksDeletion,true);
+ }
+ await f.write('ack',{state:'acknowledged_unknown',acknowledged_at_ms:Date.now(),
+   started_at_ms:1});item=(await read(newer,()=>true)).commands[0];
+ assert.equal(item.blocksDeletion,true,'old record without boot identity has no reboot proof');
+ await f.write('ack',{state:'acknowledged_unknown',acknowledged_at_ms:Date.now(),
+   started_at_ms:-123,boot_id:older});
+ item=(await read(newer,()=>true)).commands[0];
+ assert.equal(item.blocksDeletion,true,'invalid timestamp is not a valid v2 record');
+});
+
+test('boot identity probe is fail-closed when unavailable, and normalizes verified UUIDs',()=>{
+ const uuid='181C680C-917C-4D02-BB43-BF00E32DEA75';
+ assert.equal(currentBootIdentity({platform:'darwin',run:()=>uuid+'\n'}),uuid.toLowerCase());
+ assert.equal(currentBootIdentity({platform:'linux',readFile:()=>uuid+'\n'}),uuid.toLowerCase());
+ for(const value of ['random','yesterday',''])assert.equal(currentBootIdentity({platform:'darwin',run:()=>value}),null);
+ assert.equal(currentBootIdentity({platform:'win32'}),null,'no unverified wall-clock approximation');
+ assert.equal(currentBootIdentity({platform:'darwin',run:()=>{throw Error('absent');}}),null);
 });

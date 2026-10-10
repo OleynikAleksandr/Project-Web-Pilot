@@ -6,6 +6,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {emptyPlan,renderPlan} from '@webpilot/workflow-kit/lib/plan';
+import {ChildCommandWatches} from '../src/project-input-watch.mjs';
+import {readCommandActivity} from '../src/command-activity.mjs';
 
 test('a staged integration candidate never projects DONE before its Git commit is proven',()=>{
   const plan={tasks:[{id:'A',commit_status:'DONE',implementation_status:'DONE'},{id:'B',commit_status:'DONE',implementation_status:'DONE'}]};
@@ -20,6 +22,37 @@ test('sequential legacy checkout does not require new assignment commands from i
   await fs.writeFile(path.join(root,'.harness/plans/todo-plan.md'),renderPlan(emptyPlan('Legacy')));
   const kit=new ParallelKit({plans:{call:async()=>{throw Error('Legacy Kit cannot run this command');}},setup:{}});
   const result=await kit.read(root);assert.equal(result.integration.status,'IDLE');assert.deepEqual(result.assignments,[]);
+});
+
+test('F04: child receipt replacement wakes main without a worker page or polling, and stale watchers close',async t=>{
+  const directory=await fs.mkdtemp(path.join(os.tmpdir(),'child-command-event-'));
+  t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+  const child=path.join(directory,'assigned'),other=path.join(directory,'other');
+  for(const workspace of [child,other])await fs.mkdir(path.join(workspace,'.harness/runtime/command-activity'),{recursive:true});
+  let notify,events=0;const errors=[];
+  const watcher=new ChildCommandWatches({onSignal:()=>{events++;notify?.();notify=null;},onError:e=>errors.push(e)});
+  t.after(()=>watcher.close());
+  watcher.update([child]);
+  const marker=path.join(child,'.harness/runtime/command-activity','command.json');
+  const record={version:2,id:'command',workspace:child,cwd:child,executor_pid:12345,
+    executor_instance:'fixture',started_at_ms:Date.now(),process_id:'fixture',state:'running',sandbox_policy:'dangerFullAccess'};
+  const changed=()=>new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>{notify=null;reject(Error('child watcher missed a real file event'));},1500);
+    notify=()=>{clearTimeout(timeout);resolve();};
+  });
+  let observed=changed();
+  await fs.writeFile(marker+'.tmp',JSON.stringify(record));await fs.rename(marker+'.tmp',marker);
+  await observed;
+  assert.equal((await readCommandActivity(child,{isDead:()=>false})).commandActive,true);
+  observed=changed();
+  await fs.writeFile(marker+'.tmp',JSON.stringify({...record,state:'completed',exit_code:7}));
+  await fs.rename(marker+'.tmp',marker);
+  await observed;
+  assert.equal((await readCommandActivity(child,{isDead:()=>false})).commandActive,false,'terminal receipt no stdin');
+  assert.deepEqual(errors,[]);
+  assert.ok(events>=2,'both start and completion signalled the parent');
+  watcher.update([other]);assert.deepEqual([...watcher.children.keys()],[other]);
+  watcher.close();assert.equal(watcher.children.size,0);
 });
 
 function fixture(t) {

@@ -100,3 +100,27 @@ export class ProjectInputWatch {
     this.watches.clear();
   }
 }
+
+// The primary checkout must observe confirmed child command receipts even when
+// the child's ChatGPT page has finished or is not the visible tab. This uses
+// the same event-driven, inode-rearming watcher as normal project inputs.
+export class ChildCommandWatches {
+  constructor({onSignal,onError=()=>{},createWatcher=options=>new ProjectInputWatch(options)}) {
+    Object.assign(this,{onSignal,onError,createWatcher});
+    this.children=new Map();
+  }
+  update(workspaces) {
+    const wanted=new Set(workspaces.filter(workspace=>typeof workspace==='string'&&path.isAbsolute(workspace)));
+    for(const [workspace,watcher] of this.children)if(!wanted.has(workspace)){
+      watcher.close();this.children.delete(workspace);
+    }
+    for(const workspace of wanted)if(!this.children.has(workspace)){
+      const watcher=this.createWatcher({workspace,onSignal:this.onSignal,onError:error=>{
+        if(error)this.onError({...error,workspace});
+      }});
+      this.children.set(workspace,watcher);
+      watcher.update(['.harness/runtime/command-activity/']);
+    }
+  }
+  close(){for(const watcher of this.children.values())watcher.close();this.children.clear();}
+}

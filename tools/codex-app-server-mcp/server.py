@@ -43,6 +43,24 @@ PREEXECUTION_RETRY_RULE = "If OpenAI blocked the call before execution, retry th
 # job (& or nohup) dies at once with an empty log; a running command keeps its session instead.
 LONG_COMMAND_RULE = ("Do not background commands with & or nohup: they end when the command returns. "
                      "Run a long command with exec_command and poll its session ID with write_stdin, empty chars; never rerun it.")
+
+
+def current_boot_identity() -> str | None:
+    """Stable per-boot token; never infer a reboot from a wall-clock timestamp."""
+    try:
+        if sys.platform == "darwin":
+            token = subprocess.check_output(
+                ["/usr/sbin/sysctl", "-n", "kern.bootsessionuuid"], timeout=2
+            ).decode("ascii").strip()
+        elif sys.platform.startswith("linux"):
+            token = Path("/proc/sys/kernel/random/boot_id").read_text(
+                encoding="ascii"
+            ).strip()
+        else:
+            return None  # No verified per-boot identifier on this platform.
+        return str(uuid.UUID(token)).lower()
+    except (OSError, subprocess.SubprocessError, UnicodeError, ValueError):
+        return None
 # The record of the project open in Web Pilot, written by 0.6.86–0.6.95 for context delivery through MCP.
 RETIRED_ACTIVE_WORKSPACE_FILE = "active-workspace.json"
 CODEX_TOOLS_LOCK_FILE = Path(__file__).resolve().parent / "codex-tools.lock.json"
@@ -154,6 +172,7 @@ class LocalFacade:
         self._activity_lock = threading.RLock()
         self._activities: dict[str, dict] = {}
         self._executor_instance = uuid.uuid4().hex
+        self._boot_identity = current_boot_identity()
         self._read_only_generation = None
         self._patch_activity = threading.local()
 
@@ -169,6 +188,8 @@ class LocalFacade:
                     "generation": getattr(self.client, "generation", None), "process_id": None,
                     "started_at_ms": int(time.time() * 1000), "state": "starting",
                     "read_only_verified": read_only, "sandbox_policy": "readOnly" if read_only else "dangerFullAccess"}
+                if self._boot_identity:
+                    metadata["boot_id"] = self._boot_identity
                 with self._activity_lock:
                     self._activities[str(marker)] = metadata
                     self._write_activity(marker, metadata)

@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1707,
+  "plan_revision": 1709,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -136,8 +136,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T002",
@@ -171,7 +171,16 @@
         "Сохранено действующее исключение удаления acknowledged_unknown после доказанной предыдущей загрузки ОС; при сдвиге часов, отсутствии надёжной boot-границы и живом сервере удаление запрещено с объяснением."
       ],
       "expected_commit_message": "fix: уточнить lifecycle команд и child события",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/command-activity.mjs",
+        "src/main.mjs",
+        "src/project-input-watch.mjs",
+        "tests/codex-app-server-mcp.test.mjs",
+        "tests/command-activity.test.mjs",
+        "tests/parallel-execution-recovery.test.mjs",
+        "tools/codex-app-server-mcp/server.py"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -473,7 +482,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1707
+Revision: 1709
 
 ## Цель
 
@@ -498,8 +507,8 @@ Revision: 1707
   - Файлы: tests/parallel-finalization.test.mjs, tests/parallel-execution-smoke-fixture.cjs
   - Параллельность: исключительное выполнение
   - Зависимости: нет
-- [TODO] T002: Сохранить ограничения команд и доставить child completion — Ожидает
-  - Git Commit: [PENDING] fix: уточнить lifecycle команд и child события
+- [DONE] T002: Сохранить ограничения команд и доставить child completion — Завершено
+  - Git Commit: [DONE] fix: уточнить lifecycle команд и child события
   - Reference: parallel-final-stage-recovery-20261010 / T002 / implementation
   - Файлы: src/command-activity.mjs, src/parallel-kit.mjs, src/main.mjs, src/project-input-watch.mjs, tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, tests/command-activity.test.mjs, tests/codex-app-server-mcp.test.mjs, tests/parallel-execution-recovery.test.mjs
   - Параллельность: исключительное выполнение

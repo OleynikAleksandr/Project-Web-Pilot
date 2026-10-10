@@ -32,7 +32,7 @@ import { sessionRuntimeKey } from './session-runtime.mjs';
 import { ParallelExecution } from './parallel-execution.mjs';
 import { ParallelKit } from './parallel-kit.mjs';
 import {readCommandActivity,acknowledgeUnknownCommand} from './command-activity.mjs';
-import { ProjectInputWatch } from './project-input-watch.mjs';
+import { ProjectInputWatch, ChildCommandWatches } from './project-input-watch.mjs';
 import { configureExecutor,executorPageState } from './executor-session.mjs';
 import { projectExecutors } from './execution-projection.mjs';
 import { chatGPTEntrypoint, CHATGPT_SIGNIN_ENTRYPOINT } from './chatgpt-experience.mjs';
@@ -254,15 +254,35 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
   origin:(workspace,id)=>store.project(workspace,id),
   save:async book=>{parallelExecutionBook=book;await saveSettings({parallelExecutionBook:book});},
   onChange:()=>{
+    for(const [workspace,watcher] of execution.unwatch){
+      watcher.refreshAssignments?.();
+    }
     for(const state of execution.states.values())for(const assignment of state.assignments??[])if(assignment.status==='INTEGRATED') {
       const record=liveRecord(store.project(assignment.worktree));
       if(record){record.integrated=true;record.executor?.clock.observe('done');}
     }
     publish();
   },
-  watch:(workspace,signal)=>{const watcher=new ProjectInputWatch({workspace,onSignal:signal,
-    onError:error=>{if(error)execution.publish(workspace,{phase:'attention',error});}});watcher.update(['.harness/runtime/command-activity/']);const stop=()=>watcher.close();
-    stop.update=paths=>watcher.update(['.harness/runtime/command-activity/',...(paths??[])]);return stop;},
+  watch:(workspace,signal)=>{
+    const onError=error=>{if(error)execution.publish(workspace,{phase:'attention',error});};
+    const watcher=new ProjectInputWatch({workspace,onSignal:signal,onError});
+    const children=new ChildCommandWatches({onSignal:signal,onError});
+    const refreshAssignments=()=>{
+      const state=execution.view(workspace),origin=store.project(workspace,state.originSessionId);
+      // No worktree path from an unconfirmed/foreign assignment is watched.
+      children.update((state.assignments??[]).filter(a=>{
+        if(a.status==='INTEGRATED'||a.status==='UNKNOWN'||!a.worktree||!origin)return false;
+        const child=store.project(a.worktree);
+        return child?.assignmentId===a.id&&child.parentWorkspace===workspace
+          &&child.parentProjectId===origin.projectId&&child.parentScopeId===state.scopeId
+          &&child.executionOriginSessionId===origin.sessionId&&!child.archivedAt;
+      }).map(a=>a.worktree));
+    };
+    watcher.update(['.harness/runtime/command-activity/']);
+    const stop=()=>{watcher.close();children.close();};
+    stop.update=paths=>{watcher.update(['.harness/runtime/command-activity/',...(paths??[])]);refreshAssignments();};
+    stop.refreshAssignments=refreshAssignments;return stop;
+  },
   mainState:origin=>executorPageState(liveRecord(origin)),
   workerState:(assignment,entry)=>executorPageState(liveRecord(store.project(assignment.worktree,entry?.sessionId))),
   restoreOrigin:origin=>restoreExecutionPage(origin),
