@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1694,
+  "plan_revision": 1696,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -540,8 +540,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "T006",
@@ -566,7 +566,8 @@
       ],
       "expected_commit_message": "release: Собрать парный выпуск 0.6.110",
       "parallel_safe": false,
-      "verification_kind": "package"
+      "verification_kind": "package",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -651,7 +652,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1694
+Revision: 1696
 
 ## Цель
 
@@ -728,8 +729,8 @@ Revision: 1694
   - Файлы: AGENTS.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/plan-view.md, docs/modules/workspace-sidebar-ui.md, docs/modules/workspace-sessions.md, docs/modules/context-delivery.md, docs/modules/project-archive.md, docs/modules/codex-app-server-executor.md, docs/modules/release.md, packages/workflow-kit/docs/modules/workflow-kit-package.md, docs/planning/reliable-completion-sidebar.md, docs/planning/reliable-completion-validation.md, docs/modules/first-run-onboarding.md, packages/workflow-kit/docs/modules/parallel-assignments.md, docs/modules/runtime-lifecycle.md, packages/workflow-kit/src/templates/PLAN.md, packages/workflow-kit/src/templates/PROTOTYPE.md, packages/workflow-kit/src/WORKFLOW.md, docs/modules/command-activity.md, docs/modules/project-doctor.md, docs/modules/workspace-setup.md, docs/modules/chromium-diagnostics.md, docs/modules/session-opening-performance.md
   - Параллельность: исключительное выполнение
   - Зависимости: T001, T002, T003, T004, T005
-- [TODO] T006: Собрать парный выпуск 0.6.110 — Ожидает
-  - Git Commit: [PENDING] release: Собрать парный выпуск 0.6.110
+- [DONE] T006: Собрать парный выпуск 0.6.110 — Завершено
+  - Git Commit: [DONE] release: Собрать парный выпуск 0.6.110
   - Reference: reliable-completion-sidebar-20261010 / T006 / implementation
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
