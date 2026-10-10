@@ -557,7 +557,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   const embeddedTunnelId = 'tunnel_fixture1234567890123456';
   const embeddedClipboard = new TunnelClipboard({ readText: () => { tunnelClipboardReads++; return clipboard.readText(); },
     configure: async () => {}, promptTunnelId: async () => ({ cancelled: true }) });  try {
-    window.focus(); browser.focus();
+    browser.focus();
     await clipboard.writeText('');
     // Complete the async baseline read before simulating a new in-window copy.
     await embeddedClipboard.tick({ active: true, ready: true, busy: false });
@@ -727,15 +727,10 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   const externalLine = await clipboard.readText();
   assert.ok(externalLine.includes(JSON.stringify(workspace)) && externalLine.includes('AGENTS.md'));
   assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), messagesBeforeLine, 'nothing is sent to the chat');
-  await waitFor(()=>sidebar.executeJavaScript('document.getElementById("context-title").textContent === "Контекст передан"'), 'context card settled after project input events', snapshot);
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-title").textContent'), 'Контекст передан');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-toggle").getAttribute("aria-expanded")'), 'false');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);
-  await sidebar.executeJavaScript('document.getElementById("context-toggle").click()');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-toggle").getAttribute("aria-expanded")'), 'true');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), false);
-  await sidebar.executeJavaScript('document.getElementById("context-toggle").click()');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-details").hidden'), true);
+  await waitFor(()=>snapshot().context.phase==='delivered','initial delivery settled',snapshot);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("context-card")'),null);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("session-notice").hidden'),true);
+  assert.equal(await sidebar.executeJavaScript('document.querySelector("footer")'),null);
   const disclosureSize = await sidebar.executeJavaScript(`(() => { const e=document.querySelector('.expand-project'); const p=getComputedStyle(e,'::before'); return {button:e.getBoundingClientRect().width, icon:e.querySelector('svg').getBoundingClientRect().width, expanded:e.getAttribute('aria-expanded')}; })()`);
   assert.ok(disclosureSize.button >= 32); assert.ok(disclosureSize.icon >= 18); assert.equal(disclosureSize.expanded, 'false');
   const restored = new WorkspaceSessions(store.file); await restored.load();
@@ -1005,13 +1000,13 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".sessions").hidden && !document.querySelector(".project").disabled'), 'arrow expands sessions', snapshot);
   assert.equal(store.selected().sessionId, first.sessionId, 'disclosure preserves conversation');
   await sidebar.executeJavaScript('document.querySelector(".project").click()');
-  await waitFor(() => store.selected().sessionId === fourth.sessionId && snapshot().context.phase === 'delivered', 'project name selects latest session', snapshot);
+  await waitFor(() => store.selected().sessionId === first.sessionId && snapshot().context.phase === 'delivered', 'project name preserves last selected session', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.querySelector(".sessions").scrollTop'), 0);
   await sidebar.executeJavaScript('document.getElementById("toggle-projects").click()');
   await waitFor(() => sidebar.executeJavaScript('document.querySelector(".sessions").hidden && !document.getElementById("toggle-projects").disabled'), 'collapse all projects', snapshot);
   await sidebar.executeJavaScript('document.getElementById("toggle-projects").click()');
   await waitFor(() => sidebar.executeJavaScript('!document.querySelector(".sessions").hidden && !document.getElementById("toggle-projects").disabled'), 'expand all projects', snapshot);
-  assert.equal(store.selected().sessionId, fourth.sessionId);
+  assert.equal(store.selected().sessionId, first.sessionId);
   await sidebar.executeJavaScript(`document.querySelector('[data-session-id="${first.sessionId}"]').click()`);
   await waitFor(() => store.selected().sessionId === first.sessionId && snapshot().context.phase === 'delivered', 'restore old selection for restart check', snapshot);
   const history = new WorkspaceSessions(store.file); await history.load();
@@ -1254,7 +1249,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   assert.deepEqual(await browser.executeJavaScript(bubbleProbe), originalBubbles, 'reset restores native blue bubbles and transparent rows');
   assert.equal(Object.values(JSON.parse(await fs.readFile(path.join(dataDir, 'settings.json'), 'utf8')).chatColors).every(value => value === null), true);
   assert.deepEqual(await browser.executeJavaScript(composerProbe), originalComposer, 'global reset restores native composer and keeps draft');
-  getColorWindow().close(); window.show(); window.focus();
+  getColorWindow().close(); window.showInactive();
   await browser.executeJavaScript('document.getElementById("palette-probe").remove(); document.getElementById("palette-composer-probe").remove(); history.replaceState({}, "", location.pathname)');
 
   await sidebar.executeJavaScript('document.getElementById("open-archive-window").click()');
@@ -1358,7 +1353,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
     assert.equal(await countMessages(), before);
   };
   const trustedClick = async selector => {
-    window.focus(); browser.focus();
+    browser.focus();
     const point = await browser.executeJavaScript("(()=>{const b=document.querySelector(" + JSON.stringify(selector) + ");b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
     browser.sendInputEvent({ type: 'mouseDown', ...point, button: 'left', clickCount: 1 });
     browser.sendInputEvent({ type: 'mouseUp', ...point, button: 'left', clickCount: 1 });
@@ -1506,9 +1501,15 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
     if (target.experience === 'chat') {
       await beginAnswer(); await appendAnswer('Частичный обычный ответ перед Stop.');
       await trustedClick('#auto-fixture-stop');
-      await expectContinue(before + 1, 'trusted Stop creates a suitable idle pause');
+      await waitFor(()=>!pageState.current.state.busy&&pageState.current.state.manualStopRevision>0,'trusted Stop pauses automation',snapshot);
+      await noExtraSend(before+1);
       assert.ok(pageState.current.state.manualStopRevision > 0);
       assert.equal(autoPlan.view().enabled, true);
+      await browser.executeJavaScript("(()=>{const e=document.getElementById('prompt-textarea');e.textContent='Продолжаем после Stop';e.dispatchEvent(new Event('input',{bubbles:true}))})()");
+      await trustedClick('[data-testid=send-button]');
+      await waitFor(()=>pageState.current.state.manualSendRevision>0,'new user message after Stop',snapshot);
+      await beginAnswer();await endAnswer();
+      await expectContinue(before+2,'new user turn permits continuation after Stop');
     } else {
       await beginAnswer();
       const draft = 'Мой сохранённый черновик';
@@ -1692,9 +1693,10 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   await sidebar.executeJavaScript('window.webPilot.runDoctor(' + JSON.stringify(workspace) + ')');
   assert.equal(snapshot().doctor.repaired, false, 'repeat repair is idempotent');
   const beforeDoctorRefresh = await browser.executeJavaScript('window.fixtureMessages.length');
-  await sidebar.executeJavaScript('window.webPilot.continueDoctor("refresh")');
-  await waitFor(() => snapshot().context.phase === 'delivered', 'doctor refresh delivered', snapshot);
-  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeDoctorRefresh + 1);
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("doctor-refresh")'),null);
+  await sidebar.executeJavaScript('window.webPilot.continueDoctor("open")');
+  await waitFor(() => ['delivered','stale'].includes(snapshot().context.phase), 'doctor opens existing session', snapshot);
+  assert.equal(await browser.executeJavaScript('window.fixtureMessages.length'), beforeDoctorRefresh);
   await waitFor(() => controller.contextCache.pending.size === 0, 'background preparation before new Work', snapshot);
   await sidebar.executeJavaScript('window.webPilot.openSettings()');
   const beforeDoctorNew = store.snapshot().projects.find(p => p.workspace === workspace).sessions.length;
@@ -1731,7 +1733,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   assert.equal(store.snapshot().projects.find(p => p.workspace === workTarget).sessions.length, 1);
 
   // This geometry test needs animation frames in the presented fixture window.
-  window.show(); window.focus(); browser.focus();
+  window.showInactive(); browser.focus();
   await browser.executeJavaScript(`(()=>{const box=document.createElement('div');box.id='reverse-probe';box.className='thread-scroll-container';box.style.cssText='position:fixed;top:80px;left:100px;width:240px;height:120px;overflow:auto;display:flex;flex-direction:column-reverse;z-index:9999';box.innerHTML='<div style="height:1200px;flex-shrink:0">scroll probe</div>';document.body.prepend(box);box.scrollTop=-400;window.__scrollWrites=0;const original=box.scrollTo.bind(box);box.scrollTo=opts=>{window.__scrollWrites++;original(opts)};})()`);
   await browser.executeJavaScript(autoScrollPageScript({forceFollow:true}));
   await waitFor(()=>browser.executeJavaScript('Math.abs(document.getElementById("reverse-probe").scrollTop)<1'), 'reverse bottom reached',snapshot);
@@ -1742,10 +1744,10 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   await new Promise(r=>setTimeout(r,100));
   assert.equal(await browser.executeJavaScript('document.getElementById("reverse-probe").scrollTop'),-200,'manual history stays still');
   await browser.executeJavaScript('document.getElementById("reverse-probe").remove();window.__webPilotConversationAutoScroll.refresh()');
-  assert.equal(await sidebar.executeJavaScript('document.getElementById("prototype-version").textContent'), 'ПРОТОТИП ' + app.getVersion());
+  assert.equal(await sidebar.executeJavaScript('document.getElementById("prototype-version").textContent'), app.getVersion());
   const beforeSidebarReload = snapshot();
   await sidebar.reload();
-  await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object" && document.getElementById("prototype-version")?.textContent === "ПРОТОТИП " + ' + JSON.stringify(app.getVersion())), 'sidebar reload receives initial state', snapshot);
+  await waitFor(() => sidebar.executeJavaScript('typeof window.webPilot === "object" && document.getElementById("prototype-version")?.textContent === ' + JSON.stringify(app.getVersion())), 'sidebar reload receives initial state', snapshot);
   assert.equal(await sidebar.executeJavaScript('document.getElementById("plan-card").hidden'), false);
   assert.equal(snapshot().selected?.sessionId, beforeSidebarReload.selected?.sessionId, 'sidebar reload does not change selected session');
   // Ordinary first message: actual trusted input, persisted URL, no recovery acknowledgement.
@@ -1759,7 +1761,7 @@ export async function run({ app, window, sidebar, store, selectWorkspace, worksp
   ChatGPTComposer.prototype.deliver = deliverBeforeManual;
   await browser.executeJavaScript("document.querySelector('[data-testid=send-button]').scrollIntoView({block:'center'})");
   const point = await browser.executeJavaScript("(()=>{const r=document.querySelector('[data-testid=send-button]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()");
-  window.focus(); browser.focus();
+  browser.focus();
   browser.sendInputEvent({ type: 'mouseDown', button: 'left', clickCount: 1, ...point });
   browser.sendInputEvent({ type: 'mouseUp', button: 'left', clickCount: 1, ...point });
   await waitFor(() => snapshot().context.phase === 'manual-session' && !!store.selected().chatUrl, 'ordinary Send binds its own conversation', snapshot);

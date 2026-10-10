@@ -130,11 +130,11 @@ test('unknown send after restart remains idle without verification or automatic 
   assert.equal(f.controller.state.messageSent,false);
 });
 
-test('legacy sessions stay bound and only explicit refresh sends the new protocol',async()=>{
+test('legacy sessions stay bound and retry never sends another recovery',async()=>{
   const f=controllerFixture({savedAttempt:{requestId:'old',text:'old startup',state:'acknowledged',sendStartedAtMs:now-1000}});
   await f.controller.tick();assert.equal(f.controller.state.phase,'legacy-session');assert.equal(f.loads(),0);assert.equal(f.sends(),0);
-  await f.controller.retry();await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');assert.equal(f.sends(),1);
-  assert.equal(f.saved.attempt.protocol,'inline-context-v1');
+  await f.controller.retry();await f.controller.tick();assert.equal(f.controller.state.phase,'legacy-session');assert.equal(f.sends(),0);
+  assert.equal(f.saved.attempt.protocol,undefined);
 });
 
 test('drafts and generation delay packet preparation and do not overwrite user input',async()=>{
@@ -171,14 +171,14 @@ test('a foreign chat opened before or during preparation is never used for Send'
   await changed.controller.tick();assert.equal(changed.controller.state.phase,'chat-changed');assert.equal(changed.sends(),0);
 });
 
-test('changed plan after delivery is shown as stale and explicit refresh obtains the new packet',async()=>{
+test('changed plan after delivery cannot trigger another recovery through retry',async()=>{
   const f=controllerFixture();await f.controller.tick();f.info.planRevision=8;await f.controller.tick();
   assert.equal(f.controller.state.phase,'stale');assert.equal(f.sends(),1);
   f.runtime.loadContext=async()=>{const p=packet();p.facts.plan_revision=8;return p;};
-  await f.controller.retry();await f.controller.tick();assert.equal(f.controller.state.phase,'delivered');assert.equal(f.sends(),2);
+  await f.controller.retry();await f.controller.tick();assert.equal(f.controller.state.phase,'stale');assert.equal(f.sends(),1);
 });
 
-test('explicit refresh during a background read is retained once and cancelled with its session',async()=>{
+test('retry during a background read cannot rearm a delivered session',async()=>{
   for (const cancelled of [false,true]) {
     const f=controllerFixture();await f.controller.tick();f.info.planRevision=8;
     const inspect=f.store.inspect;let release;
@@ -190,8 +190,8 @@ test('explicit refresh during a background read is retained once and cancelled w
     release();await reading;
     for(let i=0;i<8;i++)await new Promise(resolve=>setImmediate(resolve));
     await f.controller.tick();
-    assert.equal(f.sends(),cancelled?1:2);
-    assert.equal(f.controller.state.phase,cancelled?'selected':'delivered');
+    assert.equal(f.sends(),1);
+    assert.equal(f.controller.state.phase,cancelled?'selected':'stale');
   }
 });
 
@@ -294,14 +294,14 @@ test('pending WEB conversation before any send never receives project context', 
 });
 
 
-test('prepared cache removes recover from explicit refresh and records timings',async()=>{
+test('prepared cache records timings and retry does not duplicate delivery',async()=>{
   const f=controllerFixture();
   const cache=new ContextCache({load:async()=>({...packet(),generated_at_ms:1}),inputKey:async()=> 'unchanged'});
   await cache.load(project.workspace);f.controller.contextCache=cache;
   await f.controller.tick();assert.equal(f.sends(),1);assert.equal(f.loads(),0);
   assert.equal(f.saved.attempt.packet.cacheHit,true);assert.equal(f.saved.attempt.packet.generatedAtMs,1);
   assert.ok(Number.isFinite(f.saved.attempt.packet.preparationMs));assert.ok(Number.isFinite(f.saved.attempt.packet.deliveryMs));
-  await f.controller.retry();assert.equal(f.sends(),2);assert.equal(f.loads(),0);
+  await f.controller.retry();assert.equal(f.sends(),1);assert.equal(f.loads(),0);
 });
 test('source edit before insertion blocks send even when plan revision is unchanged',async()=>{
   const f=controllerFixture();let key='before';
@@ -463,7 +463,7 @@ test('an unregistered attempt cannot bind a foreign conversation without its use
   assert.equal(f.controller.state.phase, 'chat-changed');
 });
 
-test('ordinary manually started conversation is view-only until explicit context refresh', async () => {
+test('ordinary manually started conversation remains view-only after retry', async () => {
   const f = controllerFixture();
   await f.store.updateSession('', '', { manualStart: true });
   await f.controller.tick();
@@ -472,8 +472,8 @@ test('ordinary manually started conversation is view-only until explicit context
   assert.equal(f.loads(), 0); assert.equal(f.sends(), 0);
   await f.controller.retry();
   await f.controller.tick();
-  assert.equal(f.saved.manualStart, false);
-  assert.equal(f.sends(), 1); assert.equal(f.controller.state.phase, 'delivered');
+  assert.equal(f.saved.manualStart, true);
+  assert.equal(f.sends(), 0); assert.equal(f.controller.state.phase, 'manual-session');
 });
 
 // 0.6.96: the context goes as text in the start message on every platform; MCP carries tools only.
@@ -511,7 +511,7 @@ test('a new session sends one start message with the full packet and the rules o
   assert.equal(f.saved.chatUrl, project.chatUrl); assert.equal(f.controller.state.phase, 'delivered');
 });
 
-test('a chat started through MCP stays bound: nothing is sent on its own, an explicit refresh delivers the full packet', async () => {
+test('a chat started through MCP stays bound without another recovery after retry', async () => {
   const f = controllerFixture({ savedAttempt: mcpStarted('sent') });
   f.runtime.setActiveWorkspace = async () => { throw new Error('the client no longer records the active project'); };
   await f.controller.tick();
@@ -525,8 +525,8 @@ test('a chat started through MCP stays bound: nothing is sent on its own, an exp
   assert.equal(f.loads(), 0); assert.equal(f.sends(), 0); assert.equal(f.saved.chatUrl, project.chatUrl);
   f.info.planRevision = 7;
   await f.controller.retry();
-  assert.equal(f.loads(), 1); assert.equal(f.sends(), 1, 'the user asked for the context');
-  assert.equal(f.saved.attempt.packet.contextMode, undefined);
+  assert.equal(f.loads(), 0); assert.equal(f.sends(), 0, 'retry only observes the old conversation');
+  assert.equal(f.controller.state.phase,'legacy-session');
 });
 
 test('a chat started through MCP whose address is not saved yet is bound when the address appears', async () => {

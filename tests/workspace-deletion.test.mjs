@@ -44,6 +44,7 @@ test('multiple owned children are journaled, archived with parent visibility, an
   const one=await boundChild(store,a,'one'),two=await boundChild(store,a,'two');
   await store.selectSession(one,store.project(one).sessionId);await store.setArchived(a,true);
   assert.equal(store.selected(),null);assert.equal(store.landing().workspace,b);
+  service.prepare=()=>store.saveExecutorTime(one,store.project(one).sessionId,{activeMs:10,waitingMs:5});
   service.cleanup=async()=>{throw Error('restart checkpoint');};
   const preview=await service.preview(a);await assert.rejects(service.apply(preview.token,preview.name),/restart checkpoint/);
   const restart=new WorkspaceDeletion({store,journalDir:service.journalDir});assert.deepEqual(await restart.recover(),[]);

@@ -2,7 +2,8 @@ import { BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 export class ChatColorsWindow {
-  constructor({ sourceDir, getState, change, reset, getBounds }) {
+  constructor({ sourceDir, getState, change, reset, getBounds, passive=false }) {
+    this.passive=passive;
     this.sourceDir = sourceDir; this.getState = getState; this.getBounds = getBounds; this.window = null;
     this.url = pathToFileURL(path.join(sourceDir, 'ui/chat-colors.html')).href;
     const handle = (channel, callback) => ipcMain.handle(channel, async (event, input) => {
@@ -23,13 +24,14 @@ export class ChatColorsWindow {
   async open() {
     if (this.window && !this.window.isDestroyed()) {
       if (this.window.isMinimized()) this.window.restore();
-      this.window.show(); this.window.focus(); this.publish(); return;
+      if(this.passive)this.window.showInactive();else {this.window.show();this.window.focus();} this.publish(); return;
     }
     const bounds = this.getBounds?.();
     this.window = new BrowserWindow({
       title: 'Цвета чата — Project Web Pilot', width: 440, height: 710, minWidth: 400, minHeight: 540,
       ...(bounds ? { x: bounds.x + 24, y: bounds.y + 90 } : {}),
       show: false, maximizable: false, backgroundColor: this.getState().theme === 'dark' ? '#1b1d22' : '#f4f6f8',
+      focusable:!this.passive,
       webPreferences: { preload: path.join(this.sourceDir, 'chat-colors-preload.cjs'),
         nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true },
     });
@@ -37,7 +39,7 @@ export class ChatColorsWindow {
     editor.setMenu(null);
     editor.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     editor.webContents.on('will-navigate', event => event.preventDefault());
-    editor.once('ready-to-show', () => { if (!editor.isDestroyed()) editor.show(); });
+    editor.once('ready-to-show', () => { if (!editor.isDestroyed()) {if(this.passive)editor.showInactive();else editor.show();} });
     editor.on('closed', () => { if (this.window === editor) this.window = null; });
     await editor.loadURL(this.url);
   }

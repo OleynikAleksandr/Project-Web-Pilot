@@ -419,6 +419,9 @@ function snapshot() {
   return { projects: projects.filter(p => !p.archivedAt&&!p.parentWorkspace)
     .map(({ workspace, projectId, name, displayName, selectedSessionId, expanded, sessions }) => ({
     workspace, projectId, name: displayName || name, selectedSessionId, expanded,
+    activity:[...liveSessions.records.values()].some(r=>(r.identity?.workspace===workspace
+      ||store.project(r.identity?.workspace)?.parentWorkspace===workspace)&&r.pageState.current?.state.busy)?'working'
+      :execution.view(workspace).error||sessions.some(s=>liveRecord({workspace,sessionId:s.sessionId})?.controller.state.error)?'attention':'idle',
     executors:projectExecutors(projects,workspace,execution.view(workspace),liveRecord),
     sessions: activeSessionsNewestFirst(sessions).map(({ sessionId, experience, chatUrl, title, createdAt }) => ({ sessionId, experience, chatUrl, title, createdAt })),
   })),
@@ -717,8 +720,9 @@ function registerAction(channel, action, { navigation = false } = {}) {
 
 async function openArchiveWindow(workspace = null) {
   archiveState = { deletion: null, notice: null, focusWorkspace: workspace }; deletion.clear();
-  if (archiveWindow && !archiveWindow.isDestroyed()) { archiveWindow.show(); archiveWindow.focus(); publishArchive(); return; }
+  if (archiveWindow && !archiveWindow.isDestroyed()) { if(smoke)archiveWindow.showInactive();else {archiveWindow.show();archiveWindow.focus();} publishArchive(); return; }
   archiveWindow = new BrowserWindow({ title: 'Архив — Project Web Pilot', width: 780, height: 720, minWidth: 620, minHeight: 480,
+    focusable:!smoke,
     backgroundColor: shellBackground[shellTheme], webPreferences: { preload: path.join(sourceDir, 'archive-preload.cjs'),
       nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   archiveWindow.setWindowOpenHandler?.(() => ({ action: 'deny' }));
@@ -1166,7 +1170,7 @@ function registerIpc() {
     await reviewWorkspace(doctorState.workspace);
   });
   registerAction('pilot:doctor-continue', async mode => {
-    if (!['open','chat','work','refresh'].includes(mode) || doctorState?.phase !== 'done' || !doctorState.projectReady || !doctorState.servicesReady || doctorState.issues.length) throw new Error('Сначала завершите проверку проекта.');
+    if (!['open','chat','work'].includes(mode) || doctorState?.phase !== 'done' || !doctorState.projectReady || !doctorState.servicesReady || doctorState.issues.length) throw new Error('Выберите открытие чата или новую сессию после проверки проекта.');
     const workspace = doctorState.workspace;
     if (!await reviewWorkspace(workspace, true)) return;
     const generation = navigationId, existing = store.project(workspace);
@@ -1174,8 +1178,7 @@ function registerIpc() {
     if (!navigationCurrent(generation) || !project) return;
     if (['chat','work'].includes(mode) && existing) project = await store.newSession(workspace, mode);
     if (!navigationCurrent(generation)) return;
-    // Navigation attaches the selected session. Refresh is requested only after it loaded.
-    await navigate(project, { refresh: mode === 'refresh', generation, freshDraft: !existing || ['chat','work'].includes(mode) });
+    await navigate(project, { generation, freshDraft: !existing || ['chat','work'].includes(mode) });
   });
   registerAction('pilot:close-settings', closeSettings);
   registerAction('pilot:set-sidebar-width', async input => {
@@ -1338,7 +1341,7 @@ function registerIpc() {
   });
   registerAction('pilot:select-workspace', input => {
     if (typeof input !== 'string' || !store.project(input)) throw new Error('Выберите проект из списка.');
-    return selectWorkspace(input, { latest: true });
+    return store.setExpanded(input,true).then(()=>selectWorkspace(input, { latest: false }));
   }, { navigation: true });
   registerAction('pilot:select-session', async input => {
     if (storageError) throw new Error('Сначала нужно восстановить сохранённый список проектов.');
@@ -1421,6 +1424,7 @@ function registerIpc() {
 
 async function createWindow() {
   window = new BaseWindow({ name: 'main-window', title: smoke ? 'Project Web Pilot — TEST FIXTURE' : 'Project Web Pilot',
+    focusable:!smoke,
     width: 1440, height: 940, minWidth: 980, minHeight: 700, backgroundColor: shellBackground[shellTheme],
     windowStatePersistence: { bounds: true, displayMode: false } });
   sidebar = new WebContentsView({ webPreferences: { preload: path.join(sourceDir, 'preload.cjs'),
@@ -1428,6 +1432,7 @@ async function createWindow() {
   window.contentView.addChildView(sidebar);
   selectLiveSession(null);
   colorEditor = new ChatColorsWindow({
+    passive:smoke,
     sourceDir, getBounds: () => window?.getBounds(),
     getState: () => ({ colors: { ...chatColors }, defaults: DEFAULT_COLORS[shellTheme], theme: shellTheme }),
     change: input => { const { key, value } = validateColorChange(input); return setChatColors({ ...chatColors, [key]: value }); },
@@ -1509,6 +1514,8 @@ else {
   app.on('window-all-closed', () => app.quit());
   app.whenReady().then(async () => {
     if (smoke) {
+      // Fixture windows must never activate the application or steal the user's desktop focus.
+      if(process.platform==='darwin')app.setActivationPolicy('accessory');
       fixture = await import('../tests/electron-smoke.mjs');
       await fixture.prepareStartup({ dataDir });
     }

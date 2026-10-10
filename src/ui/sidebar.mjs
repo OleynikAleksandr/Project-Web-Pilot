@@ -9,7 +9,6 @@ let actionPending = false, pendingAction = null, actionGeneration = 0;
 const navigationActions = new Set(['selectWorkspace', 'selectSession', 'reload', 'returnToChat']);
 const progress = createProgress($('operation-progress'));
 window.addEventListener('pagehide', () => progress.destroy());
-let contextExpanded = false;
 const sessionScroll = new Map();
 const renameDialog = $('rename-dialog');
 const renameInput = $('rename-dialog-input');
@@ -88,11 +87,43 @@ document.addEventListener('click', event => { if (!$('project-actions').contains
 document.addEventListener('keydown', event => { if (event.key === 'Escape') $('project-actions').open = false; });
 document.addEventListener('scroll', event => { if (!event.target.closest?.('[popover]')) closeTreeMenus(); }, true);
 window.addEventListener('resize', closeTreeMenus);
-$('project-actions').addEventListener('toggle', () => { if ($('project-actions').open) closeTreeMenus(); });
+$('project-actions').addEventListener('toggle', () => { if ($('project-actions').open) {closeTreeMenus();$('project-search').focus();} });
 $('toggle-projects').addEventListener('click', async () => {
   if (actionPending || !currentState) return;
-  const expand = !currentState.projects.some(project => project.expanded);
-  for (const project of currentState.projects.filter(project => project.expanded !== expand)) await action('setExpanded', project.workspace, expand);
+  const root=currentState.selected?.parentWorkspace??currentState.selected?.workspace;
+  const project=currentState.projects.find(p=>p.workspace===root);
+  if(project)await action('setExpanded',project.workspace,!project.expanded);
+});
+let pickerSignature='';
+function renderProjectChoices(state) {
+  const selected=state.selected?.parentWorkspace??state.selected?.workspace,query=$('project-search').value.trim().toLocaleLowerCase();
+  const signature=JSON.stringify([state.projects.map(p=>[p.workspace,p.name,p.activity]),selected,query]);
+  if(signature===pickerSignature)return;
+  pickerSignature=signature;
+  const focused=document.activeElement?.dataset?.projectChoice;
+  const choices=state.projects.filter(p=>(p.name+' '+p.workspace).toLocaleLowerCase().includes(query));
+  $('project-options').replaceChildren(...choices.map(project=>{
+    const button=document.createElement('button');button.type='button';button.dataset.projectChoice=project.workspace;
+    button.title=project.workspace;
+    if(project.workspace===selected)button.setAttribute('aria-current','page');
+    const title=document.createElement('span');title.textContent=project.name;
+    const status=document.createElement('small');
+    status.textContent=[project.workspace===selected?'Выбран':null,project.activity==='working'?'Работает в фоне':project.activity==='attention'?'Требует внимания':null].filter(Boolean).join(' · ');
+    button.append(title);if(status.textContent)button.append(status);
+    button.addEventListener('click',()=>{$('project-actions').open=false;action('selectWorkspace',project.workspace);});
+    return button;
+  }));
+  $('project-search-empty').hidden=choices.length>0;
+  if(focused)[...$('project-options').children].find(b=>b.dataset.projectChoice===focused)?.focus();
+}
+$('project-search').addEventListener('input',()=>{if(currentState)renderProjectChoices(currentState);});
+$('project-archive').addEventListener('click',()=>{$('project-actions').open=false;action('openArchive');});
+$('project-actions').addEventListener('keydown',event=>{
+  if(!['ArrowDown','ArrowUp','Escape'].includes(event.key))return;
+  if(event.key==='Escape'){$('project-actions').open=false;$('project-actions').querySelector('summary').focus();return;}
+  const choices=[...$('project-options').querySelectorAll('button')];if(!choices.length)return;
+  event.preventDefault();const position=choices.indexOf(document.activeElement),direction=event.key==='ArrowDown'?1:-1;
+  choices[(position+direction+choices.length)%choices.length].focus();
 });
 
 const phases = {
@@ -108,13 +139,13 @@ const phases = {
   sending: ['Передаём контекст', 'Отправляем полный контекст проекта одним сообщением.', 'working'],
   'waiting-chat': ['Контекст отправлен', 'Можно продолжать разговор. Адрес чата сохранится при его появлении.', 'success'],
   delivered: ['Контекст передан', 'Полный пакет отправлен в этот чат. Агент кратко подтвердит получение и опишет проект.', 'success'],
-  stale: ['Контекст нужно обновить', 'План изменился после отправки. Нажмите «Обновить контекст», чтобы передать актуальную версию.', 'working'],
-  'prepared-stale': ['Пакет в поле устарел', 'Уберите подготовленный черновик и нажмите «Обновить контекст». Отправка приостановлена.', 'working'],
-  'manual-session': ['Разговор сохранён', 'Вы отправили сообщение вручную. Контекст проекта ещё не передан; при необходимости нажмите «Обновить контекст».', 'neutral'],
-  'legacy-session': ['Сохранённый чат проекта', 'Чат открыт. Для передачи полного пакета нажмите «Обновить контекст» или создайте новую сессию через меню проекта.', 'neutral'],
-  'send-unknown': ['Можно продолжать разговор', 'Прежняя попытка отправки не подтверждена. Автоматических проверок и повторной отправки нет.', 'neutral'],
+  stale: ['Разговор сохранён', 'План изменился. Новый стартовый пакет доступен в новой сессии.', 'neutral'],
+  'prepared-stale': ['Пакет в поле устарел', 'Уберите подготовленный черновик и повторите подготовку. Отправка приостановлена.', 'working'],
+  'manual-session': ['Разговор сохранён', 'Для полного стартового пакета создайте новую сессию.', 'neutral'],
+  'legacy-session': ['Сохранённый чат проекта', 'Для полного стартового пакета создайте новую сессию.', 'neutral'],
+  'send-unknown': ['Исход отправки неизвестен', 'Проверьте сообщения в этом чате. Повторной отправки нет; для нового полного пакета создайте новую сессию.', 'neutral'],
   'chat-changed': ['Открыт другой чат', 'Этот чат пока не связан с проектом. Вернитесь к сессии проекта или создайте новую через меню проекта.', 'working'],
-  error: ['Не удалось передать контекст', 'Подробности ошибки показаны выше. После исправления нажмите «Проверить контекст».', 'error'],
+  error: ['Не удалось подготовить сессию', 'После исправления причины повторите подготовку.', 'error'],
 };
 
 const setupView = workspaceSetupView(action);
@@ -224,7 +255,8 @@ function renderExecutorTimes() {
 function render(state) {
   progress.show(operationLabel(state ?? {}, pendingAction));
   if (!state) return;
-  $('prototype-version').textContent = `ПРОТОТИП ${state.version ?? ''}`.trim();
+  $('prototype-version').textContent = state.version ?? '';
+  renderProjectChoices(state);
   for (const list of $('projects').querySelectorAll('.sessions')) {
     if (!list.closest('[hidden]')) sessionScroll.set(list.dataset.workspace, list.scrollTop);
   }
@@ -244,7 +276,7 @@ function render(state) {
     closeTreeMenus();
     const fragment = document.createDocumentFragment();
     const dateFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    for (const project of state.projects) {
+    for (const project of state.projects.filter(p=>p.workspace===(selected?.parentWorkspace??selected?.workspace))) {
       const item = document.createElement('li'); item.className = 'workspace-tree';
       const activeProject = project.workspace === (selected?.parentWorkspace??selected?.workspace);
       const row = document.createElement('div'); row.className = 'workspace-row' + (activeProject ? ' active' : '');
@@ -350,7 +382,7 @@ function render(state) {
       }
       fragment.append(item);
     }
-    if (!state.projects.length) {
+    if (!selected) {
       const empty = document.createElement('li'); empty.className = 'empty';
       empty.textContent = 'Откройте меню «Ваши проекты», чтобы создать проект или выбрать его папку.'; fragment.append(empty);
     }
@@ -358,8 +390,8 @@ function render(state) {
     $('projects').scrollTop = outerScroll;
     for (const workspace of sessionScroll.keys()) if (!state.projects.some(project => project.workspace === workspace)) sessionScroll.delete(workspace);
   }
-  const collapseAll = state.projects.some(project => project.expanded);
-  $('toggle-projects').title = collapseAll ? 'Свернуть все проекты' : 'Раскрыть все проекты';
+  const collapseAll = state.projects.some(project => project.workspace===(selected?.parentWorkspace??selected?.workspace)&&project.expanded);
+  $('toggle-projects').title = collapseAll ? 'Свернуть сессии проекта' : 'Раскрыть сессии проекта';
   $('toggle-projects').setAttribute('aria-label', $('toggle-projects').title);
   $('plan-card').hidden = !selected || !!selected.assignmentId;
   $('assignment-card').hidden = !selected?.assignmentId;
@@ -385,6 +417,12 @@ function render(state) {
   $('execution-message').textContent=execution.error?.message??({sending:'Поручение исправления отправляется…',sent:'Поручение исправления отправлено. Ждём основной чат.',unknown:'Исход отправки исправления неизвестен. Повтор не отправляется.'}[execution.correctionStatus])??({preparing:'Подготавливаем исполнителей…',merging:'Проверяем слияние в main…',
     complete:'Все результаты интегрированы. Ожидается приёмка.',integration:'Интеграция удерживает main. Другие слияния ждут.',
     paused:'Автовыполнение проекта выключено. Новые задачи и сообщения не запускаются.',waiting:'Состояния исполнителей показаны в дереве. Пауза не означает вопрос пользователя.'}[execution.phase]??'Включите автовыполнение этого проекта для запуска готовых задач.');
+  if(execution.finalizationStatus&&!execution.error)$('execution-message').textContent=({
+    pending:'Итоговое поручение ожидает готовности основного чата.',
+    sending:'Передаём завершение основному чату…',sent:'Ждём итоговый ответ основного чата.',
+    unknown:'Исход итоговой отправки неизвестен. Повтор не отправляется.',
+    'reply-observed':'Итоговый ответ завершён. Ожидается приёмка.',
+  })[execution.finalizationStatus]??$('execution-message').textContent;
   const auto = state.autoPlan ?? { phase: 'off', active: false, message: '' };
   $('auto-plan-toggle').textContent = auto.enabled ? 'Выключить автовыполнение' : 'Включить автовыполнение';
   $('auto-plan-toggle').disabled = actionPending;
@@ -406,7 +444,6 @@ function render(state) {
   $('auto-plan-message').dataset.reason = auto.reason ?? '';
 
   renderAgentTime(selected);
-  $('session-actions').hidden = !selected;
   const plan = (selected?.planExecution?.execution_strategy==='parallel' ? execution.planView
     : selected?.planView) ?? { state: 'not-created', completed: 0, total: 0, tasks: [], blockedReason: null };
   if (selected) {
@@ -433,30 +470,25 @@ function render(state) {
       mark.setAttribute('aria-label', task.status === 'done' ? 'выполнена' : task.status === 'current' ? 'текущая' : 'не начата');
       mark.textContent = task.status === 'done' ? '✓' : task.status === 'current' ? '●' : '○';
       const body = document.createElement('div'), title = document.createElement('strong');
-      title.textContent = task.title; body.append(title);
-      if (task.label) { const status=document.createElement('small'); status.textContent=task.label; body.append(status); }
+      const id=document.createElement('span');id.className='plan-task-id';id.textContent=task.id;
+      title.textContent = task.title;
+      const mode=document.createElement('small');mode.className='plan-task-mode';mode.textContent=task.executionLabel??'Последовательно';
+      const status=document.createElement('small');status.className='plan-task-status';
+      status.textContent=task.label??({done:'Выполнена',current:'В работе',pending:'Не начата'})[task.status]??'Состояние не подтверждено';
+      body.append(id,title,mode,status);
       item.append(mark, body); return item;
     }));
   } else { $('plan-tasks').replaceChildren(); $('plan-note').hidden = true; $('plan-reason').hidden = true; }
-  const [title, detail, tone] = phases[context.phase] ?? phases.selected;
-  $('context-title').textContent = state.pageLoading ? 'Открываем ChatGPT' : title;
-  $('context-details').hidden = !contextExpanded;
-  $('context-toggle').setAttribute('aria-expanded', String(contextExpanded));
-  $('context-toggle').setAttribute('aria-label', `${contextExpanded ? 'Скрыть' : 'Показать'} подробности состояния контекста`);
-  $('context-detail').textContent = state.pageLoading ? 'Загружаем чат выбранного проекта.' : detail;
-  $('context-card').dataset.tone = state.pageLoading ? 'working' : tone;
-  // A delivered chat is reopened without restarting services; the last confirmed runtime status still applies.
-  const runtimeService = state.localRuntime?.service;
-  const servicesReady = !!context.servicesReady || !!(runtimeService?.mcpReady && runtimeService?.tunnelReady);
-  $('state-service').textContent = servicesReady ? 'Готовы' : context.phase === 'preparing' ? 'Проверка…' : 'Не проверены';
-  $('state-service').dataset.ready = String(servicesReady);
-  $('state-message').textContent = context.messageSent ? 'Отправлено' : context.phase === 'sending' ? 'Отправка…' : context.phase === 'send-unknown' ? 'Без подтверждения' : 'Ожидание';
-  $('state-message').dataset.ready = String(!!context.messageSent);
-  $('state-context').textContent = context.phase === 'delivered' ? 'Передан целиком' : ['stale', 'prepared-stale'].includes(context.phase) ? 'Устарел' : context.phase === 'loading-context' ? 'Подготовка…' : context.phase === 'legacy-session' ? 'Прежняя сессия' : 'Ожидание';
-  $('state-context').dataset.ready = String(context.phase === 'delivered');
+  const [title, detail] = phases[context.phase] ?? phases.selected;
+  const attention=['error','prepared-stale','waiting-draft','waiting-login','waiting-experience','chat-changed','send-unknown'].includes(context.phase);
+  const started=selected?.manualStart||context.messageSent||['sending','unknown','sent','acknowledged'].includes(selected?.attempt?.state);
+  $('session-notice').hidden=!selected||!attention||!!state.setup||!!state.settings;
+  $('session-notice-title').textContent=(selected?.title||'Текущая сессия')+' · '+title;
+  $('session-notice-detail').textContent=context.error?.message??detail;
+  $('retry-context').hidden=started||!['error','prepared-stale'].includes(context.phase);
+  $('observe-context').hidden=context.phase!=='send-unknown';
+  $('new-context-session').hidden=!started&&context.phase!=='send-unknown';
   $('return-chat').hidden = context.phase !== 'chat-changed';
-  $('retry-context').textContent = ['delivered', 'stale', 'prepared-stale', 'legacy-session', 'manual-session'].includes(context.phase) ? 'Обновить контекст'
-    : ['send-unknown', 'waiting-chat'].includes(context.phase) ? 'Проверить статус' : 'Проверить контекст';
   $('connection-detail').textContent = state.localRuntime ? `${state.localRuntime.label} · встроенный MCP` : state.runtimeFolder;
   const delivery = context.delivery;
   $('session-detail').textContent = selected ? `Сессия: ${selected.sessionId}`
@@ -474,7 +506,7 @@ function render(state) {
       : 'Проверка проекта не пройдена. Чат доступен для просмотра.')) : '';
   $('workspace-health-retry').textContent = kitUpgrade ? 'Обновить Workflow Kit' : 'Повторить проверку';
   $('workspace-health-actions').hidden = !unhealthy;
-  const error = state.startupError ?? context.error;
+  const error = state.startupError;
   $('error-banner').hidden = !error;
   $('error-banner').textContent = error ? `${error.message} (${error.code})` : '';
   for (const button of document.querySelectorAll('button')) {
@@ -491,7 +523,7 @@ function render(state) {
   settingsView.render(state, actionPending);
   const guidedStartup = !!state.startup?.active && !state.setup && !state.settings;
   $('active-projects').hidden = guidedStartup || !!state.setup || !!state.settings;
-  if (guidedStartup) { $('context-card').hidden = true; $('workspace-health').hidden = true; }
+  if (guidedStartup) { $('session-notice').hidden = true; $('workspace-health').hidden = true; }
 
   // Setup briefly hides the tree while checking a folder. Restore only after it is visible.
   for (const list of $('projects').querySelectorAll('.sessions')) {
@@ -502,7 +534,6 @@ function render(state) {
   }
 }
 
-$('context-toggle').addEventListener('click', () => { contextExpanded = !contextExpanded; render(currentState); });
 $('add-workspace').addEventListener('click', () => action('chooseWorkspace'));
 $('reload-chat').addEventListener('click', () => action('reload'));
 // An outdated Kit opens the regular upgrade preview; the user confirms it there.
@@ -512,6 +543,11 @@ $('auto-plan-toggle').addEventListener('click', () => action('setAutoPlan', !cur
 $('plan-review-toggle').addEventListener('click', () => action('setPlanReview', {workspace:currentState?.selected?.workspace,enabled:!currentState?.planReview?.enabled}));
 $('reconnect-chat').addEventListener('click', () => action('reconnect'));
 $('retry-context').addEventListener('click', () => action('retry'));
+$('observe-context').addEventListener('click', () => action('retry'));
+$('new-context-session').addEventListener('click', () => {
+  const selected=currentState?.selected;
+  if(selected&&!selected.assignmentId)action('newSession',selected.workspace,selected.experience??'chat');
+});
 $('return-chat').addEventListener('click', () => action('returnToChat'));
 api.onState(render);
 api.getState().then(render).catch(error => { $('error-banner').hidden = false; $('error-banner').textContent = error.message; });

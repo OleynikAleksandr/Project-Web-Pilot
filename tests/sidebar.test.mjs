@@ -3,6 +3,43 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 
+test('project picker searches, marks current/background work, keeps one parent and supports keyboard escape',async t=>{
+  const f=await fixture(t),base=f.state,other={workspace:'/other',name:'Другой',activity:'working',expanded:true,sessions:[{sessionId:'other-chat',createdAt:1000,title:'Другой чат'}]};
+  f.emit({...base,version:'0.6.110',projects:[...base.projects,other]});
+  assert.equal(f.document.querySelectorAll('.workspace-tree').length,1);
+  assert.equal(f.document.querySelectorAll('[data-project-choice]').length,2);
+  assert.match(f.document.querySelector('[data-project-choice="/other"]').textContent,/Работает в фоне/);
+  assert.equal(f.document.getElementById('prototype-version').textContent,'0.6.110');
+  assert.ok(f.document.getElementById('open-settings').closest('.brand'));
+  const search=f.document.getElementById('project-search'),menu=f.document.getElementById('project-actions');
+  menu.open=true;search.value='другой';search.dispatchEvent(new f.window.Event('input'));
+  assert.equal(f.document.querySelectorAll('[data-project-choice]').length,1);
+  search.focus();search.dispatchEvent(new f.window.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+  assert.equal(f.document.activeElement.dataset.projectChoice,'/other');
+  f.document.activeElement.dispatchEvent(new f.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  assert.equal(menu.open,false);assert.equal(f.document.activeElement,menu.querySelector('summary'));
+  f.emit({...base,projects:[...base.projects,other],selected:{workspace:'/tree',parentWorkspace:'/demo',sessionId:'worker',assignmentId:'a'}});
+  assert.equal(f.document.querySelector('.project').dataset.workspace,'/demo');
+  assert.equal(f.document.getElementById('plan-card').hidden,true);
+  f.emit({...base,projects:[...base.projects,other],selected:{workspace:'/other',sessionId:'other-chat'}});
+  assert.equal(f.document.querySelector('.project').dataset.workspace,'/other');
+  assert.equal(f.document.querySelectorAll('.workspace-tree').length,1);
+  f.emit(base);assert.equal(f.document.querySelector('.project').dataset.workspace,'/demo');
+});
+
+test('plan rows separate identity, planned mode and current status, including final handoff',async t=>{
+  const f=await fixture(t),base=f.state;
+  f.emit({...base,selected:{...base.selected,scopeId:'scope',planExecution:{execution_strategy:'parallel'}},
+    execution:{finalizationStatus:'sent',planView:{state:'working',total:1,completed:0,tasks:[{
+      id:'T003',title:'Результат',status:'current',executionLabel:'После T001 · Параллельно',label:'Готово к интеграции'}]}}});
+  assert.equal(f.document.querySelector('.plan-task-id').textContent,'T003');
+  assert.equal(f.document.querySelector('.plan-task strong').textContent,'Результат');
+  assert.match(f.document.querySelector('.plan-task-mode').textContent,/После T001/);
+  assert.equal(f.document.querySelector('.plan-task-status').textContent,'Готово к интеграции');
+  assert.match(f.document.getElementById('execution-message').textContent,/итоговый ответ/);
+});
+
+
 async function fixture(t) {
   const html = await fs.readFile(new URL('../src/ui/index.html', import.meta.url), 'utf8');
   const source = await fs.readFile(new URL('../src/ui/sidebar.mjs', import.meta.url), 'utf8');
@@ -174,12 +211,12 @@ test('outdated Workflow Kit notice names both versions and opens the regular upg
 test('delivered chat shows local tools from the last confirmed runtime status without restarting services', async t => {
   const f = await fixture(t);
   f.emit({ ...f.state, context: { phase: 'delivered', servicesReady: false, messageSent: true } });
-  assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
+  assert.equal(f.document.getElementById('state-service'), null);
   f.emit({ ...f.state, context: { phase: 'delivered', servicesReady: false, messageSent: true },
     localRuntime: { label: 'Codex App Server Local Mac', service: { mcpReady: true, tunnelReady: true, tunnelConfigured: true } } });
-  assert.equal(f.document.getElementById('state-service').textContent, 'Готовы');
+  assert.ok(f.document.getElementById('connection-detail').closest('#settings-panel'));
   f.emit({ ...f.state, localRuntime: { label: 'Codex App Server Local Mac', service: { mcpReady: true, tunnelReady: false, tunnelConfigured: true } } });
-  assert.equal(f.document.getElementById('state-service').textContent, 'Не проверены');
+  assert.equal(f.document.querySelector('footer'),null);
   // One built-in backend on both systems: its name is shown and there is no folder to choose.
   assert.equal(f.document.getElementById('connection-detail').textContent, 'Codex App Server Local Mac · встроенный MCP');
   f.emit({ ...f.state, platform: 'win32', localRuntime: { label: 'Codex App Server Local Windows', service: null } });
@@ -187,35 +224,21 @@ test('delivered chat shows local tools from the last confirmed runtime status wi
   assert.equal(f.document.getElementById('choose-runtime'), null);
 });
 
-test('the context card describes one delivery: the full packet in the start message', async t => {
-  const f = await fixture(t), text = id => f.document.getElementById(id).textContent;
-  f.emit({ ...f.state, context: { phase: 'preparing-message', messageSent: false } });
-  assert.equal(text('context-title'), 'Вставляем контекст');
-  assert.equal(text('state-message'), 'Ожидание');
-  f.emit({ ...f.state, context: { phase: 'sending', messageSent: false } });
-  assert.equal(text('context-title'), 'Передаём контекст');
-  assert.equal(text('state-message'), 'Отправка…');
-  const sentAtMs = Date.UTC(2026, 9, 6, 12);
-  f.emit({ ...f.state, context: { phase: 'delivered', messageSent: true,
-    delivery: { workspace: '/p', contextBytes: 89088, facts: { plan_revision: 7 }, sentAtMs, deliveryMs: 1200 } } });
-  assert.equal(text('state-message'), 'Отправлено');
-  assert.equal(text('state-context'), 'Передан целиком');
-  assert.equal(f.document.getElementById('state-context').dataset.ready, 'true');
-  assert.match(text('session-detail'), /Передано 87\.0 КБ · план 7/);
-  assert.match(text('session-detail'), /Отправка: 1\.20 с/);
-  assert.equal(text('retry-context'), 'Обновить контекст');
-  // A chat started through MCP in 0.6.86–0.6.95 is a saved chat: no MCP wording, no packet figures.
-  f.emit({ ...f.state, context: { phase: 'legacy-session', messageSent: true, delivery: null } });
-  assert.equal(text('context-title'), 'Сохранённый чат проекта');
-  assert.equal(text('state-context'), 'Прежняя сессия');
-  assert.equal(text('retry-context'), 'Обновить контекст');
-  assert.doesNotMatch(text('session-detail'), /КБ|NaN|undefined|Стартовое сообщение/);
-  // The removed MCP mode leaves no texts behind, whatever an old state object carries.
-  f.emit({ ...f.state, context: { phase: 'waiting-chat', contextMode: 'mcp', messageSent: true, delivery: null } });
-  assert.equal(text('context-title'), 'Контекст отправлен');
-  assert.equal(text('retry-context'), 'Проверить статус');
-  const source = await fs.readFile(new URL('../src/ui/sidebar.mjs', import.meta.url), 'utf8');
-  assert.doesNotMatch(source, /через MCP|mcpPhases|contextMode|Проверить подключение/);
+test('context has no permanent card; only pre-send recovery can retry and unknown only observes',async t=>{
+  const f=await fixture(t),node=id=>f.document.getElementById(id);
+  assert.equal(node('context-card'),null);
+  for(const phase of ['delivered','stale','legacy-session','manual-session','waiting-chat']) {
+    f.emit({...f.state,context:{phase,messageSent:true}});
+    assert.equal(node('session-notice').hidden,true);
+    assert.equal(node('retry-context').hidden,true);
+  }
+  f.emit({...f.state,selected:{workspace:'/demo',sessionId:'s4',attempt:{state:'prepared'}},context:{phase:'error',error:{message:'Ошибка вложения'}}});
+  assert.equal(node('session-notice').hidden,false);assert.equal(node('retry-context').hidden,false);
+  assert.match(node('session-notice-detail').textContent,/Ошибка вложения/);
+  f.emit({...f.state,selected:{workspace:'/demo',sessionId:'s4',attempt:{state:'unknown'}},context:{phase:'send-unknown'}});
+  assert.equal(node('retry-context').hidden,true);assert.equal(node('observe-context').hidden,false);
+  assert.equal(node('new-context-session').hidden,false);
+  assert.match(node('session-notice-detail').textContent,/Повторной отправки нет/);
 });
 
 test('plan card shows current and total agent time in minutes and seconds without live announcements', async t => {

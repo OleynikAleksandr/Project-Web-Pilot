@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1683,
+  "plan_revision": 1685,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -87,7 +87,10 @@
       "packages/workflow-kit/src/lib/common.mjs",
       "packages/workflow-kit/src/lib/installer.mjs",
       "tests/parallel-finalization.test.mjs",
-      "tests/parallel-execution-ui.test.mjs"
+      "tests/parallel-execution-ui.test.mjs",
+      "src/chat-colors-window.mjs",
+      "src/ui/project-doctor.mjs",
+      "src/ui/workspace-setup.mjs"
     ],
     "documentation_paths": [
       "docs/planning/reliable-completion-sidebar.md",
@@ -289,8 +292,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "T004",
@@ -312,7 +315,13 @@
         "tests/sidebar.test.mjs",
         "tests/context-session.test.mjs",
         "tests/electron-smoke.mjs",
-        "tests/settings-chatgpt-channel.test.mjs"
+        "tests/settings-chatgpt-channel.test.mjs",
+        "src/chat-colors-window.mjs",
+        "src/ui/project-doctor.mjs",
+        "src/ui/workspace-setup.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/workspace-deletion.test.mjs",
+        "tests/workspace-session.test.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -330,7 +339,25 @@
         "Состояния финальной передачи видны в карточке основного проекта"
       ],
       "expected_commit_message": "fix: Один выбранный проект и обновлённый сайдбар",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/chat-colors-window.mjs",
+        "src/context-session.mjs",
+        "src/execution-projection.mjs",
+        "src/main.mjs",
+        "src/ui/index.html",
+        "src/ui/project-doctor.mjs",
+        "src/ui/settings-panel.mjs",
+        "src/ui/sidebar.mjs",
+        "src/ui/workspace-setup.mjs",
+        "src/workspace-session.mjs",
+        "tests/context-session.test.mjs",
+        "tests/electron-smoke.mjs",
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/sidebar.test.mjs",
+        "tests/workspace-deletion.test.mjs",
+        "tests/workspace-session.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -545,7 +572,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1683
+Revision: 1685
 
 ## Цель
 
@@ -604,10 +631,10 @@ Revision: 1683
   - Файлы: src/workspace-session.mjs, src/workspace-deletion.mjs, src/project-state-cleanup.mjs, src/execution-projection.mjs, src/main.mjs, tests/workspace-session.test.mjs, tests/workspace-deletion.test.mjs, tests/project-state-cleanup.test.mjs, tests/parallel-execution-ui.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: нет
-- [TODO] T004: Один выбранный проект и обновлённый сайдбар — Ожидает
-  - Git Commit: [PENDING] fix: Один выбранный проект и обновлённый сайдбар
+- [DONE] T004: Один выбранный проект и обновлённый сайдбар — Завершено
+  - Git Commit: [DONE] fix: Один выбранный проект и обновлённый сайдбар
   - Reference: reliable-completion-sidebar-20261010 / T004 / implementation
-  - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/ui/settings-panel.mjs, src/context-session.mjs, src/main.mjs, src/workspace-session.mjs, src/session-plans.mjs, src/execution-projection.mjs, tests/sidebar.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/settings-chatgpt-channel.test.mjs
+  - Файлы: src/ui/index.html, src/ui/sidebar.mjs, src/ui/settings-panel.mjs, src/context-session.mjs, src/main.mjs, src/workspace-session.mjs, src/session-plans.mjs, src/execution-projection.mjs, tests/sidebar.test.mjs, tests/context-session.test.mjs, tests/electron-smoke.mjs, tests/settings-chatgpt-channel.test.mjs, src/chat-colors-window.mjs, src/ui/project-doctor.mjs, src/ui/workspace-setup.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/workspace-deletion.test.mjs, tests/workspace-session.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T003, T002
 - [TODO] T005: Сквозная регрессия и подготовка выпуска 0.6.110 — Ожидает

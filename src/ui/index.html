@@ -86,7 +86,20 @@
   @keyframes review-spin{to{transform:rotate(360deg)}}
   @media(prefers-reduced-motion:reduce){#plan-review-indicator[data-state=working]{animation:none}}
     .executor-group{margin:8px 10px 12px 28px;border-left:1px solid var(--tree-guide);padding-left:12px}.executor-group>summary{font-size:12px;color:var(--muted);cursor:pointer;overflow-wrap:anywhere}.executor-list{list-style:none;padding:0;margin:7px 0;display:grid;gap:6px}.executor-row{display:grid;gap:4px;width:100%;padding:10px;text-align:left;border:1px solid var(--tree-guide);border-radius:8px;background:var(--tree-panel);color:var(--tree-text);overflow-wrap:anywhere}.executor-row strong{font-size:13px}.executor-row span{font-size:11px;line-height:1.5}.executor-row[aria-current=page]{background:var(--tree-selected);border-color:var(--tree-accent)}.executor-status{font-weight:600}.executor-row [data-executor-time]{font-variant-numeric:tabular-nums;color:var(--muted)}
-</style>
+    .brand .brand-title{display:flex;align-items:baseline;gap:8px;min-width:0;flex:1}
+    .brand #prototype-version{font-size:11px;letter-spacing:0;white-space:nowrap;margin:0}
+    .brand .settings-button{width:40px;height:40px;margin:0}
+    .brand .settings-button svg{width:27px;height:27px}
+    #project-search{box-sizing:border-box;width:100%;min-width:0;padding:9px;border:1px solid var(--tree-branch);border-radius:7px;background:var(--tree-panel);color:inherit}
+    #project-options{max-height:35vh;overflow:auto;margin:6px 0}
+    #project-options button{display:block;overflow-wrap:anywhere}
+    #project-options button[aria-current=page]{background:var(--tree-hover);font-weight:650}
+    #project-options small{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+    #session-notice{font-size:11px;line-height:1.5;padding:10px;margin-top:8px;border:1px solid var(--tree-branch);border-radius:8px;overflow-wrap:anywhere}
+    #session-notice p{margin:4px 0 8px}
+    .plan-task-id{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+    .plan-task-mode{color:var(--muted)}.plan-task-status{font-weight:600}
+  </style>
 </head>
 <body>
 <!-- Icons: Lucide. ISC License
@@ -142,22 +155,36 @@ SOFTWARE.
 <symbol id="tree-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
 <symbol id="tree-list-chevrons-up-down" viewBox="0 0 24 24"><path d="M3 5h8"/><path d="M3 12h8"/><path d="M3 19h8"/><path d="m15 8 3-3 3 3"/><path d="m15 16 3 3 3-3"/></symbol></defs></svg>
   <main class="shell">
-    <header class="brand"><div class="logo" aria-hidden="true">W</div><div><strong>Web Pilot</strong><span>PROJECT WORKSPACE</span></div></header>
+    <header class="brand"><div class="logo" aria-hidden="true">W</div><div class="brand-title"><strong>Web Pilot</strong><span id="prototype-version"></span></div><button id="open-settings" class="icon-button settings-button" title="Настройки и архив проектов" aria-label="Настройки и архив проектов" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 3-.6 2.3-2 .9L4.3 5.5 2.5 8.6l1.7 1.6-.2 2.2-1.6 1.8L4.3 18l2.2-.6 1.8 1.1.7 2.5h4l.7-2.5 1.8-1.1 2.2.6 1.9-3.8-1.6-1.8-.2-2.2 1.7-1.6-1.8-3.1-2.1.7-2-.9L13 3Z"/><circle cx="11" cy="12" r="3.2"/></svg></button></header>
     <div id="operation-progress" class="operation-progress" role="status" aria-live="polite" hidden></div>
     <section id="active-projects" aria-label="Проекты">
       <div class="heading projects-toolbar">
         <details class="project-actions" id="project-actions">
           <summary>Ваши проекты <svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-chevron-down"/></svg></summary>
           <div class="project-actions-menu">
+            <input id="project-search" type="search" placeholder="Найти проект" aria-label="Найти проект" aria-controls="project-options" autocomplete="off">
+            <div id="project-options" aria-label="Выбор проекта"></div>
+            <p id="project-search-empty" class="description" hidden>Проекты не найдены</p>
+            <div class="menu-separator" aria-hidden="true"></div>
             <button id="create-workspace"><svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-plus"/></svg><span>Создать проект</span></button>
             <button id="add-workspace"><svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-folder-open"/></svg><span>Открыть папку проекта</span></button>
             <div class="menu-separator" aria-hidden="true"></div>
             <button id="reload-chat"><svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-refresh-cw"/></svg><span>Обновить ChatGPT</span></button>
+            <button id="project-archive">Архив проектов…</button>
           </div>
         </details>
         <button id="toggle-projects" class="icon-button" title="Свернуть все проекты" aria-label="Свернуть все проекты"><svg class="tree-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#tree-list-chevrons-up-down"/></svg></button>
       </div>
       <ul id="projects" class="projects" aria-label="Workspace и сессии"><li class="empty">Выберите проект, чтобы начать<br>работу с его контекстом.</li></ul>
+      <section id="session-notice" aria-live="polite" hidden>
+        <strong id="session-notice-title"></strong><p id="session-notice-detail"></p>
+        <div class="actions">
+          <button id="retry-context" class="secondary" hidden>Повторить подготовку</button>
+          <button id="observe-context" class="secondary" hidden>Проверить статус</button>
+          <button id="new-context-session" class="secondary" hidden>Новая сессия</button>
+          <button id="return-chat" class="secondary" hidden>Вернуться к чату проекта</button>
+        </div>
+      </section>
     </section>
     <div class="scroll">
       <div id="error-banner" class="error-banner" role="alert" hidden></div>
@@ -267,6 +294,12 @@ SOFTWARE.
       </section>
       <section id="settings-panel" class="setup" hidden>
         <div class="heading"><h2>Настройки</h2><button id="close-settings" class="icon-button" title="Вернуться к проектам" aria-label="Закрыть настройки">✕</button></div>
+        <section class="settings-section" aria-label="Подключение">
+          <h3 id="host-platform-label">На вашем Mac</h3>
+          <p id="connection-detail" class="description"></p><p id="session-detail" class="description"></p>
+          <button id="open-startup" class="secondary" hidden>Начальная настройка</button>
+        </section>
+        <section id="executor-recovery" class="settings-section" aria-label="Восстановление исполнителей" hidden></section>
         <section class="settings-section" aria-labelledby="parallel-settings-title">
           <h3 id="parallel-settings-title">Параллельное выполнение</h3>
           <label style="display:flex;align-items:center;gap:8px"><input id="parallel-allowed" type="checkbox" style="width:auto;margin:0">Разрешить параллельное выполнение</label>
@@ -289,7 +322,6 @@ SOFTWARE.
           <button id="doctor-review" type="button" class="secondary" hidden>Открыть проверку папки</button>
           <div id="doctor-actions" class="actions" hidden>
             <button id="doctor-open" type="button" class="primary">Открыть сессию</button>
-            <button id="doctor-refresh" type="button" class="secondary">Обновить контекст</button>
             <button id="doctor-chat" type="button" class="secondary">Новый Chat</button>
             <button id="doctor-work" type="button" class="secondary">Новый Work</button>
           </div>
@@ -376,25 +408,7 @@ SOFTWARE.
         <p id="conversation-recovery-explanation" class="description">Перезагружается текущая страница чата. Новый чат не создаётся, сообщение повторно не отправляется.</p>
         <button id="reconnect-chat" class="secondary" aria-describedby="conversation-recovery-message conversation-recovery-explanation">Перезагрузить страницу чата</button>
       </section>
-      <section id="context-card" class="card" data-tone="neutral" aria-live="polite">
-        <div class="card-head"><button id="context-toggle" class="context-toggle" type="button" aria-label="Показать подробности состояния контекста" aria-expanded="false" aria-controls="context-details"></button><h3 id="context-title">Готов к началу</h3></div>
-        <div id="context-details" hidden>
-          <p id="context-detail" class="description">Войдите в ChatGPT справа и выберите папку проекта слева.</p>
-          <div class="step"><span>Локальные инструменты</span><b id="state-service">Не проверены</b></div>
-          <div class="step"><span>Стартовое сообщение</span><b id="state-message">Ожидание</b></div>
-          <div class="step"><span>Пакет проекта</span><b id="state-context">Ожидание</b></div>
-          <div id="session-actions" class="actions" hidden>
-            <button id="return-chat" class="secondary" hidden>Вернуться к чату проекта</button>
-            <button id="retry-context" class="secondary">Проверить контекст</button>
-          </div>
-        </div>
-      </section>
     </div>
-    <footer class="footer">
-      <button id="open-startup" class="text-button" hidden>Начальная настройка</button>
-      <div class="footer-line"><span id="host-platform-label">На вашем Mac</span><span id="prototype-version" class="badge">ПРОТОТИП</span></div>
-      <div class="footer-controls"><details><summary>Подробности подключения</summary><p id="connection-detail"></p><p id="session-detail"></p></details><button id="open-settings" class="icon-button settings-button" title="Настройки и архив проектов" aria-label="Настройки и архив проектов" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m9 3-.6 2.3-2 .9L4.3 5.5 2.5 8.6l1.7 1.6-.2 2.2-1.6 1.8L4.3 18l2.2-.6 1.8 1.1.7 2.5h4l.7-2.5 1.8-1.1 2.2.6 1.9-3.8-1.6-1.8-.2-2.2 1.7-1.6-1.8-3.1-2.1.7-2-.9L13 3Z"/><circle cx="11" cy="12" r="3.2"/></svg></button></div>
-    </footer>
     <div id="sidebar-splitter" class="sidebar-splitter" role="separator" aria-orientation="vertical" aria-label="Изменить ширину панели проектов" tabindex="0"></div>
   </main>
   <dialog id="rename-dialog" class="rename-dialog" aria-labelledby="rename-dialog-title">

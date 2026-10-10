@@ -176,9 +176,9 @@ test('readWorkspace exposes user plan lifecycle without using plan revision as U
   await write(base);
   let info = await readWorkspace(folder);
   assert.deepEqual(info.planView, { state: 'working', completed: 1, total: 3, blockedReason: null, tasks: [
-    { id: 'T001', title: 'Готовая задача', status: 'done' },
-    { id: 'T002', title: 'Текущая задача', status: 'current' },
-    { id: 'T003', title: 'Следующая задача', status: 'pending' },
+    { id: 'T001', title: 'Готовая задача', status: 'done', executionLabel:'Последовательно' },
+    { id: 'T002', title: 'Текущая задача', status: 'current', executionLabel:'Последовательно' },
+    { id: 'T003', title: 'Следующая задача', status: 'pending', executionLabel:'Последовательно' },
   ] });
   assert.equal(info.planRevision, 99, 'revision remains available only for protocol matching');
   assert.equal(info.objective, 'Проверить отображение плана', 'scope objective remains available as fallback');

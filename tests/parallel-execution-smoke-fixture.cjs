@@ -124,7 +124,15 @@ module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectW
   assert.match(await fs.readFile(path.join(c.worktree,'SECOND.md'),'utf8'),/worker-b/);
   await wait(()=>record(c.worktree)?.controller.state.phase==='delivered','dependent context delivered');
   const third=record(c.worktree);await hold(third);await run('--complete',c.worktree);await finish(third);
+  await wait(()=>snapshot().execution.finalizationStatus==='sent','last READY hands completion to main');
+  const finalMessage=await main.view.webContents.executeJavaScript('window.fixtureMessages.at(-1).text');
+  assert.ok(finalMessage.includes(root)&&finalMessage.includes('integration:start/continue'));
+  const ready=await plans.call(root,'assignment:status',['--id',c.id]);
+  await hold(main);
+  await plans.call(root,'integration:start',[],{id:c.id,source_commit:ready.source_commit});
+  await finish(main);
   await wait(()=>snapshot().execution.phase==='complete','three verified integrations');
+  assert.equal(snapshot().execution.finalizationStatus,'reply-observed');
   assert.equal(await git(root,'rev-list','--count','--merges',base+'..HEAD'),'3');
   for(const theme of ['dark','light']) {
     await ipc('setTheme',theme);

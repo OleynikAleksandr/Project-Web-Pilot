@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { validateParallelSettings } from './parallel-settings.mjs';
+import {plannedExecution} from './execution-projection.mjs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 const executeGit=promisify(execFile);
@@ -144,7 +145,7 @@ function projectPlan(plan, scopeTitle = '') {
         || !['PENDING', 'DONE'].includes(task.commit_status)) {
       throw new WorkspaceError('WORKFLOW_PLAN_INVALID', 'План проекта содержит некорректную микрозадачу.');
     }
-    return { id: task.id, title: task.title,
+    return { id: task.id, title: task.title, executionLabel:plannedExecution(task,plan.execution_strategy),
       status: task.commit_status === 'DONE' ? 'done' : task.implementation_status === 'IN_PROGRESS' ? 'current' : 'pending' };
   });
   const current = plan.tasks.find(t => t.id === plan.current_task_id)
@@ -430,14 +431,15 @@ export class WorkspaceSessions {
   landing() { return this.selected() ?? currentView(this.data.projects.find(p => p.archivedAt === null&&!p.parentWorkspace)); }
   project(workspace, sessionId) { return currentView(this.data.projects.find(p => p.workspace === workspace), sessionId); }
 
-  assertParent(project,data=this.data) {
-    if(project?.parentWorkspace&&!data.projects.some(p=>ownedExecutor(project,p)&&!p.archivedAt))
+  assertParent(project,data=this.data,allowArchived=false) {
+    if(project?.parentWorkspace&&!data.projects.some(p=>ownedExecutor(project,p)&&(allowArchived||!p.archivedAt)))
       throw new WorkspaceError('ASSIGNMENT_OWNER','Родитель исполнителя отсутствует или находится в архиве. Файлы и чат сохранены.');
   }
 
   activeRecord(workspace, sessionId, data = this.data, { background = false } = {}) {
     const project = data.projects.find(p => p.workspace === workspace);
-    this.assertParent(project,data);
+    // Flush an existing owned executor before deletion; this never permits selecting an archived parent.
+    this.assertParent(project,data,background);
     if (project?.archivedAt) throw new WorkspaceError('PROJECT_ARCHIVED', 'Сначала верните проект из архива.');
     const session = project?.sessions.find(s => s.sessionId === sessionId);
     if (!session || session.archivedAt || !background && project.selectedSessionId !== sessionId) {

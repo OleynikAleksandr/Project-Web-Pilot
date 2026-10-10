@@ -155,15 +155,16 @@ export class ContextSession {
 
   async retry() {
     if (!this.active) return;
+    const project = this.store.project(this.active.workspace,this.active.sessionId);
+    const attempt = project?.attempt;
+    // Retry is preparation only. A started conversation may be observed, never reset for another recovery.
+    if(project?.manualStart||attempt&&(attempt.protocol!==CONTEXT_PROTOCOL||attempt.sendStartedAtMs
+      ||['sending','unknown','sent','acknowledged'].includes(attempt.state))) {
+      if(!this.pending)return this.tick();
+      return;
+    }
     if (this.pending) { this.retryGeneration = this.generation; return; }
     this.retryGeneration = null;
-    const project = this.store.project(this.active.workspace);
-    const attempt = project?.attempt;
-    if (project?.manualStart) await this.store.updateSession(project.workspace, project.sessionId, { manualStart: false, attempt: null, receipt: null });
-    // Only an observed send or a never-sent draft can be replaced by an explicit refresh.
-    if (attempt && (['sent', 'acknowledged'].includes(attempt.state) || !attempt.sendStartedAtMs && !attempt.attachments?.length)) {
-      await this.store.updateSession(project.workspace, project.sessionId, { attempt: null, receipt: null });
-    }
     this.servicesReady = false;
     this.warmState = { requested: 0, started: -1, pending: false };
     this.inputsChanged = false; this.inputStale = false;
@@ -375,11 +376,11 @@ export class ContextSession {
         this.warm(project, generation);
         this.emit({ phase: deferred, projectInfo: info }); return;
       }
+      const preparedRequestId=attempt?.attachments?.length?attempt.requestId:undefined;
       // A prepared short MCP start message of 0.6.86–0.6.95 carries no packet facts, so it is never current and never sent.
       if (attempt && (startedThroughMcp(attempt) || !attempt.attachments || (!this.composer.hasFilled?.(attempt.requestId) && !await this.packetIsCurrent(attempt.packet, project)))) {
         if (observation.draftLength) { this.emit({ phase: 'prepared-stale', projectInfo: info }); return; }
         attempt = null;
-        await this.store.updateSession(project.workspace, project.sessionId, { attempt: null, receipt: null });
         if (!this.current(generation)) return;
       }
       if (!attempt) {
@@ -393,7 +394,7 @@ export class ContextSession {
         if (!this.current(generation)) return;
         project = { ...project, ...info };
         if (!packetMatchesProject(packet, project)) throw failure('CONTEXT_CHANGED', 'План изменился во время подготовки. Обновите контекст.');
-        const requestId = 'wp-request-' + this.uuid();
+        const requestId = preparedRequestId ?? 'wp-request-' + this.uuid();
         attempt = { protocol: CONTEXT_PROTOCOL, requestId, text: startupMessage(project, requestId, packet, this.runtime?.startupRules ?? []),
           attachments: packet.parts.map(part => ({ name: contextPartName(part, requestId), text: part.text })),
           packet: { ...metadata(packet), preparationMs }, createdAtMs: this.now(), sendStartedAtMs: null, state: 'prepared' };

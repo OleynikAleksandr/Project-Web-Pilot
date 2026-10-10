@@ -101,13 +101,17 @@ export function settingsPanelView(action) {
       $('vps-connector-copy').disabled = pending;
     }
     const settings = state.settings;
+    const recovery=$('executor-recovery');recovery.hidden=!(state.executorRecovery?.length);
+    recovery.replaceChildren(...(state.executorRecovery??[]).map(item=>{
+      const line=document.createElement('p');line.className='description';line.textContent=item.name+' · '+item.workspace+' — '+item.message;return line;
+    }));
     $('settings-panel').hidden = !settings; $('active-projects').hidden = !!settings;
     $('open-settings').setAttribute('aria-pressed', String(!!settings));
     $('open-settings').disabled = pending || state.storageError;
     archiveButton.disabled = pending;
     $('open-chat-colors').disabled = pending;
     if (!settings) return;
-    $('setup-panel').hidden = true; $('workspace-details').hidden = true; $('context-card').hidden = true;
+    $('setup-panel').hidden = true; $('workspace-details').hidden = true; $('session-notice').hidden = true;
   }
   return { render };
 }

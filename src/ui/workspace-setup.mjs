@@ -27,7 +27,7 @@ export function workspaceSetupView(action) {
     const setup = state.setup;
     $('setup-panel').hidden = !setup;
     $('projects').hidden = !!setup;
-    $('context-card').hidden = !!setup;
+    if(setup)$('session-notice').hidden = true;
     $('workspace-details').hidden = !!setup || !state.selected;
     if (!setup) { formKey = ''; focusForm = false; return; }
     const busy = ['checking', 'applying'].includes(setup.phase);

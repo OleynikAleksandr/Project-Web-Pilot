@@ -9,6 +9,12 @@ export function integrationProblem(operation) {
   return null;
 }
 
+export function plannedExecution(task,strategy) {
+  if(strategy!=='parallel')return 'Последовательно';
+  const mode=task.parallel_safe?'Параллельно':'Отдельный исполнитель';
+  return task.dependencies?.length?'После '+task.dependencies.join(', ')+' · '+mode:mode;
+}
+
 export function projectExecutionPlan(plan,assignments,integration) {
   return {state:plan.tasks.every(t=>t.commit_status==='DONE')?'awaiting-acceptance':'working',
     completed:plan.tasks.filter(t=>t.commit_status==='DONE').length,total:plan.tasks.length,
@@ -19,7 +25,7 @@ export function projectExecutionPlan(plan,assignments,integration) {
       const label=status==='done'?'Интеграция проверена':merging
         ?integrationProblem(integration)?.message??(['CONFLICT','CHECKS_FAILED'].includes(integration.status)?'Интеграция требует исправления':'Интегрируется')
         :assignment?.status==='UNKNOWN'?'Назначение требует сверки':assignment?.status==='READY_FOR_INTEGRATION'?'Готово к интеграции':assignment?'Назначено исполнителю':null;
-      return {id:task.id,title:task.title,status,label};
+      return {id:task.id,title:task.title,status,label,executionLabel:plannedExecution(task,plan.execution_strategy)};
     })};
 }
 
