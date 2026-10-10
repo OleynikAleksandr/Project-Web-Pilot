@@ -10,8 +10,17 @@ export class AutomationSendState {
     const key=owner(selected),p=event.state;
     if(!key || event.reset || !p || p.url!==selected.chatUrl)return;
     const old=this.cycles.get(key)??{key,generation:0,busy:false};
-    this.cycles.set(key,{key,generation:old.generation+(p.busy&&!old.busy?1:0),busy:!!p.busy});
+    const next={...old,key,generation:old.generation+(p.busy&&!old.busy?1:0),busy:!!p.busy,
+      documentId:event.documentId??old.documentId,manualStopRevision:p.manualStopRevision??0,manualSendRevision:p.manualSendRevision??0};
+    if((p.manualStopRevision??0)>(old.documentId===next.documentId?(old.manualStopRevision??0):0))
+      next.stop={userTurnId:p.userTurnId??null};
+    if(next.stop&&((p.userTurnId&&p.userTurnId!==next.stop.userTurnId)
+      ||old.documentId===next.documentId&&(p.manualSendRevision??0)>(old.manualSendRevision??0)))delete next.stop;
+    this.cycles.set(key,next);
+    if(JSON.stringify(old.stop)!==JSON.stringify(next.stop)||this.persistenceError)
+      this.stopSave=this.persist().then(()=>{this.persistenceError=false;},()=>{this.persistenceError=true;});
   }
+  blocked(selected){return this.persistenceError||!!this.cycles.get(owner(selected))?.stop;}
   key(selected,page){const k=owner(selected);return k && JSON.stringify([k,page?.turnId || 'cycle:'+(this.cycles.get(k)?.generation??0)]);}
   async persist(){
     while(this.entries.size>400)this.entries.delete(this.entries.keys().next().value);
@@ -19,6 +28,8 @@ export class AutomationSendState {
     await this.save({version:1,entries:[...this.entries.values()],cycles:[...this.cycles.values()]});
   }
   async send({selected,page,ready,perform,kind='plan'}) {
+    await this.stopSave;
+    if(this.blocked(selected))return {state:'cancelled',reason:this.persistenceError?'SEND_CHECKPOINT_ERROR':'MANUAL_STOP'};
     const key=this.key(selected,page);
     if(!key || this.inFlight)return {state:'cancelled',reason:'AUTOMATION_BUSY'};
     const previous=this.entries.get(key);

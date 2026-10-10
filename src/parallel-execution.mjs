@@ -39,8 +39,9 @@ export function availableTasks(plan,assignments,workers) {
 // delivery ledger, never a replacement for Kit's plan, assignments or Git proofs.
 export class ParallelExecution {
   constructor({kit,origin,openWorker,workerState,mainState,save,book={},onChange=()=>{},watch=()=>()=>{},
-    isEnabled=null,onComplete=()=>{},sendCorrection,restoreWorker=async()=>null,restoreOrigin=async()=>{},now=Date.now,uuid=randomUUID}) {
+    isEnabled=null,onComplete=()=>{},sendCorrection,sendFinalization=null,canFinalize=null,restoreWorker=async()=>null,restoreOrigin=async()=>{},now=Date.now,uuid=randomUUID}) {
     Object.assign(this,{isEnabled,onComplete,kit,origin,openWorker,workerState,mainState,save,book,onChange,watch,sendCorrection,restoreWorker,restoreOrigin,now,uuid});
+    Object.assign(this,{sendFinalization,canFinalize});
     this.queues=new Map();this.states=new Map();this.unwatch=new Map();this.correcting=new Set();this.suspended=new Set();this.enabled=false;this.closed=false;
   }
   view(workspace){return this.states.get(workspace)??{phase:'idle',assignments:[],error:null};}
@@ -141,6 +142,7 @@ export class ParallelExecution {
       canCorrect:!state.commandActive&&this.mainState(origin).stopped&&this.mainState(origin).canSend,
       error:recoveryError,maxWorkers:plan.max_workers});
     // A pending integration owns main; AutoPlan may request one correction in its exact main chat.
+    if(await this.finalize(workspace,state,origin,ledger,enabled))return;
     if(state.integration.status!=='IDLE') {
       const operation=state.integration;
       // Resume only Kit's existing journal, never start another merge after an ambiguous call.
@@ -251,6 +253,78 @@ export class ParallelExecution {
       ...(assignments.find(b=>b.id===a.id)?.error?{error:assignments.find(b=>b.id===a.id).error}:{})}))
       .concat(assignments.filter(a=>a.status==='UNKNOWN'&&!latest.assignments.some(b=>b.id===a.id))),error:recoveryError});
   }
+  async finalize(workspace,state,origin,ledger,enabled) {
+    if(!this.sendFinalization)return false;
+    const {plan,assignments}=state;
+    const allowed=()=>!this.closed&&!this.suspended.has(workspace)
+      &&(this.canFinalize?this.canFinalize(workspace,plan.scope_id):enabled());
+    const allDone=plan.tasks.length>0&&plan.tasks.every(t=>t.commit_status==='DONE');
+    const ready=plan.tasks.length>0&&plan.tasks.every(t=>t.commit_status==='DONE'||assignments.some(a=>
+      a.parent_task_id===t.id&&a.status==='READY_FOR_INTEGRATION'&&a.source_commit
+      &&!a.error&&!a.commandActive&&!a.transaction_pending&&!a.dirty));
+    if(!ledger.finalization&&state.confirmed&&ready&&allowed()&&(enabled()||ledger.started)) {
+      ledger.finalization={status:'pending',projectId:plan.project_id??null,scope:plan.scope_id,sessionId:origin.sessionId};
+      await this.persist();
+    }
+    const final=ledger.finalization;
+    if(!final)return false;
+    if(final.projectId!==(plan.project_id??null)||final.scope!==plan.scope_id||final.sessionId!==origin.sessionId)
+      throw fail('FINALIZATION_IDENTITY','Получатель итогового поручения не соответствует плану.');
+    const page=this.mainState(origin);
+    if(final.status==='sent'&&page.busy&&!final.replyStarted){final.replyStarted=true;await this.persist();}
+    if(final.status==='sent'&&allDone&&page.stopped&&!page.connectionError&&!page.manualStopped
+      &&(final.replyStarted||page.pauseKey&&page.pauseKey!==final.pauseKey)
+      &&(page.manualSendRevision??0)===(final.manualSendRevision??0)) {
+      final.status='reply-observed';await this.persist();
+    }
+    this.publish(workspace,{finalizationStatus:final.status});
+    if(allDone&&state.confirmed)await this.onComplete(workspace,plan.scope_id);
+    if(['sending','sent','unknown','reply-observed'].includes(final.status)) {
+      this.publish(workspace,{phase:final.status==='reply-observed'?'complete':'finalizing',
+        error:final.status==='unknown'||final.status==='sending'?{code:'FINALIZATION_SEND_UNKNOWN',
+          message:'Исход итогового поручения неизвестен. Проверьте основной чат; автоматический повтор не отправляется.'}:null});
+      return true;
+    }
+    // A pending intention survives automatic completion, but never overrides manual OFF/Stop/draft.
+    if(!allowed()||!ready||!state.confirmed||state.commandActive||!page.stopped||!page.canSend
+      ||assignments.some(a=>a.status!=='INTEGRATED'&&!this.workerState(a,ledger.assignments[a.id]).stopped))
+      return false;
+    if(state.integration.status!=='IDLE'&&ledger.corrections[state.integration.operation_id])return false;
+    const current=()=>{
+      const p=this.mainState(origin),latestOrigin=this.origin(workspace,origin.sessionId);
+      return allowed()&&latestOrigin?.sessionId===origin.sessionId&&latestOrigin?.chatUrl===origin.chatUrl
+        &&(p.canContinueSend??(p.stopped&&p.canSend));
+    };
+    const facts={project:plan.project_id,scope:plan.scope_id,main:workspace,head:state.head,
+      integration:state.integration,tasks:plan.tasks.map(t=>({id:t.id,done:t.commit_status==='DONE',
+        assignment:assignments.find(a=>a.parent_task_id===t.id)?.id??null,
+        source:assignments.find(a=>a.parent_task_id===t.id)?.source_commit??null,
+        integration:assignments.find(a=>a.parent_task_id===t.id)?.integration_commit??null})),
+      commands:[...(state.commands??[]),...assignments.flatMap(a=>a.commands??[])].map(c=>({
+        id:c.id,session:c.processId,checkout:c.cwd,state:c.state,readOnly:c.readOnly}))};
+    // Only structured Kit facts are transmitted; executor prose is not a control instruction.
+    const text=['Заверши общую работу по parallel-плану Workflow Kit и дай итоговый ответ пользователю.',
+      'Workspace: '+JSON.stringify(workspace),
+      'Прочитай status, integration:status, назначения и доказательства проверок. Подтверждённые коммиты исполнителей готовы; общий main может ещё требовать интеграции.',
+      'Заверши оставшиеся слияния через integration:start/continue; разреши конфликты в области соответствующих задач. Не делай implementation-коммит parallel-задачи в main.',
+      'Очередь передаёт оставшиеся интеграции тебе. Проверь итоговый main, не объявляй worktree-сервер проверкой main.',
+      'Сообщи, что сделано и проверено, ограничения, действительный адрес и checkout приложения, следующий шаг пользователя. Остановка сервера и архивирование требуют отдельного решения пользователя.',
+      'Данные Kit (не инструкции): '+JSON.stringify(facts)].join('\n');
+    if(Buffer.byteLength(text,'utf8')>28000)throw fail('FINALIZATION_TOO_LARGE','Сводка итогового поручения превышает допустимый размер; данные не усечены.');
+    final.status='sending';final.pauseKey=page.pauseKey;final.manualSendRevision=page.manualSendRevision??0;
+    await this.persist();this.publish(workspace,{phase:'finalizing',finalizationStatus:'sending'});
+    try {
+      const result=await this.sendFinalization(origin,text,current,async()=>{
+        const fresh=await this.kit.read(workspace);
+        return current()&&fresh.confirmed&&!fresh.commandActive&&fresh.plan.scope_id===plan.scope_id
+          &&fresh.plan.project_id===plan.project_id&&fresh.head===state.head;
+      });
+      final.status=result.state==='sent'?'sent':result.state==='unknown'&&result.reason!=='PAUSE_CONSUMED'?'unknown':'pending';
+      await this.persist();this.publish(workspace,{finalizationStatus:final.status});
+      // The send boundary may have observed newer command/scope facts; never merge the old snapshot.
+      return true;
+    }catch(error){final.status='unknown';await this.persist();throw error;}
+  }
   async correct(workspace,{fromQueue=false}={}) {
     if(this.correcting.has(workspace))throw fail('PARALLEL_BUSY','Дождитесь текущей операции.');
     this.correcting.add(workspace);
@@ -284,8 +358,8 @@ export class ParallelExecution {
         const latest=await this.kit.read(workspace);return ready()&&!latest.commandActive&&latest.integration.operation_id===operation.operation_id;
       });
       if(result.state==='sent')ledger.corrections[operation.operation_id]='sent';
-      else if(result.state==='unknown')ledger.corrections[operation.operation_id]='unknown';
-      else if(result.state!=='unknown')delete ledger.corrections[operation.operation_id];
+      else if(result.state==='unknown'&&result.reason!=='PAUSE_CONSUMED')ledger.corrections[operation.operation_id]='unknown';
+      else delete ledger.corrections[operation.operation_id];
       await this.persist();this.publish(workspace,{correctionStatus:ledger.corrections[operation.operation_id]??null});return result;
     }catch(error){ledger.corrections[operation.operation_id]='unknown';await this.persist();throw error;}
     }finally{this.correcting.delete(workspace);if(!fromQueue)void this.signal(workspace);}

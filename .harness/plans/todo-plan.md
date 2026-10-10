@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1679,
+  "plan_revision": 1681,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -85,7 +85,8 @@
       "tests/workflow-kit-source.test.mjs",
       "release-manifest.json",
       "packages/workflow-kit/src/lib/common.mjs",
-      "packages/workflow-kit/src/lib/installer.mjs"
+      "packages/workflow-kit/src/lib/installer.mjs",
+      "tests/parallel-finalization.test.mjs"
     ],
     "documentation_paths": [
       "docs/planning/reliable-completion-sidebar.md",
@@ -196,8 +197,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "T002",
@@ -215,7 +216,8 @@
         "tests/parallel-execution.test.mjs",
         "tests/parallel-execution-recovery.test.mjs",
         "tests/automation-send-state.test.mjs",
-        "tests/project-auto-plan.test.mjs"
+        "tests/project-auto-plan.test.mjs",
+        "tests/parallel-finalization.test.mjs"
       ],
       "documentation_paths": [],
       "verification_ids": [
@@ -230,7 +232,15 @@
         "Нет гонки merge/correction/finalization; итог основного ответа наблюдается отдельно от Send, main проверки обязательны"
       ],
       "expected_commit_message": "fix: Автоматическая финальная передача основному агенту",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "src/automation-send-state.mjs",
+        "src/executor-session.mjs",
+        "src/main.mjs",
+        "src/parallel-execution.mjs",
+        "src/project-auto-plan.mjs",
+        "tests/parallel-finalization.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -524,7 +534,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1679
+Revision: 1681
 
 ## Цель
 
@@ -571,10 +581,10 @@ Revision: 1679
   - Файлы: tools/codex-app-server-mcp/server.py, tools/codex-app-server-mcp/app_server_client.py, src/parallel-kit.mjs, src/execution-projection.mjs, tests/codex-app-server-mcp.test.mjs, tests/codex-app-server-tools.test.mjs, tests/parallel-kit.test.mjs, src/main.mjs, src/executor-session.mjs, src/command-activity.mjs, src/preload.cjs, src/ui/sidebar.mjs, src/ui/index.html, tests/command-activity.test.mjs, src/parallel-execution.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: нет
-- [TODO] T002: Автоматическая финальная передача основному агенту — Ожидает
-  - Git Commit: [PENDING] fix: Автоматическая финальная передача основному агенту
+- [DONE] T002: Автоматическая финальная передача основному агенту — Завершено
+  - Git Commit: [DONE] fix: Автоматическая финальная передача основному агенту
   - Reference: reliable-completion-sidebar-20261010 / T002 / implementation
-  - Файлы: src/parallel-execution.mjs, src/main.mjs, src/project-auto-plan.mjs, src/automation-send-state.mjs, src/executor-session.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/automation-send-state.test.mjs, tests/project-auto-plan.test.mjs
+  - Файлы: src/parallel-execution.mjs, src/main.mjs, src/project-auto-plan.mjs, src/automation-send-state.mjs, src/executor-session.mjs, tests/parallel-execution.test.mjs, tests/parallel-execution-recovery.test.mjs, tests/automation-send-state.test.mjs, tests/project-auto-plan.test.mjs, tests/parallel-finalization.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T001
 - [TODO] T003: Связь исполнителей с родителем и каскадное удаление — Ожидает

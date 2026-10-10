@@ -207,7 +207,8 @@ function applyObservedPage(event, record = liveSessions.visible) {
   }
   record.primaryAutomation?.observe(event);
   record.executor?.observe(event);
-  const safety=JSON.stringify([event.documentId,event.state?.url,event.state?.busy,event.state?.lastMessageRole,event.state?.connectionError]);
+  const safety=JSON.stringify([event.documentId,event.state?.url,event.state?.busy,event.state?.lastMessageRole,event.state?.connectionError,
+    event.state?.draftPresent,event.state?.editorAvailable,event.state?.writable,event.state?.turnId,event.state?.manualStopRevision,event.state?.manualSendRevision]);
   if(record.identity&&!record.identity.assignmentId&&execution.unwatch.has(record.identity.workspace)&&record.executionSafety!==safety) {
     record.executionSafety=safety;void execution.signal(record.identity.workspace);
   }
@@ -247,6 +248,7 @@ async function restoreExecutionPage(project,assignment=null) {
 }
 const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBook,
   isEnabled:(workspace,scope)=>projectAutoPlan.enabled(workspace,scope),
+  canFinalize:(workspace,scope)=>projectAutoPlan.finalizationAllowed(workspace,scope),
   onComplete:(workspace,scope)=>projectAutoPlan.sync(workspace,scope,{complete:true,confirmed:true}),
   origin:(workspace,id)=>store.project(workspace,id),
   save:async book=>{parallelExecutionBook=book;await saveSettings({parallelExecutionBook:book});},
@@ -288,8 +290,14 @@ const execution=new ParallelExecution({kit:executionKit,book:parallelExecutionBo
     await liveSessions.navigate(record,project.chatUrl??chatGPTEntrypoint(project.experience),{freshDraft:!project.attempt&&!project.chatUrl});
     publish();return project;
   },
-  sendCorrection:(origin,text,canContinue,onBeforeSend)=>liveRecord(origin).composer.sendUserMessage({text,canContinue,onBeforeSend,
-    waitForAcknowledgement:false,cleanupOnCancel:true})});
+  sendCorrection:(origin,text,canContinue,onBeforeSend)=>sendExecutionMessage(origin,text,canContinue,onBeforeSend,'correction'),
+  sendFinalization:(origin,text,canContinue,onBeforeSend)=>sendExecutionMessage(origin,text,canContinue,onBeforeSend,'finalization')});
+function sendExecutionMessage(origin,text,canContinue,onBeforeSend,kind) {
+  const record=liveRecord(origin),sender=record?.primaryAutomation?.automation;
+  if(!sender)return Promise.resolve({state:'cancelled',reason:'PAGE_NOT_READY'});
+  return sender.send({selected:origin,page:record.pageState.current?.state,kind,ready:canContinue,
+    perform:()=>record.composer.sendUserMessage({text,canContinue,onBeforeSend,waitForAcknowledgement:false,cleanupOnCancel:true})});
+}
 let setupState = null;
 let workspaceHealth = null;
 let settingsState = null;

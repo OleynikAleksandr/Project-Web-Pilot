@@ -10,9 +10,15 @@ export function executorPageState(record) {
     &&page?.url===project.chatUrl&&!page.busy&&!page.connectionError&&page.lastMessageRole==='assistant'
     &&page.login!=='signed-out';
   const stopped=observed&&!record.controller.pending&&!record.composer.inFlight;
-  return {stopped,canSend:stopped&&page.editorAvailable&&page.writable&&!page.draftPresent,
+  const blocked=record?.primaryAutomation?.automation?.blocked(project);
+  return {stopped,canSend:stopped&&page.editorAvailable&&page.writable&&!page.draftPresent&&!blocked,
+    busy:!!page?.busy,turnId:page?.turnId??null,assistantRevision:page?.assistantRevision??0,
+    connectionError:page?.connectionError??null,userTurnId:page?.userTurnId??null,
+    manualSendRevision:page?.manualSendRevision??0,
+    manualStopped:!!blocked,
+    pauseKey:record?.primaryAutomation?.automation.key(project,page)??page?.turnId??null,
     // Composer owns its inFlight flag and inserted draft during an admitted send.
-    canContinueSend:observed&&page.editorAvailable&&page.writable};
+    canContinueSend:observed&&page.editorAvailable&&page.writable&&!blocked};
 }
 
 // Each assigned task keeps its own continuation ledger and plan watcher. Neither
