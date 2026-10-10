@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1730,
+  "plan_revision": 1732,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -511,8 +511,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T008",
@@ -540,7 +540,8 @@
         "Работающее приложение не перезапущено автоматически."
       ],
       "expected_commit_message": "release: установить готовый выпуск финального этапа",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -598,7 +599,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1730
+Revision: 1732
 
 ## Цель
 
@@ -677,8 +678,8 @@ Revision: 1730
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
   - Зависимости: T007, DOCS-2
-- [TODO] T008: Установить готовый выпуск без пересборки — Ожидает
-  - Git Commit: [PENDING] release: установить готовый выпуск финального этапа
+- [DONE] T008: Установить готовый выпуск без пересборки — Завершено
+  - Git Commit: [DONE] release: установить готовый выпуск финального этапа
   - Reference: parallel-final-stage-recovery-20261010 / T008 / implementation
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
