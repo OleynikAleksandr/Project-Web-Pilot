@@ -1,9 +1,65 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs/promises');
 const path=require('node:path');
-const {execFile}=require('node:child_process');
+const {execFile,spawn}=require('node:child_process');
 const {promisify}=require('node:util');
+const {randomUUID}=require('node:crypto');
 const execute=promisify(execFile);
+
+// F03 characterization: a real fixture-owned HTTP writer started only after a
+// verified worker source commit. Its v2 activity record is a synthetic MCP
+// witness; the actual App Server lifecycle is covered by executor-channel.
+// Never attach this helper to a user checkout or an existing service.
+module.exports.startFixtureWriter=async function(worktree,nodeExecutable=process.execPath) {
+  const id='fixture-'+randomUUID();
+  const directory=path.join(worktree,'.harness/runtime/command-activity');
+  await fs.mkdir(directory,{recursive:true});
+  const marker=path.join(directory,id+'.json');
+  const server=String.raw`
+    const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+    const server=http.createServer((req,res)=>{
+      if(req.method==='POST'&&req.url==='/write'){
+        fs.writeFileSync(path.join(process.cwd(),'.harness/runtime/writer-proof.txt'),'fixture write\n');
+        res.writeHead(200);res.end('written');return;
+      }
+      res.writeHead(200);res.end('writer alive');
+    });
+    server.listen(0,'127.0.0.1',()=>console.log('PORT='+server.address().port));
+    process.on('SIGTERM',()=>server.close(()=>process.exit(0)));
+  `;
+  const child=spawn(nodeExecutable,['-e',server],{cwd:worktree,stdio:['ignore','pipe','pipe']});
+  const exited=new Promise(resolve=>child.once('exit',resolve));
+  let stopped=false;
+  const stop=async()=>{
+    if(stopped)return;stopped=true;
+    if(child.exitCode===null&&child.signalCode===null)child.kill('SIGTERM');
+    const timeout=setTimeout(()=>child.kill('SIGKILL'),3000);
+    try{await exited;}finally{clearTimeout(timeout);await fs.rm(marker,{force:true});}
+  };
+  try {
+    const port=await new Promise((resolve,reject)=>{
+      let output='';
+      const timeout=setTimeout(()=>reject(Error('fixture writer did not bind loopback')),6000);
+      const settle=(fn,value)=>{clearTimeout(timeout);fn(value);};
+      child.stdout.on('data',chunk=>{
+        output+=chunk.toString();const match=/PORT=(\d+)/.exec(output);
+        if(match)settle(resolve,Number(match[1]));
+      });
+      child.once('error',error=>settle(reject,error));
+      child.once('exit',(code,signal)=>settle(reject,Error('fixture writer exited before ready: '+(code??signal))));
+    });
+    const url='http://127.0.0.1:'+port;
+    const response=await fetch(url);
+    assert.equal(response.status,200);
+    assert.equal(await response.text(),'writer alive');
+    await fs.writeFile(marker,JSON.stringify({
+      version:2,id,workspace:worktree,cwd:worktree,executor_instance:'fixture-writer',
+      executor_pid:child.pid,started_at_ms:Date.now(),process_id:'fixture-'+child.pid,
+      state:'running',read_only_verified:false,sandbox_policy:'dangerFullAccess'
+    }),{flag:'wx',mode:0o600});
+    return {url,id,pid:child.pid,marker,stop};
+  }catch(error){await stop();throw error;}
+};
 
 module.exports.run=async function({sidebar,store,workspaceSetup,snapshot,selectWorkspace,liveSessions,dataDir,waitFor,getArchiveWindow}) {
   const node=await workspaceSetup.node(),script=path.resolve(__dirname,'../packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs');
@@ -205,7 +261,31 @@ const httpPreview=await require('./protected-preview-fixture.cjs').start(root,pa
     for(const file of ['FOUNDATION.md','TOOL-A.md','TOOL-B.md','TOOL-C.md'])
       assert.match(await fs.readFile(path.join(last.worktree,file),'utf8'),/worker-/);
     const beforeFinal=await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length');
-    await hold(record(last.worktree));await run('--complete',last.worktree);await finish(record(last.worktree));
+    await hold(record(last.worktree));
+    await run('--complete',last.worktree);
+    const lastSource=await plans.call(root,'assignment:status',['--id',last.id]);
+    assert.equal(lastSource.status,'READY_FOR_INTEGRATION');
+    const headBeforeLast=await git(root,'rev-parse','HEAD');
+    let f03Writer;
+    try {
+      // Characterize the ORIGINAL F03: a real writable server appears only
+      // after the final worker source commit, before the worker's last reply.
+      f03Writer=await module.exports.startFixtureWriter(last.worktree,node);
+      assert.equal((await fetch(f03Writer.url+'/write',{method:'POST'})).status,200);
+      await finish(record(last.worktree));
+      await wait(()=>snapshot().execution.assignments.some(a=>a.id===last.id
+        &&a.status==='READY_FOR_INTEGRATION'&&a.commandActive),'last source held by real writer');
+      assert.equal(snapshot().execution.finalizationStatus==='sent',false,'old F03 suppresses final handoff');
+      assert.equal(await newMain.view.webContents.executeJavaScript('window.fixtureMessages.length'),beforeFinal,
+        'no final Send while writable command is active');
+      assert.equal(snapshot().execution.planView.completed,4,'last task not integrated');
+      assert.equal(await git(root,'rev-parse','HEAD'),headBeforeLast,'main unchanged while writer lives');
+      assert.equal((await plans.call(root,'assignment:status',['--id',last.id])).source_commit,lastSource.source_commit);
+      await f03Writer.stop();f03Writer=null;
+      // Explicitly simulate the later child-change signal. Automatic event
+      // delivery is T002's acceptance, not a claim made by this T001 test.
+      await record(last.worktree).executor.monitor.refresh();
+    }finally{if(f03Writer)await f03Writer.stop();}
     await wait(()=>snapshot().execution.finalizationStatus==='sent','ready final source reaches primary before DONE');
     assert.equal(snapshot().execution.planView.completed,4);
     if(httpPreview) {

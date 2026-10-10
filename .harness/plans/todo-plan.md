@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1704,
+  "plan_revision": 1707,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -85,7 +85,7 @@
       },
       {
         "path": "docs/modules/parallel-execution.md",
-        "required": true,
+        "required": false,
         "revision": "WORKTREE"
       },
       {
@@ -104,8 +104,8 @@
   },
   "tasks": [
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T001",
@@ -129,7 +129,11 @@
         "Границы READY/DONE/Send и cleanup проверены реальными Git/Kit-операциями; пользовательские процессы не изменены, обязательные suite проходят."
       ],
       "expected_commit_message": "test: воспроизвести блокировку последнего READY",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "tests/parallel-execution-smoke-fixture.cjs",
+        "tests/parallel-finalization.test.mjs"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -469,7 +473,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1704
+Revision: 1707
 
 ## Цель
 
@@ -488,8 +492,8 @@ Revision: 1704
 Выполнение: sequential; разрешено: true; лимит: 4
 Причина: Параллельное выполнение сейчас испытывается и исправляется. Пользователь поручил текущие исправления выполнять основным агентом последовательно; пересекающиеся состояния очереди, авторизации и UI требуют одного писателя и независимого будущего живого теста.
 
-- [TODO] T001: Воспроизвести последний READY и writer после source — Ожидает
-  - Git Commit: [PENDING] test: воспроизвести блокировку последнего READY
+- [DONE] T001: Воспроизвести последний READY и writer после source — Завершено
+  - Git Commit: [DONE] test: воспроизвести блокировку последнего READY
   - Reference: parallel-final-stage-recovery-20261010 / T001 / implementation
   - Файлы: tests/parallel-finalization.test.mjs, tests/parallel-execution-smoke-fixture.cjs
   - Параллельность: исключительное выполнение

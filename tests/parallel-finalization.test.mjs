@@ -3,6 +3,20 @@ import assert from 'node:assert/strict';
 import {ParallelExecution} from '../src/parallel-execution.mjs';
 import {ProjectAutoPlan} from '../src/project-auto-plan.mjs';
 import {AutomationSendState} from '../src/automation-send-state.mjs';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {createRequire} from 'node:module';
+import {createFixture,planFixture,completeFixture} from '../packages/workflow-kit/scripts/check-parallel-execution-fixture.mjs';
+import {createAssignment,setupAssignment,assignmentStatus} from '../packages/workflow-kit/src/lib/task-assignment.mjs';
+import {readPlan} from '../packages/workflow-kit/src/lib/plan.mjs';
+import {integrationStatus,startIntegration} from '../packages/workflow-kit/src/lib/task-integration.mjs';
+import {validate} from '../packages/workflow-kit/src/lib/validate.mjs';
+import {ParallelKit} from '../src/parallel-kit.mjs';
+import {readCommandActivity} from '../src/command-activity.mjs';
+
+const {startFixtureWriter}=createRequire(import.meta.url)('./parallel-execution-smoke-fixture.cjs');
 
 function fixture(t) {
  const origin={workspace:'/main',sessionId:'origin',projectId:'project',chatUrl:'https://chatgpt.com/c/main',executionSnapshot:{parallel_allowed:true,max_workers:2}};
@@ -80,4 +94,100 @@ test('authorization keeps completion OFF distinct from manual OFF after restart 
  assert.equal(restored.finalizationAllowed('/a','one'),true);assert.equal(restored.enabled('/b','two'),true);
  restored.set('/a','one',false);assert.equal(restored.finalizationAllowed('/a','one'),false);
  restored.sync('/a','new');assert.equal(restored.finalizationAllowed('/a','new'),false);
+});
+
+test('F03 characterization: real last Git/Kit source followed by a live writable server blocks merge and final Send',async t=>{
+ const directory=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'web-pilot-last-writer-')));
+ t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const root=createFixture(directory);
+ planFixture(root,'origin');
+ const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
+ const assign=(id,task)=>{
+  const created=createAssignment(root,{id,task_id:task,base_commit:git('rev-parse','HEAD'),
+   worktree:path.join(directory,id)},readPlan(root).plan_revision);
+  assert.equal(setupAssignment(root,id,{npmCi:true}).status,'READY');
+  return created;
+ };
+ // These DONE records come from real Kit integrations, not overwritten flags.
+ for(const [id,task] of [['first','T001'],['second','T002']]){
+  const item=assign(id,task);completeFixture(item.worktree);
+  const proof=assignmentStatus(root,id);assert.equal(proof.status,'READY_FOR_INTEGRATION');
+  assert.equal(startIntegration(root,{id,source_commit:proof.source_commit}).status,'INTEGRATED');
+ }
+ assert.deepEqual(Object.keys(validate(root).resolved).sort(),['T001','T002']);
+ const last=assign('last','T003');
+ assert.equal(assignmentStatus(root,last.id).status,'READY','last source not yet committed');
+ const lastMainHead=git('rev-parse','HEAD');
+ completeFixture(last.worktree);
+ const lastProof=assignmentStatus(root,last.id);
+ assert.equal(lastProof.status,'READY_FOR_INTEGRATION');
+ assert.equal(git('rev-parse','HEAD'),lastMainHead,'source commit does not change main');
+ const source=lastProof.source_commit;
+ const setup={node:async()=>process.execPath,environment:process.env};
+ const plans={call:async(_workspace,command,args=[])=>{
+  if(command==='integration:status')return integrationStatus(root);
+  if(command==='validate')return validate(root);
+  if(command==='assignment:status')return assignmentStatus(root,args[1]);
+  throw Error('unexpected fixture Kit operation: '+command);
+ }};
+ const kit=new ParallelKit({setup,plans});
+ let writer;
+ try {
+  // Writer starts AFTER source, and really can write in its temporary checkout.
+  writer=await startFixtureWriter(last.worktree);
+  assert.equal((await fetch(writer.url+'/write',{method:'POST'})).status,200);
+  assert.match(await fs.readFile(path.join(last.worktree,'.harness/runtime/writer-proof.txt'),'utf8'),/fixture write/);
+  const activity=await readCommandActivity(last.worktree);
+  assert.equal(activity.commandActive,true);
+  assert.equal(activity.commands.find(c=>c.id===writer.id)?.readOnly,false);
+  const initial=await kit.read(root);
+  assert.equal(initial.confirmed,true);
+  assert.equal(initial.mainClean,true);
+  const actual=initial.assignments.find(a=>a.id===last.id);
+  assert.equal(actual.status,'READY_FOR_INTEGRATION');
+  assert.equal(actual.source_commit,source);
+  assert.equal(actual.commandActive,true);
+  assert.equal(actual.dirty,false,'only ignored fixture-runtime files written');
+  const auth=new ProjectAutoPlan();
+  auth.set(root,'parallel-fixture',true,'origin');
+  const origin={workspace:root,sessionId:'origin',projectId:initial.plan.project_id,
+   chatUrl:'https://chatgpt.com/c/fixture',executionSnapshot:{parallel_allowed:true,max_workers:2}};
+  const page={stopped:true,canSend:true,canContinueSend:true,pauseKey:'before',manualSendRevision:0};
+  let sends=0,merges=0;
+  const book={[JSON.stringify([root,'parallel-fixture'])]:{
+   workspace:root,scope:'parallel-fixture',started:true,assignments:{},corrections:{}}};
+  const runtime=new ParallelExecution({kit:{...kit,
+    read:()=>kit.read(root),integrate:async(_workspace,a)=>{
+     merges++;return startIntegration(root,{id:a.id,source_commit:a.source_commit});
+    }},book,origin:()=>origin,mainState:()=>page,workerState:()=>({stopped:true}),
+   restoreWorker:async()=>({sessionId:'fixture-worker'}),save:async()=>{},
+   isEnabled:(workspace,scope)=>auth.enabled(workspace,scope),
+   canFinalize:(workspace,scope)=>auth.finalizationAllowed(workspace,scope),
+   onComplete:(workspace,scope)=>auth.sync(workspace,scope,{complete:true,confirmed:true}),
+   sendFinalization:async()=>{sends++;return {state:'sent'};}});
+  t.after(()=>runtime.dispose());
+  // Green characterization of the old BUG: even with last source and a
+  // finished worker reply, the writer produces NO diagnostic/Send/merge.
+  await runtime.signal(root);await runtime.signal(root);
+  assert.equal(sends,0,'F03 is red against the desired diagnostic handoff');
+  assert.equal(merges,0,'writer correctly forbids unsafe integration');
+  assert.equal(book[JSON.stringify([root,'parallel-fixture'])].finalization,undefined);
+  assert.equal(runtime.view(root).assignments.find(a=>a.id===last.id)?.commandActive,true);
+  assert.equal(git('rev-parse','HEAD'),lastMainHead);
+  assert.deepEqual(Object.keys(validate(root).resolved).sort(),['T001','T002']);
+  // A fixture-owned terminal event clears the marker; explicit reconciliation
+  // tests the OLD happy path. Child-event wakeup itself belongs to T002.
+  await writer.stop();writer=null;
+  assert.equal((await readCommandActivity(last.worktree)).commandActive,false);
+  await runtime.signal(root);
+  assert.equal(sends,1);assert.equal(merges,0);
+  assert.equal(book[JSON.stringify([root,'parallel-fixture'])].finalization.status,'sent');
+  assert.equal(startIntegration(root,{id:last.id,source_commit:source}).status,'INTEGRATED');
+  assert.deepEqual(Object.keys(validate(root).resolved).sort(),['T001','T002','T003']);
+  page.busy=true;page.stopped=false;await runtime.signal(root);
+  page.busy=false;page.stopped=true;page.pauseKey='after';await runtime.signal(root);
+  assert.equal(book[JSON.stringify([root,'parallel-fixture'])].finalization.status,'reply-observed');
+  assert.equal(auth.enabled(root,'parallel-fixture'),false);
+  assert.equal(sends,1,'no duplicate final message');
+ }finally{if(writer)await writer.stop();}
 });
