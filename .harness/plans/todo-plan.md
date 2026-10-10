@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1696,
+  "plan_revision": 1698,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -570,8 +570,8 @@
       "actual_files": []
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "reliable-completion-sidebar-20261010",
         "task_id": "T007",
@@ -596,7 +596,8 @@
       ],
       "expected_commit_message": "release: Установить готовый macOS выпуск 0.6.110",
       "parallel_safe": false,
-      "verification_kind": "installed"
+      "verification_kind": "installed",
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -652,7 +653,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1696
+Revision: 1698
 
 ## Цель
 
@@ -735,8 +736,8 @@ Revision: 1696
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
   - Зависимости: DOCS
-- [TODO] T007: Установить готовый macOS выпуск 0.6.110 — Ожидает
-  - Git Commit: [PENDING] release: Установить готовый macOS выпуск 0.6.110
+- [DONE] T007: Установить готовый macOS выпуск 0.6.110 — Завершено
+  - Git Commit: [DONE] release: Установить готовый macOS выпуск 0.6.110
   - Reference: reliable-completion-sidebar-20261010 / T007 / implementation
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
