@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1717,
+  "plan_revision": 1719,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -77,12 +77,12 @@
       {
         "path": "docs/planning/final-stage-recovery-spec.md",
         "required": true,
-        "revision": "WORKTREE"
+        "revision": "5a3eeb5b3f27676769c3161a1b70b74a3fb2997b"
       },
       {
         "path": "docs/planning/final-stage-recovery-todo-draft.md",
         "required": true,
-        "revision": "WORKTREE"
+        "revision": "5a3eeb5b3f27676769c3161a1b70b74a3fb2997b"
       },
       {
         "path": "docs/modules/parallel-execution.md",
@@ -357,8 +357,8 @@
       ]
     },
     {
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "DOCS",
@@ -396,7 +396,21 @@
         "Матрица F/A с тестами, доказательствами и открытыми границами перенесена в подходящий действующий контракт; два временных planning-документа удалены без архивных копий по правилам Kit."
       ],
       "expected_commit_message": "docs: актуализировать контракты финального этапа",
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": [
+        "README.md",
+        "docs/architecture/OVERVIEW.md",
+        "docs/modules/auto-plan-send.md",
+        "docs/modules/auto-plan.md",
+        "docs/modules/codex-app-server-executor.md",
+        "docs/modules/command-activity.md",
+        "docs/modules/parallel-execution-acceptance.md",
+        "docs/modules/parallel-execution.md",
+        "docs/modules/release.md",
+        "docs/modules/workspace-sidebar-ui.md",
+        "docs/planning/final-stage-recovery-spec.md",
+        "docs/planning/final-stage-recovery-todo-draft.md"
+      ]
     },
     {
       "implementation_status": "TODO",
@@ -515,7 +529,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1717
+Revision: 1719
 
 ## Цель
 
@@ -570,8 +584,8 @@ Revision: 1717
   - Файлы: src/ui/sidebar.mjs, src/ui/index.html, src/execution-projection.mjs, tests/parallel-execution-ui.test.mjs, tests/parallel-execution-smoke-fixture.cjs, tests/electron-smoke.mjs, tests/sidebar.test.mjs
   - Параллельность: исключительное выполнение
   - Зависимости: T004, T005
-- [TODO] DOCS: Актуализация всех документов проекта — Ожидает
-  - Git Commit: [PENDING] docs: актуализировать контракты финального этапа
+- [DONE] DOCS: Актуализация всех документов проекта — Завершено
+  - Git Commit: [DONE] docs: актуализировать контракты финального этапа
   - Reference: parallel-final-stage-recovery-20261010 / DOCS / implementation
   - Файлы: docs/planning/final-stage-recovery-spec.md, docs/planning/final-stage-recovery-todo-draft.md, README.md, docs/architecture/OVERVIEW.md, docs/modules/parallel-execution.md, docs/modules/parallel-execution-acceptance.md, docs/modules/auto-plan.md, docs/modules/auto-plan-send.md, docs/modules/command-activity.md, docs/modules/codex-app-server-executor.md, docs/modules/workspace-sidebar-ui.md, docs/modules/release.md
   - Параллельность: исключительное выполнение

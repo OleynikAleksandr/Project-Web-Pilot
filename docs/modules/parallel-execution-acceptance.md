@@ -1,10 +1,10 @@
 # Пользовательская приёмка параллельного исполнения
 
-Протокол выполняет пользователь на установленном выпуске. Автоматические fixtures пройдены, но не подтверждают работу реального ChatGPT, чистой ОС или native Windows. До прямой приёмки план остаётся READY_FOR_ACCEPTANCE; агент его не закрывает.
+Протокол выполняет пользователь на установленном новом выпуске. Текущая исходная ветка содержит невыпущенные исправления; номер **0.6.110** относится к предыдущему выпуску, а не к ним. Автоматические fixtures пройдены, но не подтверждают работу реального ChatGPT, чистой ОС или native Windows. До прямой приёмки план остаётся READY_FOR_ACCEPTANCE; агент его не закрывает.
 
 ## Подготовка
 
-Полностью выйти из Web Pilot и открыть через прежний алиас. Вверху панели должна быть 0.6.110; Kit тестового проекта обновить до 1.7.2 через Доктор. Работающий app/MCP агент при выпуске не перезапускает. Использовать новый ненужный тестовый проект и вручную войти в ChatGPT. Основной сценарий повторить отдельно в Chat и Work. Дальнейшую параллельную реализацию разрешать только после этой приёмки.
+После публикации нового выпуска полностью выйти из Web Pilot и открыть через прежний алиас. Номер панели должен совпадать с опубликованным GitHub Release (не с прежним 0.6.110); Kit тестового проекта обновить до 1.7.2 через Доктор. Работающий app/MCP агент при выпуске не перезапускает. Использовать новый ненужный тестовый проект и вручную войти в ChatGPT. Основной сценарий повторить отдельно в Chat и Work. Дальнейшую параллельную реализацию разрешать только после этой приёмки.
 
 ## Пять задач, общий результат и сервер
 
@@ -14,6 +14,8 @@
 4. Выключить AutoPlan во время инструментов: новые назначения и сообщения не отправляются, уже начатые команды/допустимые интеграции завершаются. Включить снова. Отдельно проверить черновик и ручной Stop: автоматического сообщения нет; новый явный пользовательский ход снимает Stop.
 5. После подготовки приложения запустить штатной exec_command с read_only:true HTTP-предпросмотр и записать его URL/session ID. Не использовать обход sandbox или эвристику по имени команды. Сервер должен оставаться доступен во время последних интеграций и после финала. Если на данной ОС защиту подтвердить нельзя, записать отказ, не объявлять проверку успешной.
 6. До последнего DONE основная сессия получает ровно одно финальное поручение: завершить Kit-интеграции, проверить общий main, выдать итог и URL. Проверить актуальное содержимое по URL из main. После финального ответа нет нового «Продолжай» при переключении, событиях и restart. AutoPlan выключен по completion, план остаётся READY_FOR_ACCEPTANCE и не архивируется. Соседний проект сохраняет своё разрешение.
+
+**Отдельный последний READY с writer (F03).** В ненужном тестовом checkout после последнего source-коммита оставить исполняющуюся write-capable команду. В карточке должны быть различимы подтверждённый исходник, запрещённый merge, ID операции/worktree и диагностический Send. Основной чат после диагностики **только читает и объясняет**; он не выполняет integration:start/continue. Не прерывать пользовательский сервер агентом по своей инициативе. Лишь после самозавершения, либо явно порученной остановки точной сессии владельцем-executor, либо ручной остановки с подтверждённым terminal event App Server очередь делает один merge и отдельную финальную передачу. Если доказательство исчезло — UNKNOWN с адресной процедурой, не автоматический DONE. Проверить отсутствие двойного Send после restart, busy/черновика и смены выбранного проекта. Протокол [команд](command-activity.md) и [очереди](parallel-execution.md) обязателен.
 
 ## Последовательный режим и неизменность настроек
 
@@ -32,6 +34,41 @@
 ## Удаление и повторное имя проекта
 
 При действующем read-only сервере архивировать ненужный проект и попробовать удаление через приложение: DELETE_PROJECT_BUSY, файлы/дети сохранены. Явно остановить точную серверную сессию, получить новое подтверждение и удалить. Проверить отсутствие родителя, всех его исполнителей и локальных разрешений, включая restart; соседний проект цел. Новый проект в той же папке не наследует старую identity, AutoPlan/Review и назначения. Чужие, грязные, неизвестные или подменённые дети удаляться не должны.
+
+## Матрица технических сценариев и доказательств
+
+Указаны **запускаемые автоматические проверки** и их покрытие, а не утверждение о живой пользовательской приёмке. `unit-all` = `npm test`; `electron-smoke` = `npm run smoke` в изолированном Electron TEST FIXTURE. Тесты с настоящим Git/Kit выполняются во временных checkout; F02 проверяет реальную read-only sandbox на macOS в доступном App Server. Сценарии смены состояния DOM и нарушения порядка событий выполняются на контролируемых подставных состояниях; это не реальная сеть ChatGPT. В коммите T001 старое поведение F03 характеризовано блокировкой (Send=0, merge=0), T003 заменил ожидание на безопасную diagnostic-передачу, T006 добавил интеграционную и UI-регрессию.
+
+| Сценарий | Проверяемое доказательство | Автоматический тест / ограничение |
+| --- | --- | --- |
+| F01 | Последний READY → один финал, проверенный main DONE, отдельный завершённый ответ | `parallel-finalization.test.mjs` (`final READY`), `parallel-execution-smoke-fixture.cjs` (Git/Kit + Electron); реальные Chat/Work открыты |
+| F02 | HTTP read-only жив после merge, deny-write, удаление блокируется | `codex-app-server-mcp.test.mjs` (`real command completion`), `protected-preview-fixture.cjs`, Electron; native Windows открыта |
+| F03 | Writer после source, диагностика без записи, terminal event, один merge, один final | `parallel-finalization.test.mjs` (`F03: real Git/Kit`), `parallel-execution-smoke-fixture.cjs`; пользовательский writer не останавливается автоматически |
+| F04 | Terminal receipt без write_stdin, child receipt вызывает main reconcile | `parallel-execution-recovery.test.mjs` (`F04: child receipt`), `codex-app-server-mcp.test.mjs` (`real command completion`) |
+| F05 | UNKNOWN/legacy/malformed, boot-гарантия и отказ небезопасного удаления | `command-activity.test.mjs` (`F05 previous-boot deletion`, `malformed`); без доказанного boot — запрет |
+| F06 | read-only UNKNOWN не блокирует merge, но запрещает удаление; unsupported sandbox fail-closed | `command-activity.test.mjs` (`read-only UNKNOWN`), `codex-app-server-mcp.test.mjs` (sandbox) |
+| F07 | Неверный SHA, dirty child, assignment/transaction: нет unsafe merge | `parallel-finalization.test.mjs` (`F07/F08: missing source`), `parallel-execution-recovery.test.mjs` (binding) |
+| F08 | Dirty/busy main или write-команда блокируют запись | `parallel-finalization.test.mjs` (`F07/F08`), `parallel-execution.test.mjs` (`busy or active-command`) |
+| F09 | Conflict/CHECKS_FAILED — одна интеграция и адресная correction | `parallel-execution.test.mjs` (`conflict keeps main exclusive`, `genuine test failure`), Electron 3-задачный fixture |
+| F10 | Ошибка запуска проверки отделена от exit!=0 | `parallel-execution.test.mjs` (`a failed launch is visible`), `parallel-execution-ui.test.mjs` (`launch failure`) |
+| F11 | Busy main, незавершённый worker reply — нет раннего Send | `parallel-execution.test.mjs` (`ON waits for main readiness`, `source needs an observed final assistant pause`) |
+| F12 | Draft/Review/Composer, пауза занята, отказ до клика остаётся pending | `automation-send-state.test.mjs` (`F11/F12: cancelled pre-click`), `plan-review.test.mjs`; внешний UI требует живой тест |
+| F13 | Manual OFF/Stop запрещают новые отправки; completion-OFF не отзывает pending | `parallel-finalization.test.mjs` (`manual OFF`, `pending draft`, `user Stop`) |
+| F14 | Wrong URL/scope/HEAD/Stop в последнем guard — никакого Send | `parallel-finalization.test.mjs` (`F14: scope, URL, HEAD`, `F14: a changed command`) |
+| F15 | Persist до Send, restart sending/unknown, ошибки записи не вызывают повтор | `automation-send-state.test.mjs` (все `F15`), `parallel-finalization.test.mjs` (`restart sending/unknown`) |
+| F16 | Перестановки READY/DONE/page/command, одна очередь и один фактический Send | `parallel-finalization.test.mjs` (`F16: diagnostic pause is durable`), `parallel-execution.test.mjs` (duplicate events) |
+| F17 | Все DONE, completion-OFF и restart сохраняют разрешённый final того же scope | `parallel-finalization.test.mjs` (`pending draft`, `authorization keeps completion OFF`) |
+| F18 | Только свой новый user + завершённый assistant; чужой/незавершённый turn не считается ответом | `parallel-finalization.test.mjs` (серия `F18`), Electron fixture; настоящий поток ChatGPT открыт |
+| F19 | Два проекта и основных чата; origin из опубликованного плана | `project-auto-plan.test.mjs` (`two main monitors`), `parallel-finalization.test.mjs` (identity), Electron switch |
+| F20 | Готовый worker source/URL не равен verified main и пользовательской приёмке | `parallel-execution-ui.test.mjs` (`F20: worker source`), Electron проверка main Git и URL; реальная пользовательская оценка открыта |
+| A01 | Два monitor, NONE→scope в разных порядках | `project-auto-plan.test.mjs` (`A01-A05`, `two main monitors`) |
+| A02 | Stale null/read error не отзывают ON и не вызывают Send | `project-auto-plan.test.mjs` (`A01/A02/A04/A06`), `auto-plan.test.mjs` (`transaction or read error`) |
+| A03 | Reentrant onChange не создаёт MANUAL_OFF | `project-auto-plan.test.mjs` (`A03/A06: only the user`), `auto-plan.test.mjs` (`executor-style and Review disables`) |
+| A04 | Restart awaitingPlan, первый подтверждённый scope с origin | `project-auto-plan.test.mjs` (`A01-A05`, `A04/A05: ... archived-plan epoch`) |
+| A05 | Completion → новый scope OFF, без автоматического переноса разрешения | `project-auto-plan.test.mjs` (`only confirmed completion`), `parallel-finalization.test.mjs` (`authorization`) |
+| A06 | Два проекта и Review независимы, передача только origin | `project-auto-plan.test.mjs` (`two main monitors`, `A03/A06`), `auto-plan.test.mjs` (`executor-style and Review disables`) |
+
+**Открытые границы автоматизации:** реальный Chat/Work с перезапуском, ошибки сети и пользовательское вмешательство в длинный ответ; родная Windows sandbox и первый запуск на чистой Windows/macOS; доступность на разных системных настройках. TEST FIXTURE проверяет навигацию и DOM без реальной модели; возможные гонки вне смоделированных событий не объявлены исключёнными. Запись «технически завершено» без полного Git и завершённого собственного ответа недопустима.
 
 ## Фиксация результата
 

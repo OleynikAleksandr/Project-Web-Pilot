@@ -54,7 +54,7 @@
 6. `cancelled`/`deferred` → восстанавливается предыдущий checkpoint, `SEND_NOT_SENT` или `DRAFT_PRESENT`; доставка не заявляется.
 7. Исключения: Send выполнен, но `sent` не записался → факт `sent` остаётся в памяти, `SEND_CHECKPOINT_ERROR`, повтора нет; исключение из Composer → `SEND_ERROR`, запись `sending` остаётся и пауза дальше считается `SEND_UNKNOWN`; не удалось откатить известно не отправленную попытку → запись снимается в памяти, следующее событие может повторить.
 
-После перезапуска сохранённая `sending` → `SEND_UNKNOWN`, `sent` → `PAUSE_CONSUMED`: reload, restart, PlanMonitor и повторные наблюдения второго «Продолжай» для одной паузы не дают. AutomationSendState общий для Review, продолжения, исправления и финальной передачи; checkpoint записывается до Send, сохранённый Stop переживает restart.
+После перезапуска сохранённая `sending` → `SEND_UNKNOWN`, `sent` → `PAUSE_CONSUMED`: reload, restart, PlanMonitor и повторные наблюдения второго «Продолжай» для одной паузы не дают. AutomationSendState общий для Review, продолжения, исправления, диагностики и финальной передачи; резервирование `sending` записывается до Send, при отказе сохранения **до** Composer возвращается прежнее состояние (можно повторить только известную неотправленную попытку), после сомнительного клика запись `sending` остаётся и повтор блокируется. Сохранённый Stop переживает restart.
 
 Финальная передача parallel — отдельное содержательное поручение основной сессии, а не пустое «Продолжай». Persistent ledger и последняя проверка scope/HEAD/команд/паузы описаны в [parallel-execution](parallel-execution.md); готовность проверяется повторно непосредственно перед Send. Наблюдение итогового ответа не архивирует план.
 
@@ -101,11 +101,11 @@
 
 - `view()`: `{phase, message, active, reason, enabled, warning, continuations}`; фазы `off|waiting|checking|sending|running|paused|complete`. Панель: `Автоматически отправлено «Продолжай» №N.` + сообщение фазы; `data-reason` — код.
 - Тексты описывают состояние клиента.
-- Коды: `MANUAL_OFF`, `PAGE_NOT_READY`, `CONNECTION_ERROR`, `DRAFT_PRESENT`, `HISTORY_NOT_READY`, `USER_MESSAGE_PENDING`, `PLAN_UNAVAILABLE`, `PLAN_READ_ERROR`, `PLAN_CHANGED_OR_TRANSACTION`, `LEGACY_PAUSE_UNKNOWN`, `PAUSE_CONSUMED`, `SEND_UNKNOWN`, `SEND_NOT_SENT`, `SEND_ERROR`, `SEND_CHECKPOINT_ERROR`, `STALL_WARNING`, `PLAN_COMPLETED`.
+- Коды: `MANUAL_OFF` (только явное действие пользователя), `AUTHORIZATION_OFF` (программный disable при отсутствии разрешения), `PAGE_NOT_READY`, `CONNECTION_ERROR`, `DRAFT_PRESENT`, `HISTORY_NOT_READY`, `USER_MESSAGE_PENDING`, `PLAN_UNAVAILABLE`, `PLAN_READ_ERROR`, `PLAN_CHANGED_OR_TRANSACTION`, `LEGACY_PAUSE_UNKNOWN`, `PAUSE_CONSUMED`, `SEND_UNKNOWN`, `SEND_NOT_SENT`, `SEND_ERROR`, `SEND_CHECKPOINT_ERROR`, `STALL_WARNING`, `PLAN_COMPLETED`.
 - Диагностика — `chromium-events.jsonl`, источник `auto-plan`: `state` (фаза, код), `pause` (opaque ID, источник, поколение), `send` (вид, счётчик), `progress-timeout`/`progress-resumed`. Без текста разговора и UI, URL, секретов ([chromium-diagnostics.md](chromium-diagnostics.md)).
 
 ### Совместная работа с Review
-Review и AutoPlan независимы. Новый scope получает OFF, кроме первого плана после явного включения ожидания пользователем. Основной последовательный чат и очередь parallel используют одно разрешение. Review и AutoPlan того же основного чата делят AutomationSendState: sending до Send, sent после, UNKNOWN без повтора, в том числе при смене review-scope на ACTIVE. Подробности — [plan-review](plan-review.md).
+Review и AutoPlan независимы. Новый scope получает OFF, кроме первого подтверждённого плана после явного включения ожидания пользователем. Два PlanMonitor, stale NONE/read error не отменяют разрешение, но не разрешают Send. Основной последовательный чат и очередь parallel используют одно project-level разрешение; финальный origin берётся из опубликованного плана. Review и AutoPlan того же основного чата делят AutomationSendState: sending до Send, sent после, UNKNOWN без повтора, в том числе при смене review-scope на ACTIVE. [Финальный протокол](parallel-execution.md) различает диагностический read-only Send и передачу владения main; подтверждённый итоговый ответ — собственный новый завершённый turn, не просто пауза. Подробности — [plan-review](plan-review.md).
 
 ## Решения и запреты
 

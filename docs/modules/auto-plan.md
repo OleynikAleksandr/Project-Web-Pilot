@@ -6,9 +6,9 @@ AutoPlan разрешает Web Pilot продолжать план выбран
 
 AutoPlan и Review независимы между собой и между проектами. Пользователь управляет ими кнопками карточки проекта, текст агента режимы не меняет. ON зелёный с aria-pressed=true в обеих темах; во время действия панели кнопка временно недоступна.
 
-По умолчанию OFF. Явное ON до первого плана сразу отображается и сохраняет ожидание его публикации; без подтверждённого плана работа не начинается. OFF отменяет ожидание. Restart сохраняет выбор только своего проекта.
+По умолчанию OFF. Явное ON до первого плана сразу отображается и сохраняет ожидание его публикации; без подтверждённого плана работа не начинается. OFF отменяет ожидание. Restart сохраняет выбор только своего проекта. Два PlanMonitor разных основных чатов не владеют этим выбором: `NONE`, устаревший `null`, ошибка чтения и неподтверждённая ревизия лишь приостанавливают Send, но не снимают сохранённый ON. Первый подтверждённый scope наследует его один раз; origin берётся из опубликованного плана, а не чата, нажавшего кнопку.
 
-Хранение: settings.json, projectAutoPlan[workspace] = {projectId,scopeId,enabled,sessionId,sessions,awaitingPlan,offReason}. Ожидание первого плана имеет scopeId="" и awaitingPlan=true. Старое глобальное autoPlanEnabled игнорируется. Подтверждённое завершение сохраняет OFF с offReason=completion; уже подготовленное финальное поручение основной сессии остаётся разрешённым. Ручной OFF запрещает его; следующий scope начинает с OFF. Staged DONE и незавершённая транзакция не подтверждают завершение. Ошибка чтения запрещает Send/назначение.
+Хранение: settings.json, projectAutoPlan[workspace] = {projectId,scopeId,enabled,sessionId,sessions,awaitingPlan,offReason,planRevision,previousScopeId}. Ожидание первого плана имеет scopeId="" и awaitingPlan=true. planRevision не допускает отката к более старому плану; previousScopeId защищает от повторного связывания старого архивированного scope. Старое глобальное autoPlanEnabled игнорируется. Подтверждённое завершение сохраняет OFF с offReason=`complete`; уже подготовленное финальное поручение основной сессии остаётся разрешённым. Только пользовательское OFF присваивает `manual`; программный `flow.disable()` показывает `AUTHORIZATION_OFF`, не `MANUAL_OFF`. Следующий scope начинает с OFF. Staged DONE и транзакция не подтверждают завершение. Ошибка чтения запрещает Send/назначение, но не стирает авторизацию.
 
 sessions[sessionId] содержит отдельные autoPlanCheckpoint/automationCheckpoint без текста беседы. Защита Review/AutoPlan от повторной отправки сохраняется при смене scope; UNKNOWN не повторяется.
 
@@ -16,7 +16,7 @@ sessions[sessionId] содержит отдельные autoPlanCheckpoint/autom
 
 ## Контроллеры
 
-project-auto-plan.mjs хранит разрешения; project-session-auto-plan.mjs создаёт AutoPlan, AutomationSendState и PlanMonitor каждого основного runtime. Скрытые чаты адресуются самостоятельно; другой выбранный проект не переносит отправку. Один основной Session ID продолжает sequential; исполнители наследуют разрешение родителя.
+project-auto-plan.mjs хранит проектное разрешение; project-session-auto-plan.mjs создаёт AutoPlan, AutomationSendState и PlanMonitor каждого основного runtime, но per-chat view не вправе менять project-level scope без подтверждённого плана. Скрытые чаты адресуются самостоятельно; другой выбранный проект не переносит отправку. Один исходный основной Session ID продолжает sequential; parallel очередь подтверждает scope через Kit и передаёт результаты тому origin, который сохранён в плане. Исполнители наследуют разрешение родителя; Review и собственный программный disable исполнителя его не выключают.
 
 main.mjs связывает защищённый pilot:auto-plan с чтением плана, сохранением и событиями; ui/sidebar.mjs — с кнопкой. auto-plan-state.mjs проверяет план, транзакцию и Review; auto-plan.mjs управляет продолжением, Composer отправляет. Функционального polling и model API нет.
 
@@ -26,4 +26,4 @@ main.mjs связывает защищённый pilot:auto-plan с чтение
 
 ## Проверки
 
-Unit проверяет разрешения, restart, OFF/completion-OFF, финальное pending/sending/unknown/sent/reply-observed, новый scope, Stop и черновик. Electron TEST FIXTURE проверяет защищённые IPC, конфликт и пятизадачный граф с восемью интеграциями, одним финальным ответом, действующим read-only HTTP-сервером и безопасным удалением после его остановки. Живой ChatGPT, чистую ОС и native Windows принимает пользователь.
+Unit проверяет A01–A06 (два основных чата, restart, stale/read error, first scope/origin, программное выключение, MANUAL_OFF, новый scope и два проекта), pending/sending/unknown/sent/reply-observed, Stop и черновик. Electron TEST FIXTURE проверяет защищённые IPC, предварительный ON, конфликт и пятизадачный граф с восемью интеграциями, одним финальным ответом, действующим read-only HTTP-сервером и безопасным удалением после его остановки. [Матрица A01–A06](parallel-execution-acceptance.md) отмечает реальные проверки и границы. Живой ChatGPT, чистую ОС и native Windows принимает пользователь.
