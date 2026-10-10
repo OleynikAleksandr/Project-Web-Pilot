@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1691,
+  "plan_revision": 1692,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "reliable-completion-sidebar-20261010",
@@ -137,12 +137,12 @@
       {
         "path": "docs/planning/reliable-completion-sidebar.md",
         "required": true,
-        "revision": "WORKTREE"
+        "revision": "eaef35820ce1da10a236681d8aeeee236f70d3b8"
       },
       {
         "path": "docs/planning/reliable-completion-validation.md",
         "required": true,
-        "revision": "WORKTREE"
+        "revision": "eaef35820ce1da10a236681d8aeeee236f70d3b8"
       },
       {
         "path": "docs/architecture/OVERVIEW.md",
@@ -624,7 +624,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: reliable-completion-sidebar-20261010
 Current Task: нет
-Revision: 1691
+Revision: 1692
 
 ## Цель
 
