@@ -4,7 +4,7 @@
 ```json
 {
   "schema_version": 1,
-  "plan_revision": 1728,
+  "plan_revision": 1730,
   "project_id": "cf944136-d1fc-4bd5-9ea0-e46d1fe230e7",
   "project_name": "Project Web Pilot",
   "scope_id": "parallel-final-stage-recovery-20261010",
@@ -500,14 +500,15 @@
         "Одна сборка запускается проверкой paired-release при коммите T010, не вручную и не до фиксации исходников."
       ],
       "expected_commit_message": "release: собрать парный выпуск 0.6.111",
-      "implementation_status": "TODO",
-      "commit_status": "PENDING",
+      "implementation_status": "DONE",
+      "commit_status": "DONE",
       "commit_ref": {
         "scope_id": "parallel-final-stage-recovery-20261010",
         "task_id": "T010",
         "role": "implementation"
       },
-      "parallel_safe": false
+      "parallel_safe": false,
+      "actual_files": []
     },
     {
       "implementation_status": "TODO",
@@ -597,7 +598,7 @@ Execution Scope Status: ACTIVE
 Delivery Status: IN_PROGRESS
 Scope: parallel-final-stage-recovery-20261010
 Current Task: нет
-Revision: 1728
+Revision: 1730
 
 ## Цель
 
@@ -670,8 +671,8 @@ Revision: 1728
   - Файлы: docs/architecture/OVERVIEW.md, README.md, docs/modules/release.md
   - Параллельность: исключительное выполнение
   - Зависимости: T007
-- [TODO] T010: Собрать один проверенный парный выпуск 0.6.111 — Ожидает
-  - Git Commit: [PENDING] release: собрать парный выпуск 0.6.111
+- [DONE] T010: Собрать один проверенный парный выпуск 0.6.111 — Завершено
+  - Git Commit: [DONE] release: собрать парный выпуск 0.6.111
   - Reference: parallel-final-stage-recovery-20261010 / T010 / implementation
   - Файлы: release-manifest.json
   - Параллельность: исключительное выполнение
